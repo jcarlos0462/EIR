@@ -35,8 +35,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
         
-        // Verificar la contraseña usando password_verify
-        if (password_verify($password, $row['Contraseña'])) {
+        // Verificar contraseña: primero intenta con password_verify (hasheada)
+        // Si falla, intenta comparación directa (sin hashear) - compatibilidad temporal
+        $password_valida = false;
+        
+        if (preg_match('/^\$2[aby]\$/', $row['Contraseña'])) {
+            // La contraseña está hasheada
+            $password_valida = password_verify($password, $row['Contraseña']);
+        } else {
+            // La contraseña NO está hasheada - compatibilidad temporal
+            $password_valida = ($password === $row['Contraseña']);
+        }
+        
+        if ($password_valida) {
             // Contraseña correcta
             $_SESSION['id'] = $row['ID'];
             $_SESSION['nombre'] = $row['Nombre'];
