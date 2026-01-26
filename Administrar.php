@@ -1,0 +1,134 @@
+<?php
+session_start();
+
+// Verificar si el usuario está logueado
+if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
+    header("Location: index.html");
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar - EIR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar {
+            background-color: white;
+            border-right: 1px solid #e0e0e0;
+            min-height: calc(100vh - 56px);
+            padding: 20px 0;
+        }
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        .sidebar a:hover {
+            background-color: #f5f5f5;
+            border-left-color: #667eea;
+            color: #667eea;
+        }
+        .sidebar a.active {
+            background-color: #f0f0f0;
+            border-left-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .main-content {
+            padding: 30px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .user-info {
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <strong>EIR</strong> - Sistema de Inspección de Daños
+            </span>
+            <div class="user-info">
+                <span>Bienvenido, <?php echo htmlspecialchars($_SESSION['nombre']); ?></span>
+                <a href="logout.php" class="btn btn-sm btn-light ms-3">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <a href="#" class="active">Dashboard</a>
+                <a href="#">Vehículos</a>
+                <a href="#">Daños</a>
+                <a href="#">Reportes</a>
+                <a href="#">Usuarios</a>
+                <a href="#">Configuración</a>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="row">
+                    <div class="col-12">
+                        <h2>Dashboard</h2>
+                        <p class="text-muted">Bienvenido al sistema EIR</p>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Vehículos</h5>
+                                <p class="card-text display-6">0</p>
+                                <a href="#" class="btn btn-sm btn-primary">Ver</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Daños Registrados</h5>
+                                <p class="card-text display-6">0</p>
+                                <a href="#" class="btn btn-sm btn-primary">Ver</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Usuarios</h5>
+                                <p class="card-text display-6">0</p>
+                                <a href="#" class="btn btn-sm btn-primary">Ver</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

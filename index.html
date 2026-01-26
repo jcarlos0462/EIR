@@ -86,17 +86,24 @@
                     <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión - EIR</h5>
                 </div>
                 <div class="modal-body">
-                    <form id="loginForm">
+                    <?php
+                    session_start();
+                    if (isset($_SESSION['error'])) {
+                        echo '<div class="alert alert-danger">' . htmlspecialchars($_SESSION['error']) . '</div>';
+                        unset($_SESSION['error']);
+                    }
+                    ?>
+                    <form action="validar_login.php" method="POST">
                         <div class="mb-3">
                             <label for="usuario" class="form-label">Usuario</label>
-                            <input type="text" class="form-control" id="usuario" placeholder="Ingrese su usuario" required>
+                            <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Ingrese su usuario" required>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" id="password" placeholder="Ingrese su contraseña" required>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese su contraseña" required>
                         </div>
                         <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="recuerdame">
+                            <input class="form-check-input" type="checkbox" id="recuerdame" name="recuerdame">
                             <label class="form-check-label" for="recuerdame">
                                 Recuérdame
                             </label>
@@ -116,14 +123,6 @@
             e.preventDefault();
             const usuario = document.getElementById('usuario').value;
             const password = document.getElementById('password').value;
-            
-            // Aquí irá la validación con el servidor
-            console.log('Usuario:', usuario);
-            console.log('Contraseña:', password);
-            
-            alert('Login enviado\nUsuario: ' + usuario);
-            // Después de validar, redirigir a la página principal
-            // window.location.href = 'dashboard.php';
         });
 
 
