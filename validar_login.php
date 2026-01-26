@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['usuario'] = $row['Usuario'];
             $_SESSION['logueado'] = true;
             
-            header("Location: index.html");
+            header("Location: Administrar.php");
             exit();
         } else {
             $_SESSION['error'] = "Usuario o contraseña incorrectos";
