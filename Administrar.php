@@ -80,10 +80,7 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 sidebar">
                 <a href="#" class="active">Dashboard</a>
-                <a href="#">Vehículos</a>
-                <a href="#">Daños</a>
-                <a href="#">Reportes</a>
-                <a href="#">Usuarios</a>
+                        <a href="listar_vehiculos.php">Vehículos</a>
                 <a href="#">Configuración</a>
             </div>
 
