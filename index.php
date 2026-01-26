@@ -6,7 +6,7 @@ session_start();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EIR - Sistema de Inspección de Daños en Vehículos</title>
+    <title>EIR - Iniciar Sesión</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -17,103 +17,102 @@ session_start();
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .container-login {
-            max-width: 500px;
+        .login-box {
+            max-width: 450px;
             width: 100%;
+            padding: 15px;
         }
-        .modal-content {
+        .card {
             border: none;
             border-radius: 15px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
-        .modal-header {
+        .card-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 15px 15px 0 0;
+            padding: 25px;
+            text-align: center;
         }
-        .modal-title {
+        .card-header h3 {
+            margin: 0;
             font-weight: 700;
             font-size: 24px;
         }
-        .btn-close {
-            filter: brightness(0) invert(1);
+        .card-body {
+            padding: 30px;
         }
         .form-control {
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 12px 15px;
             border: 2px solid #e0e0e0;
             transition: all 0.3s;
         }
         .form-control:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
         }
         .btn-login {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 8px;
             font-weight: 600;
-            transition: transform 0.2s;
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         .btn-login:hover {
             transform: translateY(-2px);
             color: white;
             background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-        .text-center a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .text-center a:hover {
-            text-decoration: underline;
-        }
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.5);
+        .alert {
+            border-radius: 8px;
+            border: none;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <!-- Modal de Inicio de Sesión -->
-    <div class="modal fade show" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="false" style="display: flex;">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión - EIR</h5>
-                </div>
-                <div class="modal-body">
-                    <?php
-                    if (isset($_SESSION['error'])) {
-                        echo '<div class="alert alert-danger">' . htmlspecialchars($_SESSION['error']) . '</div>';
-                        unset($_SESSION['error']);
-                    }
-                    ?>
-                    <form action="validar_login.php" method="POST">
-                        <div class="mb-3">
-                            <label for="usuario" class="form-label">Usuario</label>
-                            <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Ingrese su usuario" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese su contraseña" required>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="recuerdame" name="recuerdame">
-                            <label class="form-check-label" for="recuerdame">
-                                Recuérdame
-                            </label>
-                        </div>
-                        <button type="submit" class="btn btn-login w-100 text-white mb-3">Iniciar Sesión</button>
-                    </form>
-
-                </div>
+    <div class="login-box">
+        <div class="card">
+            <div class="card-header">
+                <h3>Iniciar Sesión - EIR</h3>
+            </div>
+            <div class="card-body">
+                <?php 
+                if (isset($_SESSION['error']) && !empty($_SESSION['error'])): 
+                    $error = $_SESSION['error'];
+                    unset($_SESSION['error']);
+                ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                
+                <form action="validar_login.php" method="POST">
+                    <div class="mb-3">
+                        <label for="usuario" class="form-label">Usuario</label>
+                        <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Ingrese su usuario" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese su contraseña" required>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="recuerdame" name="recuerdame">
+                        <label class="form-check-label" for="recuerdame">
+                            Recuérdame
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-login w-100">Iniciar Sesión</button>
+                </form>
             </div>
         </div>
     </div>
