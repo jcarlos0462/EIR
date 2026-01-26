@@ -1,0 +1,17 @@
+-- Crear base de datos
+CREATE DATABASE IF NOT EXISTS EIR;
+USE EIR;
+
+-- Tabla vehículo
+CREATE TABLE IF NOT EXISTS vehiculo (
+    ID INT(10) PRIMARY KEY AUTO_INCREMENT,
+    Buque VARCHAR(25) NOT NULL,
+    Viaje VARCHAR(25) NOT NULL,
+    VIN VARCHAR(50) NOT NULL UNIQUE,
+    Marca VARCHAR(20) NOT NULL,
+    Modelo VARCHAR(15) NOT NULL,
+    Color VARCHAR(20),
+    Año VARCHAR(10),
+    Puerto VARCHAR(30),
+    Terminal VARCHAR(20)
+);
