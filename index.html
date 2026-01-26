@@ -1,9 +1,5 @@
 <?php
 session_start();
-$error = isset($_SESSION['error']) ? $_SESSION['error'] : null;
-if (isset($_SESSION['error'])) {
-    unset($_SESSION['error']);
-}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -24,6 +20,7 @@ if (isset($_SESSION['error'])) {
         .login-box {
             max-width: 450px;
             width: 100%;
+            padding: 15px;
         }
         .card {
             border: none;
@@ -74,6 +71,7 @@ if (isset($_SESSION['error'])) {
         .alert {
             border-radius: 8px;
             border: none;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -84,7 +82,11 @@ if (isset($_SESSION['error'])) {
                 <h3>Iniciar Sesión - EIR</h3>
             </div>
             <div class="card-body">
-                <?php if ($error): ?>
+                <?php 
+                if (isset($_SESSION['error'])): 
+                    $error = $_SESSION['error'];
+                    unset($_SESSION['error']);
+                ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <?php echo htmlspecialchars($error); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
