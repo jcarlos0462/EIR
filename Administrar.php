@@ -59,6 +59,25 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
             color: white;
             font-size: 14px;
         }
+        @media (max-width: 768px) {
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+                min-height: auto;
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .sidebar a {
+                flex: 1 1 auto;
+                min-width: 100px;
+                text-align: center;
+                border-left: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .main-content {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -80,7 +99,10 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 sidebar">
                 <a href="#" class="active">Dashboard</a>
-                        <a href="listar_vehiculos.php">Vehículos</a>
+                <a href="listar_vehiculos.php">Vehículos</a>
+                <a href="#">Daños</a>
+                <a href="#">Reportes</a>
+                <a href="gestionar_usuarios.php">Usuarios</a>
                 <a href="#">Configuración</a>
             </div>
 
@@ -94,16 +116,16 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
                 </div>
 
                 <div class="row mt-4">
-                    <div class="col-md-4">
+                    <div class="col-md-6 col-lg-4 mb-3">
                         <div class="card text-center">
                             <div class="card-body">
                                 <h5 class="card-title">Vehículos</h5>
                                 <p class="card-text display-6">0</p>
-                                <a href="#" class="btn btn-sm btn-primary">Ver</a>
+                                <a href="listar_vehiculos.php" class="btn btn-sm btn-primary">Ver</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6 col-lg-4 mb-3">
                         <div class="card text-center">
                             <div class="card-body">
                                 <h5 class="card-title">Daños Registrados</h5>
@@ -112,12 +134,12 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6 col-lg-4 mb-3">
                         <div class="card text-center">
                             <div class="card-body">
                                 <h5 class="card-title">Usuarios</h5>
                                 <p class="card-text display-6">0</p>
-                                <a href="#" class="btn btn-sm btn-primary">Ver</a>
+                                <a href="gestionar_usuarios.php" class="btn btn-sm btn-primary">Ver</a>
                             </div>
                         </div>
                     </div>

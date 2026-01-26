@@ -35,9 +35,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
         
-        // Verificar la contraseña (usando password_verify si está hasheada)
-        // Si no está hasheada, comparar directamente
-        if ($password === $row['Contraseña']) {
+        // Verificar la contraseña usando password_verify
+        if (password_verify($password, $row['Contraseña'])) {
             // Contraseña correcta
             $_SESSION['id'] = $row['ID'];
             $_SESSION['nombre'] = $row['Nombre'];
