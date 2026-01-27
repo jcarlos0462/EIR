@@ -3,7 +3,7 @@ session_start();
 
 // Verificar si el usuario está logueado
 if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
-    header("Location: index.html");
+    header("Location: index.php");
     exit();
 }
 ?>
@@ -103,7 +103,7 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
                 <a href="#">Daños</a>
                 <a href="#">Reportes</a>
                 <a href="gestionar_usuarios.php">Usuarios</a>
-                <a href="#">Configuración</a>
+                <a href="configuracion.php">Configuración</a>
             </div>
 
             <!-- Main Content -->
