@@ -162,8 +162,7 @@ if (isset($_GET['editar'])) {
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
+                            <tr>                        
                                 <th>Buque</th>
                                 <th>Viaje</th>
                                 <th>VIN</th>
@@ -179,8 +178,7 @@ if (isset($_GET['editar'])) {
                         <tbody>
                             <?php if ($result->num_rows > 0): ?>
                                 <?php while ($row = $result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($row['ID']); ?></td>
+                                    <tr >                                      
                                         <td><?php echo htmlspecialchars($row['Buque']); ?></td>
                                         <td><?php echo htmlspecialchars($row['Viaje']); ?></td>
                                         <td><?php echo htmlspecialchars($row['VIN']); ?></td>
