@@ -1,6 +1,6 @@
 <?php
 // Incluir archivo de conexión a base de datos
-include 'database_connection.php';
+require_once __DIR__ . '/../database_connection.php';
 
 // Crear tabla de roles si no existe
 $sql_roles = "CREATE TABLE IF NOT EXISTS roles (
