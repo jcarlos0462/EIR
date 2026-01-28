@@ -1,6 +1,10 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+<?php
 session_start();
-
+?>
 // Verificar si el usuario está logueado
 if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
     header("Location: index.php");
