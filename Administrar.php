@@ -102,7 +102,6 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
                 <a href="listar_vehiculos.php">Vehículos</a>
                 <a href="#">Daños</a>
                 <a href="#">Reportes</a>
-                <a href="gestionar_usuarios.php">Usuarios</a>
                 <a href="configuracion.php">Configuración</a>
             </div>
 

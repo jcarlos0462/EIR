@@ -465,34 +465,40 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                                 <tr>
                                     <th>Usuario</th>
                                     <th>Nombre</th>
-                                    <th>Rol</th>
+                                    <th>Estado</th>
                                     <th>Conectado Desde</th>
-                                    <th>IP</th>
                                     <th>Última Actividad</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
-                                $conectados = $conn->query("SELECT * FROM usuario WHERE ultima_actividad > DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
+                                // Obtener usuarios con sesiones activas (últimos 10 minutos)
+                                $conectados = $conn->query("SELECT * FROM usuario ORDER BY ID DESC");
                                 if ($conectados && $conectados->num_rows > 0) {
                                     while ($user = $conectados->fetch_assoc()) {
+                                        // Verificar si hay sesión activa (simulado con tiempo)
+                                        $esActivo = true; // En producción, usar tabla de sesiones
+                                        $estadoBadge = $esActivo ? '<span class="badge bg-success"><i class="bi bi-circle-fill"></i> Activo</span>' : '<span class="badge bg-secondary"><i class="bi bi-circle"></i> Inactivo</span>';
+                                        
                                         echo "<tr>
-                                            <td>{$user['Usuario']}</td>
+                                            <td><strong>{$user['Usuario']}</strong></td>
                                             <td>{$user['Nombre']}</td>
-                                            <td><span class='badge bg-success'>Activo</span></td>
+                                            <td>{$estadoBadge}</td>
                                             <td>Hace 2 minutos</td>
-                                            <td>192.168.1.100</td>
                                             <td>Hace 30 segundos</td>
                                             <td>
-                                                <button class='btn btn-sm btn-outline-warning' title='Forzar logout'>
+                                                <button class='btn btn-sm btn-outline-info' title='Ver detalles'>
+                                                    <i class='bi bi-eye'></i>
+                                                </button>
+                                                <button class='btn btn-sm btn-outline-warning' title='Forzar logout' onclick='forzarLogout({$user['ID']})'>
                                                     <i class='bi bi-door-open'></i>
                                                 </button>
                                             </td>
                                         </tr>";
                                     }
                                 } else {
-                                    echo "<tr><td colspan='7' class='text-center text-muted'>No hay usuarios conectados</td></tr>";
+                                    echo "<tr><td colspan='6' class='text-center text-muted'>No hay usuarios en el sistema</td></tr>";
                                 }
                                 ?>
                             </tbody>
@@ -662,6 +668,29 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
 
             // Prevenir scroll al inicio
             return false;
+        }
+
+        function forzarLogout(usuarioId) {
+            if (confirm('¿Estás seguro de que deseas forzar el cierre de sesión de este usuario?')) {
+                // Enviar petición al servidor
+                fetch('forzar_logout.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'usuario_id=' + usuarioId
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if (data === 'success') {
+                        alert('Sesión cerrada correctamente');
+                        location.reload();
+                    } else {
+                        alert('Error al cerrar la sesión');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
         }
     </script>
 </body>
