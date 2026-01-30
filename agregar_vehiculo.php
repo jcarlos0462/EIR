@@ -99,8 +99,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
     <?php include 'navbar.php'; ?>
 
-    <div class="main-content">
-        <div class="row mb-4">
+    <div class="container-fluid">
+        <div class="row">
+            <?php include 'sidebar.php'; ?>
+            <div class="col-md-9 col-lg-10 main-content">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
                     <h2>Agregar Nuevo Vehículo</h2>

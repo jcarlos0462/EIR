@@ -207,18 +207,7 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
     <div class="container-fluid">
         <div class="row" style="min-height: 100vh;">
             <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 sidebar">
-                <h5><i class="bi bi-gear"></i> CONFIGURACIÓN</h5>
-                <a href="#" onclick="mostrarSeccion('estadisticas')" class="nav-link active">
-                    <i class="bi bi-graph-up"></i> Estadísticas
-                </a>
-                <a href="#" onclick="mostrarSeccion('usuarios')" class="nav-link">
-                    <i class="bi bi-people"></i> Gestión de Usuarios
-                </a>
-                <a href="#" onclick="mostrarSeccion('accesos')" class="nav-link">
-                    <i class="bi bi-shield-lock"></i> Administrar Accesos
-                </a>
-                <a href="#" onclick="mostrarSeccion('conectados')" class="nav-link">
+            <?php include 'sidebar.php'; ?>
                     <i class="bi bi-person-check"></i> Usuarios Conectados
                 </a>
                 <a href="#" onclick="mostrarSeccion('roles')" class="nav-link">

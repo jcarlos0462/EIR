@@ -123,8 +123,10 @@ if (isset($_GET['editar'])) {
 <body>
     <?php include 'navbar.php'; ?>
 
-    <div class="main-content">
-        <div class="row mb-4">
+    <div class="container-fluid">
+        <div class="row">
+            <?php include 'sidebar.php'; ?>
+            <div class="col-md-9 col-lg-10 main-content">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
                     <h2>Lista de Vehículos</h2>
