@@ -208,16 +208,9 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
         <div class="row" style="min-height: 100vh;">
             <!-- Sidebar -->
             <?php include 'sidebar.php'; ?>
-                    <i class="bi bi-person-check"></i> Usuarios Conectados
-                </a>
-                <a href="#" onclick="mostrarSeccion('roles')" class="nav-link">
-                    <i class="bi bi-shield-badge"></i> Administrar Roles
-                </a>
-                <hr style="opacity: 0.2;">
-                <a href="Administrar.php" class="nav-link">
-                    <i class="bi bi-arrow-left"></i> Volver al Dashboard
-                </a>
-            </div>
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Todo el contenido de configuración, gestión de usuarios, accesos, roles, etc. está aquí -->
+                ...existing code...
 
             <!-- Contenido Principal -->
             <div class="col-md-9 col-lg-10" style="padding: 25px;">

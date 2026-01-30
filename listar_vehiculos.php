@@ -127,27 +127,24 @@ if (isset($_GET['editar'])) {
         <div class="row">
             <?php include 'sidebar.php'; ?>
             <div class="col-md-9 col-lg-10 main-content">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Lista de Vehículos</h2>
                     <div>
                         <a href="agregar_vehiculo.php" class="btn btn-primary">Agregar Vehículo</a>
                         <a href="Administrar.php" class="btn btn-secondary ms-2">Volver</a>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <?php if (isset($_GET['exito'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?php echo $_GET['exito'] == 2 ? 'Vehículo eliminado exitosamente' : 'Vehículo actualizado exitosamente'; ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
+                <?php if (isset($_GET['exito'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?php echo $_GET['exito'] == 2 ? 'Vehículo eliminado exitosamente' : 'Vehículo actualizado exitosamente'; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
 
-        <div class="card">
-            <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>                        
