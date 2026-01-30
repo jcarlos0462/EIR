@@ -125,7 +125,9 @@ if (isset($_GET['editar'])) {
 
     <div class="container-fluid">
         <div class="row">
-            <?php include 'sidebar.php'; ?>
+            <div class="col-md-3 col-lg-2">
+                <?php include 'sidebar.php'; ?>
+            </div>
             <div class="col-md-9 col-lg-10 main-content">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Lista de Vehículos</h2>
