@@ -81,13 +81,10 @@ if (isset($_GET['editar'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Vehículos - EIR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="navbar_styles.css">
     <style>
         body {
             background-color: #f5f5f5;
-        }
-        .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         .main-content {
             padding: 30px;
@@ -124,18 +121,7 @@ if (isset($_GET['editar'])) {
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-dark">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">
-                <strong>EIR</strong> - Sistema de Inspección de Daños
-            </span>
-            <div class="user-info">
-                <span>Bienvenido, <?php echo htmlspecialchars($_SESSION['nombre']); ?></span>
-                <a href="logout.php" class="btn btn-sm btn-light ms-3">Cerrar Sesión</a>
-            </div>
-        </div>
-    </nav>
+    <?php include 'navbar.php'; ?>
 
     <div class="main-content">
         <div class="row mb-4">
