@@ -1,4 +1,4 @@
-/* Sidebar Styles - Formato Configuración */
+/* Sidebar Styles - Mejor contraste y formato */
 .sidebar {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     color: #fff !important;
@@ -11,22 +11,33 @@
     margin-bottom: 30px;
     border-bottom: 2px solid rgba(255,255,255,0.2);
     padding-bottom: 15px;
+    color: #fff;
+    opacity: 0.95;
+    letter-spacing: 1px;
 }
 .sidebar-link {
     display: block;
     padding: 12px 20px;
-    color: #fff !important;
+    color: rgba(255,255,255,0.85) !important;
     text-decoration: none;
     transition: all 0.3s;
     border-radius: 8px;
     font-size: 1.1rem;
     margin-bottom: 8px;
+    font-weight: 500;
 }
-.sidebar-link:hover, .sidebar-link.active {
-    background-color: rgba(255,255,255,0.2) !important;
+.sidebar-link:hover {
+    background-color: rgba(255,255,255,0.18) !important;
     color: #fff !important;
     font-weight: 600;
     padding-left: 25px;
+}
+.sidebar-link.active, .sidebar-link[aria-current="page"] {
+    background-color: rgba(255,255,255,0.35) !important;
+    color: #fff !important;
+    font-weight: 700;
+    padding-left: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 /* Navbar Styles */
 .navbar {
