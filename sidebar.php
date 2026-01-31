@@ -6,7 +6,7 @@ function active_link($file) {
 }
 ?>
 <!-- Sidebar -->
-<div class="sidebar d-flex flex-column p-3">
+<div class="sidebar d-flex flex-column p-3 h-100" style="width: 220px; min-width: 180px; max-width: 260px;">
     <h5 class="fw-bold mb-4 pb-2 border-bottom"><i class="bi bi-gear"></i> MENÚ</h5>
     <a href="Administrar.php" class="sidebar-link mb-2 <?php echo active_link('Administrar.php'); ?>">Dashboard</a>
     <a href="listar_vehiculos.php" class="sidebar-link mb-2 <?php echo active_link('listar_vehiculos.php'); ?>">Vehículos</a>
