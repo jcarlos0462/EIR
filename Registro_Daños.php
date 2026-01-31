@@ -99,76 +99,105 @@ $severidades = $conn->query("SELECT CodSeveridadDano FROM severidaddano ORDER BY
 </head>
 <body>
 <?php include 'navbar.php'; ?>
-<div class="main-box p-3 bg-white">
-    <form method="post" class="mb-3 d-flex flex-column gap-2">
-        <label class="label">VIN</label>
-        <input type="text" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin); ?>" required>
-        <button type="submit" name="buscar_vin" class="btn">Buscar</button>
-    </form>
-    <?php if ($errores): ?>
-        <div class="alert alert-danger py-2"><?php echo implode('<br>', $errores); ?></div>
-    <?php endif; ?>
-    <?php if ($marca): ?>
-        <div class="mb-2">
-            <div class="label">Marca</div>
-            <div><?php echo htmlspecialchars($marca); ?></div>
-            <div class="label">Modelo</div>
-            <div><?php echo htmlspecialchars($modelo); ?></div>
-            <div class="label">Color</div>
-            <div><?php echo htmlspecialchars($color); ?></div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-lg-2">
+            <?php include 'sidebar.php'; ?>
         </div>
-        <div class="table-section">
-            <table class="table table-bordered table-sm mb-2">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Área</th>
-                        <th>Tipo</th>
-                        <th>Severidad</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if ($danios): foreach ($danios as $d): ?>
-                    <tr>
-                        <td><?php echo $d['CodAreaDano']; ?></td>
-                        <td><?php echo $d['CodTipoDano']; ?></td>
-                        <td><?php echo $d['CodSeveridadDano']; ?></td>
-                    </tr>
-                <?php endforeach; else: ?>
-                    <tr><td colspan="3" class="text-center">Sin daños registrados</td></tr>
+        <div class="col-md-9 col-lg-10 main-content">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <form method="post" class="d-flex flex-row gap-2 align-items-end">
+                        <div>
+                            <label class="label">VIN</label>
+                            <input type="text" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin); ?>" required>
+                        </div>
+                        <div>
+                            <button type="submit" name="buscar_vin" class="btn">Buscar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <?php if ($errores): ?>
+                <div class="alert alert-danger py-2"><?php echo implode('<br>', $errores); ?></div>
+            <?php endif; ?>
+            <?php if ($marca): ?>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="label">Marca</div>
+                        <div><?php echo htmlspecialchars($marca); ?></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="label">Modelo</div>
+                        <div><?php echo htmlspecialchars($modelo); ?></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="label">Color</div>
+                        <div><?php echo htmlspecialchars($color); ?></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <table class="table table-bordered table-sm mb-2">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Área</th>
+                                    <th>Tipo</th>
+                                    <th>Severidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <?php if ($danios): foreach ($danios as $d): ?>
+                                <tr>
+                                    <td><?php echo $d['CodAreaDano']; ?></td>
+                                    <td><?php echo $d['CodTipoDano']; ?></td>
+                                    <td><?php echo $d['CodSeveridadDano']; ?></td>
+                                </tr>
+                            <?php endforeach; else: ?>
+                                <tr><td colspan="3" class="text-center">Sin daños registrados</td></tr>
+                            <?php endif; ?>
+                            </tbody>
+                        </table>
+                        <form method="post" class="d-inline">
+                            <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                            <button type="submit" name="show_form" class="btn btn-primary">Agregar Daño</button>
+                        </form>
+                    </div>
+                </div>
+                <?php if (isset($_POST['show_form']) || $show_form): ?>
+                <div class="row mt-4">
+                    <div class="col-md-6 col-lg-5">
+                        <div class="card p-3">
+                            <form method="post" class="d-flex flex-column gap-2">
+                                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                <label class="label">Área de Daño</label>
+                                <select name="area" class="form-control" required>
+                                    <option value="">Seleccione</option>
+                                    <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'">'.$a['CodAreaDano'].'</option>'; ?>
+                                </select>
+                                <label class="label">Tipo de Daño</label>
+                                <select name="tipo" class="form-control" required>
+                                    <option value="">Seleccione</option>
+                                    <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['CodTipoDano'].'</option>'; ?>
+                                </select>
+                                <label class="label">Severidad</label>
+                                <select name="severidad" class="form-control" required>
+                                    <option value="">Seleccione</option>
+                                    <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['CodSeveridadDano'].'</option>'; ?>
+                                </select>
+                                <button type="submit" name="guardar_danio" class="btn btn-success">Guardar</button>
+                            </form>
+                            <form method="post" class="mt-2">
+                                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                <button type="submit" name="buscar_vin" class="btn btn-secondary">Regresar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 <?php endif; ?>
-                </tbody>
-            </table>
-            <form method="post">
-                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                <button type="submit" name="show_form" class="btn btn-add">Daño</button>
-            </form>
+            <?php endif; ?>
         </div>
-        <div class="form-section">
-            <form method="post" class="d-flex flex-column gap-2">
-                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                <label class="label">Área de Daño</label>
-                <select name="area" class="form-control" required>
-                    <option value="">Seleccione</option>
-                    <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'">'.$a['CodAreaDano'].'</option>'; ?>
-                </select>
-                <label class="label">Tipo de Daño</label>
-                <select name="tipo" class="form-control" required>
-                    <option value="">Seleccione</option>
-                    <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['CodTipoDano'].'</option>'; ?>
-                </select>
-                <label class="label">Severidad</label>
-                <select name="severidad" class="form-control" required>
-                    <option value="">Seleccione</option>
-                    <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['CodSeveridadDano'].'</option>'; ?>
-                </select>
-                <button type="submit" name="guardar_danio" class="btn">Guardar</button>
-            </form>
-            <form method="post">
-                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                <button type="submit" name="buscar_vin" class="btn btn-back">Regresar</button>
-            </form>
-        </div>
-    <?php endif; ?>
+    </div>
 </div>
 </body>
 </html>
