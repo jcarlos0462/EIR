@@ -18,7 +18,7 @@ if (isset($_POST['buscar_vin'])) {
     if ($stmt->fetch()) {
         // Buscar daños registrados
         $stmt->close();
-        $sql = "SELECT ID, AreaID, TipoID, SeveridadID FROM RegistroDanio WHERE VIN = ? ORDER BY ID DESC";
+        $sql = "SELECT ID, CodAreaDano, CodTipoDano, CodSeveridadDano FROM RegistroDanio WHERE VIN = ? ORDER BY ID DESC";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param('s', $vin);
         $stmt->execute();
@@ -39,7 +39,7 @@ if (isset($_POST['guardar_danio'])) {
     $tipo = intval($_POST['tipo']);
     $severidad = intval($_POST['severidad']);
     if ($vin && $area && $tipo && $severidad) {
-        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, AreaID, TipoID, SeveridadID) VALUES (?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano) VALUES (?, ?, ?, ?)");
         $stmt->bind_param('siii', $vin, $area, $tipo, $severidad);
         if ($stmt->execute()) {
             $show_form = false;
@@ -58,7 +58,7 @@ if (isset($_POST['guardar_danio'])) {
     $stmt->bind_result($marca, $modelo, $color);
     $stmt->fetch();
     $stmt->close();
-    $sql = "SELECT ID, AreaID, TipoID, SeveridadID FROM RegistroDanio WHERE VIN = ? ORDER BY ID DESC";
+    $sql = "SELECT ID, CodAreaDano, CodTipoDano, CodSeveridadDano FROM RegistroDanio WHERE VIN = ? ORDER BY ID DESC";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('s', $vin);
     $stmt->execute();
@@ -71,9 +71,9 @@ if (isset($_POST['guardar_danio'])) {
 }
 
 // Cargar listas para selects
-$areas = $conn->query("SELECT ID FROM areadano ORDER BY ID");
-$tipos = $conn->query("SELECT ID FROM tipodano ORDER BY ID");
-$severidades = $conn->query("SELECT ID FROM severidaddano ORDER BY ID");
+$areas = $conn->query("SELECT CodAreaDano FROM areadano ORDER BY CodAreaDano");
+$tipos = $conn->query("SELECT CodTipoDano FROM tipodano ORDER BY CodTipoDano");
+$severidades = $conn->query("SELECT CodSeveridadDano FROM severidaddano ORDER BY CodSeveridadDano");
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -129,9 +129,9 @@ $severidades = $conn->query("SELECT ID FROM severidaddano ORDER BY ID");
                 <tbody>
                 <?php if ($danios): foreach ($danios as $d): ?>
                     <tr>
-                        <td><?php echo $d['AreaID']; ?></td>
-                        <td><?php echo $d['TipoID']; ?></td>
-                        <td><?php echo $d['SeveridadID']; ?></td>
+                        <td><?php echo $d['CodAreaDano']; ?></td>
+                        <td><?php echo $d['CodTipoDano']; ?></td>
+                        <td><?php echo $d['CodSeveridadDano']; ?></td>
                     </tr>
                 <?php endforeach; else: ?>
                     <tr><td colspan="3" class="text-center">Sin daños registrados</td></tr>
@@ -149,17 +149,17 @@ $severidades = $conn->query("SELECT ID FROM severidaddano ORDER BY ID");
                 <label class="label">Área de Daño</label>
                 <select name="area" class="form-control" required>
                     <option value="">Seleccione</option>
-                    <?php foreach ($areas as $a) echo '<option value="'.$a['ID'].'">'.$a['ID'].'</option>'; ?>
+                    <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'">'.$a['CodAreaDano'].'</option>'; ?>
                 </select>
                 <label class="label">Tipo de Daño</label>
                 <select name="tipo" class="form-control" required>
                     <option value="">Seleccione</option>
-                    <?php foreach ($tipos as $t) echo '<option value="'.$t['ID'].'">'.$t['ID'].'</option>'; ?>
+                    <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['CodTipoDano'].'</option>'; ?>
                 </select>
                 <label class="label">Severidad</label>
                 <select name="severidad" class="form-control" required>
                     <option value="">Seleccione</option>
-                    <?php foreach ($severidades as $s) echo '<option value="'.$s['ID'].'">'.$s['ID'].'</option>'; ?>
+                    <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['CodSeveridadDano'].'</option>'; ?>
                 </select>
                 <button type="submit" name="guardar_danio" class="btn">Guardar</button>
             </form>
