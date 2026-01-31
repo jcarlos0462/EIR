@@ -1,3 +1,33 @@
+/* Sidebar Styles - Formato Configuración */
+.sidebar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #fff !important;
+    min-height: 100vh;
+    padding-top: 30px;
+    border-right: none;
+}
+.sidebar h5 {
+    font-weight: 700;
+    margin-bottom: 30px;
+    border-bottom: 2px solid rgba(255,255,255,0.2);
+    padding-bottom: 15px;
+}
+.sidebar-link {
+    display: block;
+    padding: 12px 20px;
+    color: #fff !important;
+    text-decoration: none;
+    transition: all 0.3s;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+.sidebar-link:hover, .sidebar-link.active {
+    background-color: rgba(255,255,255,0.2) !important;
+    color: #fff !important;
+    font-weight: 600;
+    padding-left: 25px;
+}
 /* Navbar Styles */
 .navbar {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
