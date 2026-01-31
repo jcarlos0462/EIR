@@ -10,7 +10,7 @@ function active_link($file) {
     <h5 class="fw-bold mb-4 pb-2 border-bottom"><i class="bi bi-gear"></i> MENÚ</h5>
     <a href="Administrar.php" class="sidebar-link mb-2 <?php echo active_link('Administrar.php'); ?>">Dashboard</a>
     <a href="listar_vehiculos.php" class="sidebar-link mb-2 <?php echo active_link('listar_vehiculos.php'); ?>">Vehículos</a>
-    <a href="#" class="sidebar-link mb-2">Daños</a>
+    <a href="Registro_Daños.php" class="sidebar-link mb-2 <?php echo active_link('Registro_Daños.php'); ?>">Daños</a>
     <a href="#" class="sidebar-link mb-2">Reportes</a>
     <a href="configuracion.php" class="sidebar-link mb-2 <?php echo active_link('configuracion.php'); ?>">Configuración</a>
 </div>
