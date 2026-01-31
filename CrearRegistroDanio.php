@@ -2,7 +2,7 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-include '../database_connection.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/database_connection.php';
 
 $sql = "CREATE TABLE IF NOT EXISTS RegistroDanio (
     ID INT AUTO_INCREMENT PRIMARY KEY,
