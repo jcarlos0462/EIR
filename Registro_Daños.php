@@ -125,6 +125,13 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
     <link rel="stylesheet" href="navbar_styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
+                        .qr-help {
+                            text-align: center;
+                            color: #426dc9;
+                            font-size: 1.1rem;
+                            margin-bottom: 1rem;
+                            font-weight: 500;
+                        }
                 .vehiculo-card {
                     background: #fff;
                     border-radius: 18px;
@@ -353,6 +360,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                             <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body">
+                            <div class="qr-help" id="qr-help-msg">Apunta la cámara al código QR del VIN</div>
                             <div id="qr-reader" style="width:100%; min-height:300px;"></div>
                         </div>
                     </div>
@@ -545,21 +553,36 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
     }
 
     function iniciarQR() {
-        qrScanner = new Html5Qrcode("qr-reader");
-        qrScanner.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: 250 },
-            qrCodeMessage => {
-                document.getElementById('vinInput').value = qrCodeMessage;
-                bootstrap.Modal.getInstance(document.getElementById('modalQR')).hide();
-                qrScanner.stop();
-                // Enviar el formulario automáticamente al escanear
-                setTimeout(function() {
-                    document.querySelector('form input[name="vin"]').form.submit();
-                }, 300);
-            },
-            errorMessage => {}
-        ).catch(err => {});
+        // Forzar destrucción previa
+        if (window.qrScannerInstance) {
+            try { window.qrScannerInstance.clear(); } catch(e){}
+            window.qrScannerInstance = null;
+        }
+        document.getElementById('qr-help-msg').style.display = 'block';
+        try {
+            qrScanner = new Html5Qrcode("qr-reader");
+            window.qrScannerInstance = qrScanner;
+            qrScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                qrCodeMessage => {
+                    document.getElementById('vinInput').value = qrCodeMessage;
+                    bootstrap.Modal.getInstance(document.getElementById('modalQR')).hide();
+                    qrScanner.stop();
+                    // Enviar el formulario automáticamente al escanear
+                    setTimeout(function() {
+                        document.querySelector('form input[name="vin"]').form.submit();
+                    }, 300);
+                },
+                errorMessage => {}
+            ).then(() => {
+                document.getElementById('qr-help-msg').style.display = 'none';
+            }).catch(err => {
+                document.getElementById('qr-help-msg').innerText = 'No se pudo acceder a la cámara. Permite el acceso o revisa tu dispositivo.';
+            });
+        } catch (e) {
+            document.getElementById('qr-help-msg').innerText = 'No se pudo inicializar la cámara.';
+        }
     }
 
     // Limpiar QR al cerrar modal
