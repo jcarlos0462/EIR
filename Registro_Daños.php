@@ -517,12 +517,17 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
     <script>
     // Abrir modal QR
     let qrScanner;
+
+    // Mostrar el modal QR
     document.getElementById('btnScanQR').addEventListener('click', function() {
-        // Limpiar el contenedor del QR para evitar overlays
         document.getElementById('qr-reader').innerHTML = '';
         var qrModal = new bootstrap.Modal(document.getElementById('modalQR'));
         qrModal.show();
-        setTimeout(startQRScanner, 400);
+    });
+
+    // Iniciar el escáner QR cuando el modal esté completamente visible
+    document.getElementById('modalQR').addEventListener('shown.bs.modal', function () {
+        startQRScanner();
     });
 
     function startQRScanner() {
