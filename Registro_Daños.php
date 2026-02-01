@@ -115,7 +115,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
         <div class="col-md-3 col-lg-2">
             <?php include 'sidebar.php'; ?>
         </div>
-        <br>
+</br>
         <div class="col-md-9 col-lg-10 main-content">
             <div class="row mb-4">
                 <div class="col-12">
@@ -147,6 +147,8 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                         <div class="label">Color</div>
                         <div><?php echo htmlspecialchars($color); ?></div>
                     </div>
+                    <!-- Botón para abrir el modal -->
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalDanio">Agregar Daño</button>
                 </div>
                 <div class="row">
                     <div class="col-12">
@@ -170,8 +172,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                             <?php endif; ?>
                             </tbody>
                         </table>
-                        <!-- Botón para abrir el modal -->
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalDanio">Agregar Daño</button>
+                        
                     </div>
                 </div>
                                 <!-- Modal para registrar daño -->
