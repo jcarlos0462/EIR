@@ -173,210 +173,126 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                     border-radius: 12px;
                     overflow: hidden;
                     background: #f4f7fb;
-                    <div id="dashboard-cards" class="row justify-content-center" style="gap:2rem; margin-bottom:2rem;">
-                        <div class="col-md-3">
-                            <div class="modern-table-card text-center">
-                                <div style="font-size:3rem; color:#426dc9;"><i class="bi bi-truck"></i></div>
-                                <div class="modern-label" style="font-size:1.3rem;">Vehículos</div>
-                                <div style="font-size:2.5rem; font-weight:700; margin:1rem 0;">1</div>
-                                <button class="modern-btn modern-btn-primary w-75" onclick="mostrarSeccion('vehiculos')">Ver</button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="modern-table-card text-center">
-                                <div style="font-size:3rem; color:#426dc9;"><i class="bi bi-exclamation-triangle"></i></div>
-                                <div class="modern-label" style="font-size:1.3rem;">Daños Registrados</div>
-                                <div style="font-size:2.5rem; font-weight:700; margin:1rem 0;"><?php echo count($danios); ?></div>
-                                <button class="modern-btn modern-btn-primary w-75" onclick="mostrarSeccion('danios')">Ver</button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="modern-table-card text-center">
-                                <div style="font-size:3rem; color:#426dc9;"><i class="bi bi-people"></i></div>
-                                <div class="modern-label" style="font-size:1.3rem;">Usuarios</div>
-                                <div style="font-size:2.5rem; font-weight:700; margin:1rem 0;">4</div>
-                                <button class="modern-btn modern-btn-primary w-75" onclick="mostrarSeccion('usuarios')">Ver</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="seccion-danios" style="display:none;">
-                        <button class="modern-btn btn-secondary mb-3" onclick="volverDashboard()"><i class="bi bi-arrow-left"></i> Regresar</button>
-                        <div class="vehiculo-card mb-4">
-                            <div class="vehiculo-info">
-                                <div>
-                                    <div class="vehiculo-label">Marca</div>
-                                    <div class="vehiculo-value"><?php echo htmlspecialchars($marca); ?></div>
-                                </div>
-                                <div>
-                                    <div class="vehiculo-label">Modelo</div>
-                                    <div class="vehiculo-value"><?php echo htmlspecialchars($modelo); ?></div>
-                                </div>
-                                <div>
-                                    <div class="vehiculo-label">Color</div>
-                                    <div class="vehiculo-value"><?php echo htmlspecialchars($color); ?></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modern-table-card">
-                            <div class="mb-3 d-flex justify-content-between align-items-center">
-                                <span class="modern-label mb-0">Daños Registrados</span>
-                                <button type="button" class="modern-btn modern-btn-primary" onclick="mostrarSeccion('registrar-danio')">
-                                    <i class="bi bi-plus-lg"></i> Agregar Daño
-                                </button>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table modern-table mb-2">
-                                    <thead>
-                                        <tr>
-                                            <th>Área</th>
-                                            <th>Tipo</th>
-                                            <th>Severidad</th>
-                                            <th style="width:120px;">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    <?php if (!empty($danios)): foreach ($danios as $d): ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
-                                            <td>
-                                                <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
-                                                    <span class="bi bi-pencil-square"></span>
-                                                </button>
-                                                <form method="post" style="display:inline;">
-                                                    <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
-                                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                                    <button type="submit" name="eliminar_danio" class="modern-btn modern-btn-danger btn-sm" title="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este daño?');">
-                                                        <span class="bi bi-trash-fill"></span>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        <!-- Modal editar daño -->
-                                        <div class="modal fade" id="modalEditarDanio<?php echo $d['ID']; ?>" tabindex="-1" aria-labelledby="modalEditarLabel<?php echo $d['ID']; ?>" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content modern-modal-content">
-                                                    <div class="modal-header modern-modal-header-warning">
-                                                        <h5 class="modal-title" id="modalEditarLabel<?php echo $d['ID']; ?>">Editar Daño</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <form method="post" class="d-flex flex-column gap-3">
-                                                            <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
-                                                            <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                                            <div>
-                                                                <label class="modern-label">Tipo de Daño</label>
-                                                                <select name="tipo" class="form-control modern-input" required>
-                                                                    <option value="">Seleccione</option>
-                                                                    <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'"'.($t['NomTipoDano']==$d['NomTipoDano']?' selected':'').'>'.$t['NomTipoDano'].'</option>'; ?>
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label class="modern-label">Área de Daño</label>
-                                                                <select name="area" class="form-control modern-input" required>
-                                                                    <option value="">Seleccione</option>
-                                                                    <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'"'.($a['NomAreaDano']==$d['NomAreaDano']?' selected':'').'>'.$a['NomAreaDano'].'</option>'; ?>
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label class="modern-label">Severidad</label>
-                                                                <select name="severidad" class="form-control modern-input" required>
-                                                                    <option value="">Seleccione</option>
-                                                                    <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'"'.($s['NomSeveridadDano']==$d['NomSeveridadDano']?' selected':'').'>'.$s['NomSeveridadDano'].'</option>'; ?>
-                                                                </select>
-                                                            </div>
-                                                            <div class="d-grid gap-2 mt-2">
-                                                                <button type="submit" name="editar_danio" class="modern-btn modern-btn-warning">Guardar Cambios</button>
-                                                                <button type="button" class="modern-btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; else: ?>
-                                        <tr><td colspan="4" class="text-center">Sin daños registrados</td></tr>
-                                    <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="seccion-registrar-danio" style="display:none;">
-                        <button class="modern-btn btn-secondary mb-3" onclick="volverDashboard()"><i class="bi bi-arrow-left"></i> Regresar</button>
-                        <div class="modern-table-card">
-                            <h5 class="modern-label">Registrar Daño</h5>
-                            <form method="post" class="d-flex flex-column gap-3">
-                                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                <div>
-                                    <label class="modern-label">Tipo de Daño</label>
-                                    <select name="tipo" class="form-control modern-input" required>
-                                        <option value="">Seleccione</option>
-                                        <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['NomTipoDano'].'</option>'; ?>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="modern-label">Área de Daño</label>
-                                    <select name="area" class="form-control modern-input" required>
-                                        <option value="">Seleccione</option>
-                                        <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'">'.$a['NomAreaDano'].'</option>'; ?>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="modern-label">Severidad</label>
-                                    <select name="severidad" class="form-control modern-input" required>
-                                        <option value="">Seleccione</option>
-                                        <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['NomSeveridadDano'].'</option>'; ?>
-                                    </select>
-                                </div>
-                                <div class="d-grid gap-2 mt-2">
-                                    <button type="submit" name="guardar_danio" class="modern-btn modern-btn-primary">Guardar</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    <div id="seccion-vehiculos" style="display:none;">
-                        <button class="modern-btn btn-secondary mb-3" onclick="volverDashboard()"><i class="bi bi-arrow-left"></i> Regresar</button>
-                        <div class="modern-table-card text-center">
-                            <div style="font-size:2rem; color:#426dc9;"><i class="bi bi-truck"></i></div>
-                            <div class="modern-label" style="font-size:1.3rem;">Gestión de Vehículos</div>
-                            <div class="text-muted">(Aquí puedes mostrar la gestión/listado de vehículos)</div>
-                        </div>
-                    </div>
-                    <div id="seccion-usuarios" style="display:none;">
-                        <button class="modern-btn btn-secondary mb-3" onclick="volverDashboard()"><i class="bi bi-arrow-left"></i> Regresar</button>
-                        <div class="modern-table-card text-center">
-                            <div style="font-size:2rem; color:#426dc9;"><i class="bi bi-people"></i></div>
-                            <div class="modern-label" style="font-size:1.3rem;">Gestión de Usuarios</div>
-                            <div class="text-muted">(Aquí puedes mostrar la gestión/listado de usuarios)</div>
-                        </div>
-                    </div>
-            <script>
-            function mostrarSeccion(seccion) {
-                document.getElementById('dashboard-cards').style.display = 'none';
-                document.getElementById('seccion-danios').style.display = 'none';
-                document.getElementById('seccion-registrar-danio').style.display = 'none';
-                document.getElementById('seccion-vehiculos').style.display = 'none';
-                document.getElementById('seccion-usuarios').style.display = 'none';
-                if (seccion === 'danios') {
-                    document.getElementById('seccion-danios').style.display = 'block';
-                } else if (seccion === 'registrar-danio') {
-                    document.getElementById('seccion-registrar-danio').style.display = 'block';
-                } else if (seccion === 'vehiculos') {
-                    document.getElementById('seccion-vehiculos').style.display = 'block';
-                } else if (seccion === 'usuarios') {
-                    document.getElementById('seccion-usuarios').style.display = 'block';
+                    box-shadow: 0 2px 8px 0 rgba(60,60,120,0.07);
                 }
-            }
-            function volverDashboard() {
-                document.getElementById('dashboard-cards').style.display = 'flex';
-                document.getElementById('seccion-danios').style.display = 'none';
-                document.getElementById('seccion-registrar-danio').style.display = 'none';
-                document.getElementById('seccion-vehiculos').style.display = 'none';
-                document.getElementById('seccion-usuarios').style.display = 'none';
-            }
-            </script>
+                .modern-table thead {
+                    background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+                    color: #fff;
+                    font-size: 1.08rem;
+                    letter-spacing: 0.5px;
+                }
+                .modern-table th, .modern-table td {
+                    vertical-align: middle;
+                    font-size: 1.08rem;
+                }
+                .modern-table th {
+                    border: none;
+                }
+                .modern-table td {
+                    background: #fff;
+                    border-top: 1px solid #e0e6f7;
+                }
+                .modern-table tbody tr:hover {
+                    background: #f0f4ff;
+                    transition: background 0.2s;
+                }
+        body {
+            background: linear-gradient(120deg, #6a82fb 0%, #fc5c7d 100%);
+            min-height: 100vh;
+        }
+        .modern-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
+            padding: 2.5rem 2rem 2rem 2rem;
+            margin: 40px auto 0 auto;
+            max-width: 600px;
+        }
+        .modern-label {
+            font-weight: 700;
+            color: #426dc9;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .modern-input {
+            font-size: 1.4rem;
+            border-radius: 12px;
+            padding: 0.8rem 1.2rem;
+            border: 2px solid #e0e6f7;
+            text-align: center;
+            letter-spacing: 2px;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.04);
+        }
+        .modern-btn {
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0.7rem 1.5rem;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08);
+        }
+        .modern-btn-primary {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
+            border: none;
+        }
+        .modern-btn-primary:hover {
+            background: linear-gradient(90deg, #2d4e8c 60%, #426dc9 100%);
+            color: #fff;
+        }
+        .modern-btn-success {
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+            color: #fff;
+            border: none;
+        }
+        .modern-btn-success:hover {
+            background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+            color: #fff;
+        }
+        .modern-modal-header {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .modern-modal-icon {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+        }
+        .modern-modal-content {
+            border-radius: 18px;
+        }
+        .modern-table-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .modern-table {
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+        .modern-table thead {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
+        }
+        .modern-table th, .modern-table td {
+            vertical-align: middle;
+            font-size: 1.08rem;
+        }
+        .modern-table th {
+            border: none;
+        }
+        .modern-table td {
+            background: #fff;
+            border-top: 1px solid #e0e6f7;
+        }
+        .modern-btn-warning {
+            background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
             color: #333;
             border: none;
         }

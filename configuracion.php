@@ -32,99 +32,172 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
     <link rel="stylesheet" href="navbar_styles.css">
     <style>
         body {
-            background: linear-gradient(120deg, #6a82fb 0%, #fc5c7d 100%);
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             min-height: 100vh;
+            padding: 20px;
         }
-        .modern-card {
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
-            padding: 2.5rem 2rem 2rem 2rem;
-            margin: 40px auto 0 auto;
-            max-width: 900px;
-        }
-        .modern-table-card {
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.13);
-            padding: 2rem 1.5rem 1.5rem 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .modern-table {
-            border-radius: 12px;
-            overflow: hidden;
-            background: #f4f7fb;
-            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.07);
-        }
-        .modern-table thead {
-            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
-            color: #fff;
-            font-size: 1.08rem;
-            letter-spacing: 0.5px;
-        }
-        .modern-table th, .modern-table td {
-            vertical-align: middle;
-            font-size: 1.08rem;
-        }
-        .modern-table th {
-            border: none;
-        }
-        .modern-table td {
-            background: #fff;
-            border-top: 1px solid #e0e6f7;
-        }
-        .modern-table tbody tr:hover {
-            background: #f0f4ff;
-            transition: background 0.2s;
-        }
-        .modern-btn {
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            padding: 0.7rem 1.5rem;
-            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08);
-        }
-        .modern-btn-primary {
-            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
-            color: #fff;
-            border: none;
-        }
-        .modern-btn-primary:hover {
-            background: linear-gradient(90deg, #2d4e8c 60%, #426dc9 100%);
-            color: #fff;
-        }
-        .modern-btn-success {
-            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
-            color: #fff;
-            border: none;
-        }
-        .modern-btn-success:hover {
-            background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
-            color: #fff;
-        }
-        .modern-label {
+        .sidebar h5 {
             font-weight: 700;
-            color: #426dc9;
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            padding-bottom: 15px;
         }
-        .modern-input {
-            font-size: 1.1rem;
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: block;
+            transition: all 0.3s;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background-color: rgba(255,255,255,0.2);
+            padding-left: 25px;
+        }
+        .stat-card {
+            background: white;
             border-radius: 12px;
-            padding: 0.7rem 1.2rem;
-            border: 2px solid #e0e6f7;
-            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.04);
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s;
         }
-        .modern-modal-header-primary {
-            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
-            color: #fff;
-            border-top-left-radius: 18px;
-            border-top-right-radius: 18px;
+        .stat-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            transform: translateY(-5px);
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 15px 0;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .stat-icon {
+            font-size: 32px;
+            color: #764ba2;
+        }
+        .btn-ver {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-ver:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(102, 126, 234, 0.4);
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header h2 {
+            color: #333;
+            font-weight: 700;
+            margin: 0;
+        }
+        .header-subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .table-responsive {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .table {
+            margin: 0;
+        }
+        .table thead {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .table thead th {
+            font-weight: 600;
+            color: #667eea;
+            border: none;
+        }
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-card h4 {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .btn-primary-custom:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(102, 126, 234, 0.4);
+        }
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
         }
         @media (max-width: 768px) {
-            .modern-card, .modern-table-card {
-                padding: 1.2rem 0.7rem 1rem 0.7rem;
-                max-width: 100%;
+            .sidebar {
+                padding: 10px;
+            }
+            .sidebar a {
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+            .stat-number {
+                font-size: 24px;
+            }
+            .stat-icon {
+                font-size: 24px;
             }
         }
     </style>
@@ -136,66 +209,65 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
             <!-- Sidebar -->
             <?php include 'sidebar.php'; ?>
             <div class="col-md-9 col-lg-10 main-content">
-                <div class="modern-card mb-4">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                        <h2 class="mb-3 mb-md-0">Configuración del Sistema</h2>
-                        <a href="Administrar.php" class="modern-btn btn-secondary">Volver</a>
-                    </div>
-                    <div class="d-flex flex-wrap gap-3 justify-content-center mt-4 mb-2" id="configTabs">
-                        <button class="modern-btn modern-btn-primary" id="tab-estadisticas" onclick="mostrarSeccion('estadisticas', this)"><i class="bi bi-graph-up"></i> Estadísticas</button>
-                        <button class="modern-btn modern-btn-primary" id="tab-usuarios" onclick="mostrarSeccion('usuarios', this)"><i class="bi bi-people"></i> Usuarios</button>
-                        <button class="modern-btn modern-btn-primary" id="tab-roles" onclick="mostrarSeccion('roles', this)"><i class="bi bi-shield-badge"></i> Roles</button>
-                        <button class="modern-btn modern-btn-primary" id="tab-accesos" onclick="mostrarSeccion('accesos', this)"><i class="bi bi-shield-lock"></i> Accesos</button>
-                        <button class="modern-btn modern-btn-primary" id="tab-conectados" onclick="mostrarSeccion('conectados', this)"><i class="bi bi-person-check"></i> Conectados</button>
-                    </div>
-                <!-- SECCIONES ENCAPSULADAS -->
+                <!-- Todo el contenido de configuración, gestión de usuarios, accesos, roles, etc. está aquí -->
+                ...existing code...
+
+            <!-- Contenido Principal -->
+            <div class="col-md-9 col-lg-10" style="padding: 25px;">
+
+                <!-- SECCIÓN: ESTADÍSTICAS -->
                 <div id="estadisticas" class="content-section active">
-                    <!-- ...estadísticas... -->
                     <div class="header">
                         <h2><i class="bi bi-graph-up"></i> Estadísticas del Sistema</h2>
                         <div class="header-subtitle">Resumen general de configuración y usuarios</div>
                     </div>
+
                     <div class="row">
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-people"></i></div>
                                 <div class="stat-label">Usuarios Registrados</div>
                                 <div class="stat-number"><?php echo $totalUsuarios; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('usuarios', document.getElementById('tab-usuarios'))">Ver</button>
+                                <button class="btn btn-ver" onclick="mostrarSeccion('usuarios')">Ver</button>
                             </div>
                         </div>
+
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-person-check"></i></div>
                                 <div class="stat-label">Usuarios Conectados</div>
                                 <div class="stat-number"><?php echo $usuariosConectados; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('conectados', document.getElementById('tab-conectados'))">Ver</button>
+                                <button class="btn btn-ver" onclick="mostrarSeccion('conectados')">Ver</button>
                             </div>
                         </div>
+
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-shield-badge"></i></div>
                                 <div class="stat-label">Roles Definidos</div>
                                 <div class="stat-number"><?php echo $totalRoles; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('roles', document.getElementById('tab-roles'))">Ver</button>
+                                <button class="btn btn-ver" onclick="mostrarSeccion('roles')">Ver</button>
                             </div>
                         </div>
+
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-shield-lock"></i></div>
                                 <div class="stat-label">Accesos Configurados</div>
                                 <div class="stat-number"><?php echo $totalAccesos; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('accesos', document.getElementById('tab-accesos'))">Ver</button>
+                                <button class="btn btn-ver" onclick="mostrarSeccion('accesos')">Ver</button>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- SECCIÓN: GESTIÓN DE USUARIOS -->
                 <div id="usuarios" class="content-section">
-                    <!-- ...gestión de usuarios... -->
                     <div class="header">
                         <h2><i class="bi bi-people"></i> Gestión de Usuarios</h2>
                         <div class="header-subtitle">Crear, editar y eliminar usuarios del sistema</div>
                     </div>
+
                     <div class="form-card">
                         <h4>Agregar Nuevo Usuario</h4>
                         <form action="crear_usuario.php" method="POST">
@@ -238,6 +310,7 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                             </button>
                         </form>
                     </div>
+
                     <div class="table-responsive">
                         <h4>Usuarios del Sistema</h4>
                         <table class="table table-hover">
@@ -278,12 +351,14 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                         </table>
                     </div>
                 </div>
+
+                <!-- SECCIÓN: ADMINISTRAR ACCESOS -->
                 <div id="accesos" class="content-section">
-                    <!-- ...accesos... -->
                     <div class="header">
                         <h2><i class="bi bi-shield-lock"></i> Administrar Accesos</h2>
                         <div class="header-subtitle">Configurar permisos y accesos del sistema</div>
                     </div>
+
                     <div class="form-card">
                         <h4>Asignar Acceso a Usuario</h4>
                         <form action="asignar_acceso.php" method="POST">
@@ -343,6 +418,7 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                             </button>
                         </form>
                     </div>
+
                     <div class="table-responsive">
                         <h4>Accesos Configurados</h4>
                         <table class="table table-hover">
@@ -364,12 +440,14 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                         </table>
                     </div>
                 </div>
+
+                <!-- SECCIÓN: USUARIOS CONECTADOS -->
                 <div id="conectados" class="content-section">
-                    <!-- ...usuarios conectados... -->
                     <div class="header">
                         <h2><i class="bi bi-person-check"></i> Usuarios Conectados</h2>
                         <div class="header-subtitle">Monitoreo de sesiones activas en el sistema</div>
                     </div>
+
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
@@ -391,6 +469,7 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                                         // Verificar si hay sesión activa (simulado con tiempo)
                                         $esActivo = true; // En producción, usar tabla de sesiones
                                         $estadoBadge = $esActivo ? '<span class="badge bg-success"><i class="bi bi-circle-fill"></i> Activo</span>' : '<span class="badge bg-secondary"><i class="bi bi-circle"></i> Inactivo</span>';
+                                        
                                         echo "<tr>
                                             <td><strong>{$user['Usuario']}</strong></td>
                                             <td>{$user['Nombre']}</td>
@@ -415,12 +494,14 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                         </table>
                     </div>
                 </div>
+
+                <!-- SECCIÓN: ADMINISTRAR ROLES -->
                 <div id="roles" class="content-section">
-                    <!-- ...roles... -->
                     <div class="header">
                         <h2><i class="bi bi-shield-badge"></i> Administrar Roles</h2>
                         <div class="header-subtitle">Crear y configurar roles de usuario con permisos específicos</div>
                     </div>
+
                     <div class="form-card">
                         <h4>Crear Nuevo Rol</h4>
                         <form action="crear_rol.php" method="POST">
@@ -494,6 +575,7 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                             </button>
                         </form>
                     </div>
+
                     <div class="table-responsive">
                         <h4>Roles del Sistema</h4>
                         <table class="table table-hover">
@@ -557,25 +639,25 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Tabs de navegación para configuración
-        function mostrarSeccion(seccion, btn) {
+        function mostrarSeccion(seccion) {
             // Ocultar todas las secciones
             const secciones = document.querySelectorAll('.content-section');
             secciones.forEach(s => s.classList.remove('active'));
+
             // Mostrar la sección seleccionada
             const seccionActiva = document.getElementById(seccion);
             if (seccionActiva) {
                 seccionActiva.classList.add('active');
             }
-            // Quitar activo de todos los tabs
-            document.querySelectorAll('#configTabs button').forEach(b => b.classList.remove('active'));
-            // Poner activo al tab actual
-            if (btn) btn.classList.add('active');
+
+            // Actualizar nav activo
+            const links = document.querySelectorAll('.sidebar a.nav-link');
+            links.forEach(link => link.classList.remove('active'));
+            event.target.closest('a').classList.add('active');
+
+            // Prevenir scroll al inicio
+            return false;
         }
-        // Activar tab por defecto
-        document.addEventListener('DOMContentLoaded', function() {
-            mostrarSeccion('estadisticas', document.getElementById('tab-estadisticas'));
-        });
 
         function forzarLogout(usuarioId) {
             if (confirm('¿Estás seguro de que deseas forzar el cierre de sesión de este usuario?')) {

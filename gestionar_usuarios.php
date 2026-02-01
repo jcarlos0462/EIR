@@ -105,97 +105,37 @@ $result_usuarios = $conn->query($sql_usuarios);
     <title>Gestionar Usuarios - EIR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="navbar_styles.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         body {
-            background: linear-gradient(120deg, #6a82fb 0%, #fc5c7d 100%);
-            min-height: 100vh;
+            background-color: #f5f5f5;
         }
-        .modern-card {
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
-            padding: 2.5rem 2rem 2rem 2rem;
-            margin: 40px auto 0 auto;
-            max-width: 900px;
+        .main-content {
+            padding: 30px 20px;
         }
-        .modern-table-card {
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.13);
-            padding: 2rem 1.5rem 1.5rem 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .modern-table {
-            border-radius: 12px;
-            overflow: hidden;
-            background: #f4f7fb;
-            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.07);
-        }
-        .modern-table thead {
-            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
-            color: #fff;
-            font-size: 1.08rem;
-            letter-spacing: 0.5px;
-        }
-        .modern-table th, .modern-table td {
-            vertical-align: middle;
-            font-size: 1.08rem;
-        }
-        .modern-table th {
+        .card {
             border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
-        .modern-table td {
-            background: #fff;
-            border-top: 1px solid #e0e6f7;
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #ddd;
         }
-        .modern-table tbody tr:hover {
-            background: #f0f4ff;
-            transition: background 0.2s;
-        }
-        .modern-btn {
-            border-radius: 12px;
-            font-size: 1.1rem;
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
             font-weight: 600;
-            padding: 0.7rem 1.5rem;
-            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08);
         }
-        .modern-btn-primary {
-            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
-            color: #fff;
-            border: none;
-        }
-        .modern-btn-primary:hover {
-            background: linear-gradient(90deg, #2d4e8c 60%, #426dc9 100%);
-            color: #fff;
-        }
-        .modern-btn-success {
-            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
-            color: #fff;
-            border: none;
-        }
-        .modern-btn-success:hover {
-            background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
-            color: #fff;
-        }
-        .modern-label {
-            font-weight: 700;
-            color: #426dc9;
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-        }
-        .modern-input {
-            font-size: 1.1rem;
-            border-radius: 12px;
-            padding: 0.7rem 1.2rem;
-            border: 2px solid #e0e6f7;
-            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.04);
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
         }
         .password-requirements {
-            background-color: #f0f4ff;
-            border-left: 4px solid #426dc9;
+            background-color: #f0f0f0;
+            border-left: 4px solid #667eea;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 5px;
             font-size: 13px;
             margin-top: 10px;
         }
@@ -203,15 +143,20 @@ $result_usuarios = $conn->query($sql_usuarios);
             margin: 5px 0;
         }
         .req-item.done {
-            color: #43e97b;
+            color: #28a745;
         }
         .req-item.pending {
-            color: #f857a6;
+            color: #dc3545;
+        }
+        .table {
+            background: white;
         }
         @media (max-width: 768px) {
-            .modern-card, .modern-table-card {
-                padding: 1.2rem 0.7rem 1rem 0.7rem;
-                max-width: 100%;
+            .main-content {
+                padding: 15px 10px;
+            }
+            .card {
+                margin-bottom: 15px;
             }
         }
     </style>
@@ -223,86 +168,110 @@ $result_usuarios = $conn->query($sql_usuarios);
             <?php include 'sidebar.php'; ?>
             <div class="col-md-9 col-lg-10 main-content">
 
-    <div class="modern-card mb-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
-        <h2 class="mb-3 mb-md-0">Gestionar Usuarios</h2>
-        <a href="Administrar.php" class="modern-btn btn-secondary">Volver</a>
-    </div>
-
-    <div class="row">
-        <!-- Formulario Agregar Usuario -->
-        <div class="col-lg-6 mb-4">
-            <div class="modern-card h-100">
-                <h5 class="mb-3">Crear Nuevo Usuario</h5>
-                <?php if ($error): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <?php echo $error; ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <h2>Gestionar Usuarios</h2>
+                        <a href="Administrar.php" class="btn btn-secondary">Volver</a>
                     </div>
-                <?php endif; ?>
-                <?php if ($exito): ?>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <?php echo htmlspecialchars($exito); ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
-                <form method="POST" action="" class="d-flex flex-column gap-3">
-                    <div>
-                        <label for="nombre" class="modern-label">Nombre Completo *</label>
-                        <input type="text" class="form-control modern-input" id="nombre" name="nombre" placeholder="Ej: Juan Pérez" required>
-                    </div>
-                    <div>
-                        <label for="usuario" class="modern-label">Usuario *</label>
-                        <input type="text" class="form-control modern-input" id="usuario" name="usuario" placeholder="Ej: jperez" required>
-                    </div>
-                    <div>
-                        <label for="password" class="modern-label">Contraseña *</label>
-                        <input type="password" class="form-control modern-input" id="password" name="password" placeholder="Ingrese contraseña" required>
-                    </div>
-                    <div>
-                        <label for="password_confirm" class="modern-label">Confirmar Contraseña *</label>
-                        <input type="password" class="form-control modern-input" id="password_confirm" name="password_confirm" placeholder="Confirme contraseña" required>
-                    </div>
-                    <div class="password-requirements">
-                        <strong>Requisitos de contraseña fuerte:</strong>
-                        <div class="req-item pending" id="req-length">✗ Mínimo 8 caracteres</div>
-                        <div class="req-item pending" id="req-upper">✗ Al menos una mayúscula</div>
-                        <div class="req-item pending" id="req-lower">✗ Al menos una minúscula</div>
-                        <div class="req-item pending" id="req-number">✗ Al menos un número</div>
-                        <div class="req-item pending" id="req-special">✗ Al menos un carácter especial (!@#$%^&*)</div>
-                    </div>
-                    <button type="submit" class="modern-btn modern-btn-primary w-100 mt-2">Crear Usuario</button>
-                </form>
+                </div>
             </div>
-        </div>
-        <!-- Lista de Usuarios -->
-        <div class="col-lg-6 mb-4">
-            <div class="modern-table-card h-100">
-                <h5 class="mb-3">Usuarios Registrados</h5>
-                <div class="table-responsive">
-                    <table class="table modern-table mb-0">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Usuario</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if ($result_usuarios->num_rows > 0): ?>
-                                <?php while ($row = $result_usuarios->fetch_assoc()): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($row['ID']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['Nombre']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['Usuario']); ?></td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted py-4">No hay usuarios</td>
-                                </tr>
+
+            <div class="row">
+                <!-- Formulario Agregar Usuario -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Crear Nuevo Usuario</h5>
+                        </div>
+                        <div class="card-body">
+                            <?php if ($error): ?>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <?php echo $error; ?>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
                             <?php endif; ?>
-                        </tbody>
-                    </table>
+
+                            <?php if ($exito): ?>
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <?php echo htmlspecialchars($exito); ?>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            <?php endif; ?>
+
+                            <form method="POST" action="">
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre Completo *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej: Juan Pérez" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="usuario" class="form-label">Usuario *</label>
+                                    <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Ej: jperez" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Contraseña *</label>
+                                    <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese contraseña" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="password_confirm" class="form-label">Confirmar Contraseña *</label>
+                                    <input type="password" class="form-control" id="password_confirm" name="password_confirm" placeholder="Confirme contraseña" required>
+                                </div>
+
+                                <div class="password-requirements">
+                                    <strong>Requisitos de contraseña fuerte:</strong>
+                                    <div class="req-item pending" id="req-length">✗ Mínimo 8 caracteres</div>
+                                    <div class="req-item pending" id="req-upper">✗ Al menos una mayúscula</div>
+                                    <div class="req-item pending" id="req-lower">✗ Al menos una minúscula</div>
+                                    <div class="req-item pending" id="req-number">✗ Al menos un número</div>
+                                    <div class="req-item pending" id="req-special">✗ Al menos un carácter especial (!@#$%^&*)</div>
+                                </div>
+
+                                <button type="submit" class="btn btn-submit w-100 mt-4">Crear Usuario</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Usuarios -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Usuarios Registrados</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Usuario</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if ($result_usuarios->num_rows > 0): ?>
+                                            <?php while ($row = $result_usuarios->fetch_assoc()): ?>
+                                                <tr>
+                                                    <td><?php echo htmlspecialchars($row['ID']); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['Nombre']); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['Usuario']); ?></td>
+                                                </tr>
+                                            <?php endwhile; ?>
+                                        <?php else: ?>
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted py-4">No hay usuarios</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
