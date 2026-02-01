@@ -148,62 +148,54 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                         <button class="modern-btn modern-btn-primary" id="tab-accesos" onclick="mostrarSeccion('accesos', this)"><i class="bi bi-shield-lock"></i> Accesos</button>
                         <button class="modern-btn modern-btn-primary" id="tab-conectados" onclick="mostrarSeccion('conectados', this)"><i class="bi bi-person-check"></i> Conectados</button>
                     </div>
-                </div>
-                <div class="modern-card" style="padding: 1.5rem 1rem;">
-
-                <!-- SECCIÓN: ESTADÍSTICAS -->
+                <!-- SECCIONES ENCAPSULADAS -->
                 <div id="estadisticas" class="content-section active">
+                    <!-- ...estadísticas... -->
                     <div class="header">
                         <h2><i class="bi bi-graph-up"></i> Estadísticas del Sistema</h2>
                         <div class="header-subtitle">Resumen general de configuración y usuarios</div>
                     </div>
-
                     <div class="row">
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-people"></i></div>
                                 <div class="stat-label">Usuarios Registrados</div>
                                 <div class="stat-number"><?php echo $totalUsuarios; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('usuarios')">Ver</button>
+                                <button class="btn btn-ver" onclick="mostrarSeccion('usuarios', document.getElementById('tab-usuarios'))">Ver</button>
                             </div>
                         </div>
-
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-person-check"></i></div>
                                 <div class="stat-label">Usuarios Conectados</div>
                                 <div class="stat-number"><?php echo $usuariosConectados; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('conectados')">Ver</button>
+                                <button class="btn btn-ver" onclick="mostrarSeccion('conectados', document.getElementById('tab-conectados'))">Ver</button>
                             </div>
                         </div>
-
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-shield-badge"></i></div>
                                 <div class="stat-label">Roles Definidos</div>
                                 <div class="stat-number"><?php echo $totalRoles; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('roles')">Ver</button>
+                                <button class="btn btn-ver" onclick="mostrarSeccion('roles', document.getElementById('tab-roles'))">Ver</button>
                             </div>
                         </div>
-
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-shield-lock"></i></div>
                                 <div class="stat-label">Accesos Configurados</div>
                                 <div class="stat-number"><?php echo $totalAccesos; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('accesos')">Ver</button>
+                                <button class="btn btn-ver" onclick="mostrarSeccion('accesos', document.getElementById('tab-accesos'))">Ver</button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- SECCIÓN: GESTIÓN DE USUARIOS -->
                 <div id="usuarios" class="content-section">
+                    <!-- ...gestión de usuarios... -->
                     <div class="header">
                         <h2><i class="bi bi-people"></i> Gestión de Usuarios</h2>
                         <div class="header-subtitle">Crear, editar y eliminar usuarios del sistema</div>
                     </div>
-
                     <div class="form-card">
                         <h4>Agregar Nuevo Usuario</h4>
                         <form action="crear_usuario.php" method="POST">
@@ -246,7 +238,6 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                             </button>
                         </form>
                     </div>
-
                     <div class="table-responsive">
                         <h4>Usuarios del Sistema</h4>
                         <table class="table table-hover">
@@ -287,14 +278,12 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                         </table>
                     </div>
                 </div>
-
-                <!-- SECCIÓN: ADMINISTRAR ACCESOS -->
                 <div id="accesos" class="content-section">
+                    <!-- ...accesos... -->
                     <div class="header">
                         <h2><i class="bi bi-shield-lock"></i> Administrar Accesos</h2>
                         <div class="header-subtitle">Configurar permisos y accesos del sistema</div>
                     </div>
-
                     <div class="form-card">
                         <h4>Asignar Acceso a Usuario</h4>
                         <form action="asignar_acceso.php" method="POST">
@@ -354,7 +343,6 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                             </button>
                         </form>
                     </div>
-
                     <div class="table-responsive">
                         <h4>Accesos Configurados</h4>
                         <table class="table table-hover">
@@ -376,14 +364,12 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                         </table>
                     </div>
                 </div>
-
-                <!-- SECCIÓN: USUARIOS CONECTADOS -->
                 <div id="conectados" class="content-section">
+                    <!-- ...usuarios conectados... -->
                     <div class="header">
                         <h2><i class="bi bi-person-check"></i> Usuarios Conectados</h2>
                         <div class="header-subtitle">Monitoreo de sesiones activas en el sistema</div>
                     </div>
-
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
@@ -405,7 +391,6 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                                         // Verificar si hay sesión activa (simulado con tiempo)
                                         $esActivo = true; // En producción, usar tabla de sesiones
                                         $estadoBadge = $esActivo ? '<span class="badge bg-success"><i class="bi bi-circle-fill"></i> Activo</span>' : '<span class="badge bg-secondary"><i class="bi bi-circle"></i> Inactivo</span>';
-                                        
                                         echo "<tr>
                                             <td><strong>{$user['Usuario']}</strong></td>
                                             <td>{$user['Nombre']}</td>
@@ -430,14 +415,12 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                         </table>
                     </div>
                 </div>
-
-                <!-- SECCIÓN: ADMINISTRAR ROLES -->
                 <div id="roles" class="content-section">
+                    <!-- ...roles... -->
                     <div class="header">
                         <h2><i class="bi bi-shield-badge"></i> Administrar Roles</h2>
                         <div class="header-subtitle">Crear y configurar roles de usuario con permisos específicos</div>
                     </div>
-
                     <div class="form-card">
                         <h4>Crear Nuevo Rol</h4>
                         <form action="crear_rol.php" method="POST">
@@ -511,7 +494,6 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                             </button>
                         </form>
                     </div>
-
                     <div class="table-responsive">
                         <h4>Roles del Sistema</h4>
                         <table class="table table-hover">
