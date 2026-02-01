@@ -530,31 +530,29 @@ let html5QrCode;
 function abrirCamara() {
     const qrReader = document.getElementById("qr-reader");
     qrReader.style.display = "block";
-
-    html5QrCode = new Html5Qrcode("qr-reader");
-
-    html5QrCode.start(
-        { facingMode: "environment" }, // 🔥 CAMARA TRASERA
-        {
-            fps: 10,
-            qrbox: { width: 250, height: 250 }
-        },
-        qrCodeMessage => {
-            document.getElementById("qrInput").value = qrCodeMessage;
-
-            html5QrCode.stop().then(() => {
-                qrReader.style.display = "none";
-            });
-
-            document.getElementById("formBuscar").submit();
-        },
-        errorMessage => {
-            // errores silenciosos
-        }
-    ).catch(err => {
-        alert("No se pudo acceder a la cámara trasera");
-        console.error(err);
-    });
+    setTimeout(() => {
+        html5QrCode = new Html5Qrcode("qr-reader");
+        html5QrCode.start(
+            { facingMode: "environment" }, // 🔥 CAMARA TRASERA
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            qrCodeMessage => {
+                document.getElementById("qrInput").value = qrCodeMessage;
+                html5QrCode.stop().then(() => {
+                    qrReader.style.display = "none";
+                });
+                document.getElementById("formBuscar").submit();
+            },
+            errorMessage => {
+                // errores silenciosos
+            }
+        ).catch(err => {
+            alert("No se pudo acceder a la cámara trasera");
+            console.error(err);
+        });
+    }, 350);
 }
 
 // Mostrar el modal QR y abrir la cámara
