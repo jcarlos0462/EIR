@@ -9,6 +9,7 @@ $danios = [];
 $show_form = false;
 
 // Buscar VIN
+// Buscar VIN (por POST o GET)
 if (isset($_POST['buscar_vin'])) {
     $vin = trim($_POST['vin']);
     $stmt = $conn->prepare("SELECT Marca, Modelo, Color FROM vehiculo WHERE VIN = ?");
@@ -35,7 +36,7 @@ if (isset($_POST['buscar_vin'])) {
 // Guardar daño
 if (isset($_POST['guardar_danio'])) {
     $vin = trim($_POST['vin']);
-    $area = intval($_POST['area']);
+    // Guardar daño
     $tipo = intval($_POST['tipo']);
     $severidad = intval($_POST['severidad']);
     if ($vin && $area && $tipo && $severidad) {
@@ -75,7 +76,9 @@ $areas = $conn->query("SELECT CodAreaDano FROM areadano ORDER BY CodAreaDano");
 $tipos = $conn->query("SELECT CodTipoDano FROM tipodano ORDER BY CodTipoDano");
 $severidades = $conn->query("SELECT CodSeveridadDano FROM severidaddano ORDER BY CodSeveridadDano");
 ?>
-<!DOCTYPE html>
+    $areas = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY CodAreaDano");
+    $tipos = $conn->query("SELECT CodTipoDano, NomTipoDano FROM tipodano ORDER BY CodTipoDano");
+    $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM severidaddano ORDER BY CodSeveridadDano");
 <html lang="es">
 <head>
     <meta charset="UTF-8">
