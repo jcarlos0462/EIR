@@ -8,10 +8,16 @@ $errores = [];
 $danios = [];
 $show_form = false;
 
-// Buscar VIN
-// Buscar VIN (por POST o GET)
+// Buscar VIN (por POST, GET o contexto de acción)
 if (isset($_POST['buscar_vin'])) {
     $vin = trim($_POST['vin']);
+} elseif (isset($_GET['vin'])) {
+    $vin = trim($_GET['vin']);
+} elseif (isset($_POST['vin'])) {
+    $vin = trim($_POST['vin']);
+}
+
+if ($vin) {
     $stmt = $conn->prepare("SELECT Marca, Modelo, Color FROM vehiculo WHERE VIN = ?");
     $stmt->bind_param('s', $vin);
     $stmt->execute();
