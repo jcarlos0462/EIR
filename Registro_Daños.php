@@ -17,9 +17,13 @@ if (isset($_POST['buscar_vin'])) {
     $stmt->execute();
     $stmt->bind_result($marca, $modelo, $color);
     if ($stmt->fetch()) {
-        // Buscar daños registrados
+        // Buscar daños registrados con descripciones
         $stmt->close();
-        $sql = "SELECT ID, CodAreaDano, CodTipoDano, CodSeveridadDano FROM RegistroDanio WHERE VIN = ? ORDER BY ID DESC";
+        $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano FROM RegistroDanio r
+                JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
+                JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
+                JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
+                WHERE r.VIN = ? ORDER BY r.ID DESC";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param('s', $vin);
         $stmt->execute();
@@ -89,6 +93,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
     <title>Registro de Daños</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="navbar_styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         body { background: #fff; }
         .main-box { max-width: 400px; margin: 40px auto; border-radius: 0; box-shadow: 0 0 0 0; }
