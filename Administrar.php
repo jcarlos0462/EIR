@@ -1,11 +1,24 @@
 <?php
 session_start();
-
+include 'database_connection.php';
 // Verificar si el usuario está logueado
 if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
     header("Location: index.php");
     exit();
 }
+// Consultas para contadores dinámicos
+$vehiculos_count = 0;
+$danios_count = 0;
+$usuarios_count = 0;
+// Vehículos
+$res = $conn->query("SELECT COUNT(*) AS total FROM vehiculo");
+if ($res && $row = $res->fetch_assoc()) $vehiculos_count = $row['total'];
+// Daños
+$res = $conn->query("SELECT COUNT(*) AS total FROM RegistroDanio");
+if ($res && $row = $res->fetch_assoc()) $danios_count = $row['total'];
+// Usuarios
+$res = $conn->query("SELECT COUNT(*) AS total FROM usuario");
+if ($res && $row = $res->fetch_assoc()) $usuarios_count = $row['total'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -15,60 +28,72 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
     <title>Administrar - EIR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="navbar_styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         body {
-            background-color: #f5f5f5;
+            background: linear-gradient(120deg, #6a82fb 0%, #fc5c7d 100%);
+            min-height: 100vh;
         }
-        .sidebar {
-            background-color: white;
-            border-right: 1px solid #e0e0e0;
-            min-height: calc(100vh - 56px);
-            padding: 20px 0;
+        .modern-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
+            padding: 2.5rem 2rem 2rem 2rem;
+            margin: 40px auto 0 auto;
+            max-width: 600px;
         }
-        .sidebar a {
-            display: block;
-            padding: 12px 20px;
-            color: #333;
-            text-decoration: none;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
+        .modern-dashboard-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.13);
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            transition: box-shadow 0.2s;
         }
-        .sidebar a:hover {
-            background-color: #f5f5f5;
-            border-left-color: #667eea;
-            color: #667eea;
+        .modern-dashboard-card:hover {
+            box-shadow: 0 8px 32px 0 rgba(60,60,120,0.18);
         }
-        .sidebar a.active {
-            background-color: #f0f0f0;
-            border-left-color: #667eea;
-            color: #667eea;
+        .modern-dashboard-icon {
+            font-size: 2.5rem;
+            color: #426dc9;
+            margin-bottom: 0.5rem;
+        }
+        .modern-dashboard-title {
+            font-weight: 700;
+            color: #426dc9;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .modern-dashboard-count {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 0.5rem;
+        }
+        .modern-btn {
+            border-radius: 12px;
+            font-size: 1.1rem;
             font-weight: 600;
+            padding: 0.7rem 1.5rem;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08);
         }
-        .main-content {
-            padding: 30px;
-        }
-        .card {
+        .modern-btn-primary {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
             border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .modern-btn-primary:hover {
+            background: linear-gradient(90deg, #2d4e8c 60%, #426dc9 100%);
+            color: #fff;
         }
         @media (max-width: 768px) {
-            .sidebar {
-                border-right: none;
-                border-bottom: 1px solid #e0e0e0;
-                min-height: auto;
-                display: flex;
-                flex-wrap: wrap;
+            .modern-card {
+                padding: 1.2rem 0.7rem 1rem 0.7rem;
+                max-width: 100%;
             }
-            .sidebar a {
-                flex: 1 1 auto;
-                min-width: 100px;
-                text-align: center;
-                border-left: none;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            .main-content {
-                padding: 15px;
+            .modern-dashboard-card {
+                padding: 1.2rem 0.7rem 1rem 0.7rem;
             }
         }
     </style>
@@ -78,44 +103,37 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
 
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
-            <?php include 'sidebar.php'; ?>
-
-            <!-- Main Content -->
+            <div class="col-md-3 col-lg-2">
+                <?php include 'sidebar.php'; ?>
+            </div>
             <div class="col-md-9 col-lg-10 main-content">
-                <div class="row">
-                    <div class="col-12">
-                        <h2>Dashboard</h2>
-                        <p class="text-muted">Bienvenido al sistema EIR</p>
-                    </div>
+                <div class="modern-card mb-4 text-center">
+                    <h2 class="mb-2">Dashboard</h2>
+                    <p class="text-muted mb-0">Bienvenido al sistema EIR</p>
                 </div>
-
-                <div class="row mt-4">
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">Vehículos</h5>
-                                <p class="card-text display-6">0</p>
-                                <a href="listar_vehiculos.php" class="btn btn-sm btn-primary">Ver</a>
-                            </div>
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+                        <div class="modern-dashboard-card">
+                            <div class="modern-dashboard-icon"><i class="bi bi-truck"></i></div>
+                            <div class="modern-dashboard-title">Vehículos</div>
+                            <div class="modern-dashboard-count"><?php echo $vehiculos_count; ?></div>
+                            <a href="listar_vehiculos.php" class="modern-btn modern-btn-primary">Ver</a>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">Daños Registrados</h5>
-                                <p class="card-text display-6">0</p>
-                                <a href="#" class="btn btn-sm btn-primary">Ver</a>
-                            </div>
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+                        <div class="modern-dashboard-card">
+                            <div class="modern-dashboard-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                            <div class="modern-dashboard-title">Daños Registrados</div>
+                            <div class="modern-dashboard-count"><?php echo $danios_count; ?></div>
+                            <a href="Registro_Daños.php" class="modern-btn modern-btn-primary">Ver</a>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title">Usuarios</h5>
-                                <p class="card-text display-6">0</p>
-                                <a href="gestionar_usuarios.php" class="btn btn-sm btn-primary">Ver</a>
-                            </div>
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+                        <div class="modern-dashboard-card">
+                            <div class="modern-dashboard-icon"><i class="bi bi-people"></i></div>
+                            <div class="modern-dashboard-title">Usuarios</div>
+                            <div class="modern-dashboard-count"><?php echo $usuarios_count; ?></div>
+                            <a href="gestionar_usuarios.php" class="modern-btn modern-btn-primary">Ver</a>
                         </div>
                     </div>
                 </div>

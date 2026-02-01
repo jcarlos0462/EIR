@@ -341,8 +341,8 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                 <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required autofocus placeholder="Escanea o ingresa el VIN">
                             </div>
                             <div class="d-flex align-items-end gap-2">
-                                <button type="button" class="modern-btn modern-btn-success" data-bs-toggle="modal" data-bs-target="#modalQR">
-                                    <i class="bi bi-qr-code-scan"></i> Escanear
+                                <button type="button" class="modern-btn modern-btn-success" data-bs-toggle="modal" data-bs-target="#modalQR" title="Escanear VIN">
+                                    <i class="bi bi-camera" style="font-size: 1.5rem;"></i>
                                 </button>
                             </div>
                             <div>
