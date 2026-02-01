@@ -68,31 +68,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Agregar Vehículo - EIR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="navbar_styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         body {
-            background-color: #f5f5f5;
+            background: linear-gradient(120deg, #6a82fb 0%, #fc5c7d 100%);
+            min-height: 100vh;
         }
-        .main-content {
-            padding: 30px;
+        .modern-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
+            padding: 2.5rem 2rem 2rem 2rem;
+            margin: 40px auto 0 auto;
+            max-width: 900px;
         }
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        .modern-label {
+            font-weight: 700;
+            color: #426dc9;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
         }
-        .form-control, .form-select {
-            border-radius: 8px;
-            border: 1px solid #ddd;
+        .modern-input {
+            font-size: 1.1rem;
+            border-radius: 12px;
+            padding: 0.7rem 1.2rem;
+            border: 2px solid #e0e6f7;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.04);
         }
-        .btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
+        .modern-btn {
+            border-radius: 12px;
+            font-size: 1.1rem;
             font-weight: 600;
+            padding: 0.7rem 1.5rem;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08);
         }
-        .btn-submit:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-            color: white;
+        .modern-btn-primary {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
+            border: none;
+        }
+        .modern-btn-primary:hover {
+            background: linear-gradient(90deg, #2d4e8c 60%, #426dc9 100%);
+            color: #fff;
+        }
+        @media (max-width: 768px) {
+            .modern-card {
+                padding: 1.2rem 0.7rem 1rem 0.7rem;
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -103,86 +126,76 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="row">
             <?php include 'sidebar.php'; ?>
             <div class="col-md-9 col-lg-10 main-content">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h2>Agregar Nuevo Vehículo</h2>
-                    <a href="listar_vehiculos.php" class="btn btn-secondary">Ver Lista de Vehículos</a>
+                <div class="modern-card mb-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <h2 class="mb-3 mb-md-0">Agregar Nuevo Vehículo</h2>
+                    <a href="listar_vehiculos.php" class="modern-btn btn-secondary">Ver Lista de Vehículos</a>
                 </div>
-            </div>
-        </div>
-
-        <?php if ($error): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <?php echo htmlspecialchars($error); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($exito): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?php echo htmlspecialchars($exito); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
-        <div class="card">
-            <div class="card-body p-4">
-                <form method="POST" action="">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="buque" class="form-label">Buque *</label>
-                            <input type="text" class="form-control" id="buque" name="buque" placeholder="Nombre del buque" value="<?php echo isset($buque) ? htmlspecialchars($buque) : ''; ?>" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="viaje" class="form-label">Viaje *</label>
-                            <input type="text" class="form-control" id="viaje" name="viaje" placeholder="Número de viaje" value="<?php echo isset($viaje) ? htmlspecialchars($viaje) : ''; ?>" required>
-                        </div>
+                <?php if ($error): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?php echo htmlspecialchars($error); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label for="vin" class="form-label">VIN (Número de Identificación) *</label>
-                            <input type="text" class="form-control" id="vin" name="vin" placeholder="VIN único del vehículo" value="<?php echo isset($vin) ? htmlspecialchars($vin) : ''; ?>" required>
-                        </div>
+                <?php endif; ?>
+                <?php if ($exito): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?php echo htmlspecialchars($exito); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="marca" class="form-label">Marca *</label>
-                            <input type="text" class="form-control" id="marca" name="marca" placeholder="Ej: Toyota, Ford" value="<?php echo isset($marca) ? htmlspecialchars($marca) : ''; ?>" required>
+                <?php endif; ?>
+                <div class="modern-card">
+                    <form method="POST" action="" class="d-flex flex-column gap-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="buque" class="modern-label">Buque *</label>
+                                <input type="text" class="form-control modern-input" id="buque" name="buque" placeholder="Nombre del buque" value="<?php echo isset($buque) ? htmlspecialchars($buque) : ''; ?>" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="viaje" class="modern-label">Viaje *</label>
+                                <input type="text" class="form-control modern-input" id="viaje" name="viaje" placeholder="Número de viaje" value="<?php echo isset($viaje) ? htmlspecialchars($viaje) : ''; ?>" required>
+                            </div>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="modelo" class="form-label">Modelo *</label>
-                            <input type="text" class="form-control" id="modelo" name="modelo" placeholder="Ej: Corolla, Fiesta" value="<?php echo isset($modelo) ? htmlspecialchars($modelo) : ''; ?>" required>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="vin" class="modern-label">VIN (Número de Identificación) *</label>
+                                <input type="text" class="form-control modern-input" id="vin" name="vin" placeholder="VIN único del vehículo" value="<?php echo isset($vin) ? htmlspecialchars($vin) : ''; ?>" required>
+                            </div>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="ano" class="form-label">Año</label>
-                            <input type="text" class="form-control" id="ano" name="ano" placeholder="Ej: 2023" value="<?php echo isset($ano) ? htmlspecialchars($ano) : ''; ?>">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="marca" class="modern-label">Marca *</label>
+                                <input type="text" class="form-control modern-input" id="marca" name="marca" placeholder="Ej: Toyota, Ford" value="<?php echo isset($marca) ? htmlspecialchars($marca) : ''; ?>" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="modelo" class="modern-label">Modelo *</label>
+                                <input type="text" class="form-control modern-input" id="modelo" name="modelo" placeholder="Ej: Corolla, Fiesta" value="<?php echo isset($modelo) ? htmlspecialchars($modelo) : ''; ?>" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="ano" class="modern-label">Año</label>
+                                <input type="text" class="form-control modern-input" id="ano" name="ano" placeholder="Ej: 2023" value="<?php echo isset($ano) ? htmlspecialchars($ano) : ''; ?>">
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="color" class="form-label">Color</label>
-                            <input type="text" class="form-control" id="color" name="color" placeholder="Color del vehículo" value="<?php echo isset($color) ? htmlspecialchars($color) : ''; ?>">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="color" class="modern-label">Color</label>
+                                <input type="text" class="form-control modern-input" id="color" name="color" placeholder="Color del vehículo" value="<?php echo isset($color) ? htmlspecialchars($color) : ''; ?>">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="puerto" class="modern-label">Puerto</label>
+                                <input type="text" class="form-control modern-input" id="puerto" name="puerto" placeholder="Puerto de origen" value="<?php echo isset($puerto) ? htmlspecialchars($puerto) : ''; ?>">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="terminal" class="modern-label">Terminal</label>
+                                <input type="text" class="form-control modern-input" id="terminal" name="terminal" placeholder="Terminal asignada" value="<?php echo isset($terminal) ? htmlspecialchars($terminal) : ''; ?>">
+                            </div>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="puerto" class="form-label">Puerto</label>
-                            <input type="text" class="form-control" id="puerto" name="puerto" placeholder="Puerto de origen" value="<?php echo isset($puerto) ? htmlspecialchars($puerto) : ''; ?>">
+                        <div class="row mt-4">
+                            <div class="col-12 d-flex gap-2">
+                                <button type="submit" class="modern-btn modern-btn-primary">Registrar Vehículo</button>
+                                <a href="Administrar.php" class="modern-btn btn-secondary">Volver</a>
+                            </div>
                         </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="terminal" class="form-label">Terminal</label>
-                            <input type="text" class="form-control" id="terminal" name="terminal" placeholder="Terminal asignada" value="<?php echo isset($terminal) ? htmlspecialchars($terminal) : ''; ?>">
-                        </div>
-                    </div>
-
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-submit">Registrar Vehículo</button>
-                            <a href="Administrar.php" class="btn btn-secondary ms-2">Volver</a>
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
