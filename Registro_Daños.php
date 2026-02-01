@@ -43,7 +43,9 @@ if (isset($_POST['guardar_danio'])) {
         $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano) VALUES (?, ?, ?, ?)");
         $stmt->bind_param('siii', $vin, $area, $tipo, $severidad);
         if ($stmt->execute()) {
-            $show_form = false;
+            // Redirigir para evitar duplicado al refrescar (PRG)
+            header("Location: Registro_Daños.php?vin=" . urlencode($vin));
+            exit();
         } else {
             $errores[] = 'Error al guardar daño.';
         }
@@ -52,28 +54,6 @@ if (isset($_POST['guardar_danio'])) {
         $errores[] = 'Todos los campos son obligatorios.';
         $show_form = true;
     }
-    // Refrescar daños
-    $stmt = $conn->prepare("SELECT Marca, Modelo, Color FROM vehiculo WHERE VIN = ?");
-    $stmt->bind_param('s', $vin);
-    $stmt->execute();
-    $stmt->bind_result($marca, $modelo, $color);
-    $stmt->fetch();
-    $stmt->close();
-    $sql = "SELECT ID, CodAreaDano, CodTipoDano, CodSeveridadDano FROM RegistroDanio WHERE VIN = ? ORDER BY ID DESC";
-    $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano FROM RegistroDanio r
-            JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
-            JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
-            JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
-            WHERE r.VIN = ? ORDER BY r.ID DESC";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('s', $vin);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $danios = [];
-    while ($row = $result->fetch_assoc()) {
-        $danios[] = $row;
-    }
-    $stmt->close();
 }
 
 // Cargar listas para selects
@@ -147,17 +127,22 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                         <div class="label">Color</div>
                         <div><?php echo htmlspecialchars($color); ?></div>
                     </div>
-                    <!-- Botón para abrir el modal -->
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalDanio">Agregar Daño</button>
                 </div>
                 <div class="row">
                     <div class="col-12">
+                        <!-- Botón para abrir el modal arriba de la tabla -->
+                        <div class="mb-2">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalDanio">
+                                <i class="bi bi-plus-lg"></i> Agregar Daño
+                            </button>
+                        </div>
                         <table class="table table-bordered table-sm mb-2">
                             <thead class="table-primary">
                                 <tr>
                                     <th>Área</th>
                                     <th>Tipo</th>
                                     <th>Severidad</th>
+                                    <th style="width:120px;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -166,13 +151,23 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                     <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
                                     <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
                                     <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-warning me-1" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <form method="post" style="display:inline;">
+                                            <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
+                                            <button type="submit" name="eliminar_danio" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este daño?');">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             <?php endforeach; else: ?>
-                                <tr><td colspan="3" class="text-center">Sin daños registrados</td></tr>
+                                <tr><td colspan="4" class="text-center">Sin daños registrados</td></tr>
                             <?php endif; ?>
                             </tbody>
                         </table>
-                        
                     </div>
                 </div>
                                 <!-- Modal para registrar daño -->
