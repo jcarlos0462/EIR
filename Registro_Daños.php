@@ -125,15 +125,74 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
     <link rel="stylesheet" href="navbar_styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        body { background: #fff; }
-        .main-box { max-width: 400px; margin: 40px auto; border-radius: 0; box-shadow: 0 0 0 0; }
-        .main-box, .form-control, .btn { border-radius: 8px; }
-        .table { font-size: 1rem; }
-        .btn { background: #426dc9; color: #fff; border: none; font-weight: 500; }
-        .btn:hover { background: #2d4e8c; color: #fff; }
-        .btn-add { width: 100%; margin-top: 16px; }
-        .btn-back { width: 100%; margin-top: 16px; background: #426dc9; }
-        .label { font-weight: 600; color: #426dc9; }
+        body {
+            background: linear-gradient(120deg, #6a82fb 0%, #fc5c7d 100%);
+            min-height: 100vh;
+        }
+        .modern-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
+            padding: 2.5rem 2rem 2rem 2rem;
+            margin: 40px auto 0 auto;
+            max-width: 600px;
+        }
+        .modern-label {
+            font-weight: 700;
+            color: #426dc9;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .modern-input {
+            font-size: 1.4rem;
+            border-radius: 12px;
+            padding: 0.8rem 1.2rem;
+            border: 2px solid #e0e6f7;
+            text-align: center;
+            letter-spacing: 2px;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.04);
+        }
+        .modern-btn {
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0.7rem 1.5rem;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08);
+        }
+        .modern-btn-primary {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
+            border: none;
+        }
+        .modern-btn-primary:hover {
+            background: linear-gradient(90deg, #2d4e8c 60%, #426dc9 100%);
+            color: #fff;
+        }
+        .modern-btn-success {
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+            color: #fff;
+            border: none;
+        }
+        .modern-btn-success:hover {
+            background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+            color: #fff;
+        }
+        .modern-modal-header {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .modern-modal-icon {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+        }
+        .modern-modal-content {
+            border-radius: 18px;
+        }
         .form-section { display: <?php echo $show_form ? 'block' : 'none'; ?>; }
         .table-section { display: <?php echo $show_form ? 'none' : 'block'; ?>; }
     </style>
@@ -147,17 +206,37 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
         </div>
 </br>
         <div class="col-md-9 col-lg-10 main-content">
-            <div class="row mb-4">
-                <div class="col-12">
-                    <form method="post" class="d-flex flex-row gap-2 align-items-end">
-                        <div>
-                            <label class="label">VIN</label>
-                            <input type="text" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin); ?>" required>
+            <div class="row mb-4 justify-content-center">
+                <div class="col-12 d-flex justify-content-center">
+                    <div class="modern-card">
+                        <form method="post" class="d-flex flex-row gap-3 align-items-end" style="width: 100%;">
+                            <div class="flex-grow-1">
+                                <label class="modern-label">VIN</label>
+                                <input type="text" id="vinInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required autofocus placeholder="Escanea o ingresa el VIN">
+                            </div>
+                            <div>
+                                <button type="button" class="modern-btn modern-btn-success" id="btnScanQR" title="Escanear QR"><i class="bi bi-qr-code-scan"></i></button>
+                            </div>
+                            <div>
+                                <button type="submit" name="buscar_vin" class="modern-btn modern-btn-primary">Buscar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal QR -->
+            <div class="modal fade" id="modalQR" tabindex="-1" aria-labelledby="modalQRLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content modern-modal-content">
+                        <div class="modal-header modern-modal-header">
+                            <span class="modern-modal-icon bi bi-qr-code-scan"></span>
+                            <h5 class="modal-title mb-0" id="modalQRLabel">Escanear VIN (QR)</h5>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                         </div>
-                        <div>
-                            <button type="submit" name="buscar_vin" class="btn">Buscar</button>
+                        <div class="modal-body">
+                            <div id="qr-reader" style="width:100%; min-height:300px;"></div>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
             <?php if ($errores): ?>
@@ -309,5 +388,36 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
     </div>
 </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
+    <script>
+    // Abrir modal QR
+    document.getElementById('btnScanQR').addEventListener('click', function() {
+        var qrModal = new bootstrap.Modal(document.getElementById('modalQR'));
+        qrModal.show();
+        setTimeout(startQRScanner, 400);
+    });
+
+    let qrScanner;
+    function startQRScanner() {
+        if (qrScanner) {
+            qrScanner.clear();
+        }
+        qrScanner = new Html5Qrcode("qr-reader");
+        qrScanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            qrCodeMessage => {
+                document.getElementById('vinInput').value = qrCodeMessage;
+                bootstrap.Modal.getInstance(document.getElementById('modalQR')).hide();
+                qrScanner.stop();
+            },
+            errorMessage => {}
+        ).catch(err => {});
+    }
+    // Limpiar QR al cerrar modal
+    document.getElementById('modalQR').addEventListener('hidden.bs.modal', function () {
+        if (qrScanner) qrScanner.stop();
+    });
+    </script>
 </body>
 </html>
