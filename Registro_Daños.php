@@ -561,7 +561,14 @@ function abrirCamara() {
             });
         } catch (e) {
             document.getElementById('qr-help-msg').style.display = 'block';
-            document.getElementById('qr-help-msg').innerText = 'No se pudo inicializar la cámara.';
+            let msg = 'No se pudo inicializar la cámara.';
+            if (e && e.message) {
+                msg += '\n' + e.message;
+            } else if (typeof e === 'string') {
+                msg += '\n' + e;
+            }
+            document.getElementById('qr-help-msg').innerText = msg;
+            console.error('Error al inicializar Html5Qrcode:', e);
         }
     }, 500);
 }
