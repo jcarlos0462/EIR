@@ -372,152 +372,156 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                 <div class="alert alert-danger py-2"><?php echo implode('<br>', $errores); ?></div>
             <?php endif; ?>
             <?php if ($marca): ?>
-                <div class="vehiculo-card mb-4">
-                    <div class="vehiculo-info">
-                        <div>
-                            <div class="vehiculo-label">Marca</div>
-                            <div class="vehiculo-value"><?php echo htmlspecialchars($marca); ?></div>
-                        </div>
-                        <div>
-                            <div class="vehiculo-label">Modelo</div>
-                            <div class="vehiculo-value"><?php echo htmlspecialchars($modelo); ?></div>
-                        </div>
-                        <div>
-                            <div class="vehiculo-label">Color</div>
-                            <div class="vehiculo-value"><?php echo htmlspecialchars($color); ?></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="modern-table-card">
-                            <div class="mb-3 d-flex justify-content-between align-items-center">
-                                <span class="modern-label mb-0">Daños Registrados</span>
-                                <button type="button" class="modern-btn modern-btn-primary" data-bs-toggle="modal" data-bs-target="#modalDanio">
-                                    <i class="bi bi-plus-lg"></i> Agregar Daño
-                                </button>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table modern-table mb-2">
-                                    <thead>
-                                        <tr>
-                                            <th>Área</th>
-                                            <th>Tipo</th>
-                                            <th>Severidad</th>
-                                            <th style="width:120px;">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    <?php if (!empty($danios)): foreach ($danios as $d): ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
-                                            <td>
-                                                <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
-                                                    <span class="bi bi-pencil-square"></span>
-                                                </button>
-                                                <form method="post" style="display:inline;">
-                                                    <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
-                                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                                    <button type="submit" name="eliminar_danio" class="modern-btn modern-btn-danger btn-sm" title="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este daño?');">
-                                                        <span class="bi bi-trash-fill"></span>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        <!-- Modal editar daño -->
-                                        <div class="modal fade" id="modalEditarDanio<?php echo $d['ID']; ?>" tabindex="-1" aria-labelledby="modalEditarLabel<?php echo $d['ID']; ?>" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content modern-modal-content">
-                                                    <div class="modal-header modern-modal-header-warning">
-                                                        <h5 class="modal-title" id="modalEditarLabel<?php echo $d['ID']; ?>">Editar Daño</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <form method="post" class="d-flex flex-column gap-3">
-                                                            <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
-                                                            <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                                            <div>
-                                                                <label class="modern-label">Tipo de Daño</label>
-                                                                <select name="tipo" class="form-control modern-input" required>
-                                                                    <option value="">Seleccione</option>
-                                                                    <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'"'.($t['NomTipoDano']==$d['NomTipoDano']?' selected':'').'>'.$t['NomTipoDano'].'</option>'; ?>
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label class="modern-label">Área de Daño</label>
-                                                                <select name="area" class="form-control modern-input" required>
-                                                                    <option value="">Seleccione</option>
-                                                                    <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'"'.($a['NomAreaDano']==$d['NomAreaDano']?' selected':'').'>'.$a['NomAreaDano'].'</option>'; ?>
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label class="modern-label">Severidad</label>
-                                                                <select name="severidad" class="form-control modern-input" required>
-                                                                    <option value="">Seleccione</option>
-                                                                    <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'"'.($s['NomSeveridadDano']==$d['NomSeveridadDano']?' selected':'').'>'.$s['NomSeveridadDano'].'</option>'; ?>
-                                                                </select>
-                                                            </div>
-                                                            <div class="d-grid gap-2 mt-2">
-                                                                <button type="submit" name="editar_danio" class="modern-btn modern-btn-warning">Guardar Cambios</button>
-                                                                <button type="button" class="modern-btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
+                                <div class="vehiculo-card mb-4">
+                                        <div class="vehiculo-info">
+                                                <div>
+                                                        <div class="vehiculo-label">Marca</div>
+                                                        <div class="vehiculo-value"><?php echo htmlspecialchars($marca); ?></div>
                                                 </div>
+                                                <div>
+                                                        <div class="vehiculo-label">Modelo</div>
+                                                        <div class="vehiculo-value"><?php echo htmlspecialchars($modelo); ?></div>
+                                                </div>
+                                                <div>
+                                                        <div class="vehiculo-label">Color</div>
+                                                        <div class="vehiculo-value"><?php echo htmlspecialchars($color); ?></div>
+                                                </div>
+                                        </div>
+                                </div>
+                                <!-- Tabs para registrar/ver daños -->
+                                <ul class="nav nav-tabs mb-3" id="daniosTab" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="ver-danios-tab" data-bs-toggle="tab" data-bs-target="#ver-danios" type="button" role="tab" aria-controls="ver-danios" aria-selected="true">
+                                            Daños Registrados
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="registrar-danio-tab" data-bs-toggle="tab" data-bs-target="#registrar-danio" type="button" role="tab" aria-controls="registrar-danio" aria-selected="false">
+                                            Registrar Daño
+                                        </button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" id="daniosTabContent">
+                                    <div class="tab-pane fade show active" id="ver-danios" role="tabpanel" aria-labelledby="ver-danios-tab">
+                                        <div class="modern-table-card">
+                                            <div class="mb-3 d-flex justify-content-between align-items-center">
+                                                <span class="modern-label mb-0">Daños Registrados</span>
+                                                <button type="button" class="modern-btn modern-btn-primary" data-bs-toggle="tab" data-bs-target="#registrar-danio">
+                                                    <i class="bi bi-plus-lg"></i> Agregar Daño
+                                                </button>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table modern-table mb-2">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Área</th>
+                                                            <th>Tipo</th>
+                                                            <th>Severidad</th>
+                                                            <th style="width:120px;">Acciones</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <?php if (!empty($danios)): foreach ($danios as $d): ?>
+                                                        <tr>
+                                                            <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
+                                                            <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
+                                                            <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
+                                                            <td>
+                                                                <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
+                                                                    <span class="bi bi-pencil-square"></span>
+                                                                </button>
+                                                                <form method="post" style="display:inline;">
+                                                                    <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
+                                                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                                                    <button type="submit" name="eliminar_danio" class="modern-btn modern-btn-danger btn-sm" title="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este daño?');">
+                                                                        <span class="bi bi-trash-fill"></span>
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                        <!-- Modal editar daño -->
+                                                        <div class="modal fade" id="modalEditarDanio<?php echo $d['ID']; ?>" tabindex="-1" aria-labelledby="modalEditarLabel<?php echo $d['ID']; ?>" aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered">
+                                                                <div class="modal-content modern-modal-content">
+                                                                    <div class="modal-header modern-modal-header-warning">
+                                                                        <h5 class="modal-title" id="modalEditarLabel<?php echo $d['ID']; ?>">Editar Daño</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <form method="post" class="d-flex flex-column gap-3">
+                                                                            <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
+                                                                            <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                                                            <div>
+                                                                                <label class="modern-label">Tipo de Daño</label>
+                                                                                <select name="tipo" class="form-control modern-input" required>
+                                                                                    <option value="">Seleccione</option>
+                                                                                    <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'"'.($t['NomTipoDano']==$d['NomTipoDano']?' selected':'').'>'.$t['NomTipoDano'].'</option>'; ?>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div>
+                                                                                <label class="modern-label">Área de Daño</label>
+                                                                                <select name="area" class="form-control modern-input" required>
+                                                                                    <option value="">Seleccione</option>
+                                                                                    <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'"'.($a['NomAreaDano']==$d['NomAreaDano']?' selected':'').'>'.$a['NomAreaDano'].'</option>'; ?>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div>
+                                                                                <label class="modern-label">Severidad</label>
+                                                                                <select name="severidad" class="form-control modern-input" required>
+                                                                                    <option value="">Seleccione</option>
+                                                                                    <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'"'.($s['NomSeveridadDano']==$d['NomSeveridadDano']?' selected':'').'>'.$s['NomSeveridadDano'].'</option>'; ?>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div class="d-grid gap-2 mt-2">
+                                                                                <button type="submit" name="editar_danio" class="modern-btn modern-btn-warning">Guardar Cambios</button>
+                                                                                <button type="button" class="modern-btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <?php endforeach; else: ?>
+                                                        <tr><td colspan="4" class="text-center">Sin daños registrados</td></tr>
+                                                    <?php endif; ?>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
-                                    <?php endforeach; else: ?>
-                                        <tr><td colspan="4" class="text-center">Sin daños registrados</td></tr>
-                                    <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Modal para registrar daño -->
-                <div class="modal fade" id="modalDanio" tabindex="-1" aria-labelledby="modalDanioLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content modern-modal-content">
-                            <div class="modal-header modern-modal-header-primary">
-                                <h5 class="modal-title" id="modalDanioLabel">Registrar Daño</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form method="post" class="d-flex flex-column gap-3">
-                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                    <div>
-                                        <label class="modern-label">Tipo de Daño</label>
-                                        <select name="tipo" class="form-control modern-input" required>
-                                            <option value="">Seleccione</option>
-                                            <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['NomTipoDano'].'</option>'; ?>
-                                        </select>
                                     </div>
-                                    <div>
-                                        <label class="modern-label">Área de Daño</label>
-                                        <select name="area" class="form-control modern-input" required>
-                                            <option value="">Seleccione</option>
-                                            <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'">'.$a['NomAreaDano'].'</option>'; ?>
-                                        </select>
+                                    <div class="tab-pane fade" id="registrar-danio" role="tabpanel" aria-labelledby="registrar-danio-tab">
+                                        <div class="modern-table-card">
+                                            <h5 class="modern-label">Registrar Daño</h5>
+                                            <form method="post" class="d-flex flex-column gap-3">
+                                                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                                <div>
+                                                    <label class="modern-label">Tipo de Daño</label>
+                                                    <select name="tipo" class="form-control modern-input" required>
+                                                        <option value="">Seleccione</option>
+                                                        <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['NomTipoDano'].'</option>'; ?>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="modern-label">Área de Daño</label>
+                                                    <select name="area" class="form-control modern-input" required>
+                                                        <option value="">Seleccione</option>
+                                                        <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'">'.$a['NomAreaDano'].'</option>'; ?>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="modern-label">Severidad</label>
+                                                    <select name="severidad" class="form-control modern-input" required>
+                                                        <option value="">Seleccione</option>
+                                                        <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['NomSeveridadDano'].'</option>'; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="d-grid gap-2 mt-2">
+                                                    <button type="submit" name="guardar_danio" class="modern-btn modern-btn-primary">Guardar</button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label class="modern-label">Severidad</label>
-                                        <select name="severidad" class="form-control modern-input" required>
-                                            <option value="">Seleccione</option>
-                                            <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['NomSeveridadDano'].'</option>'; ?>
-                                        </select>
-                                    </div>
-                                    <div class="d-grid gap-2 mt-2">
-                                        <button type="submit" name="guardar_danio" class="modern-btn modern-btn-primary">Guardar</button>
-                                        <button type="button" class="modern-btn btn-secondary" data-bs-dismiss="modal">Regresar</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                </div>
             <?php endif; ?>
         </div>
     </div>
