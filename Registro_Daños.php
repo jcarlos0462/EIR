@@ -40,13 +40,14 @@ if (isset($_POST['buscar_vin'])) {
 // Eliminar daño
 if (isset($_POST['eliminar_danio']) && isset($_POST['id_danio'])) {
     $id_danio = intval($_POST['id_danio']);
+    $vin = isset($_POST['vin']) ? trim($_POST['vin']) : '';
     $stmt = $conn->prepare("DELETE FROM RegistroDanio WHERE ID = ?");
     $stmt->bind_param('i', $id_danio);
     $stmt->execute();
     $stmt->close();
-    // Redirigir para evitar reenvío
-    if (isset($_GET['vin'])) {
-        header("Location: Registro_Daños.php?vin=" . urlencode($_GET['vin']));
+    // Redirigir para evitar reenvío y mantener contexto VIN
+    if ($vin) {
+        header("Location: Registro_Daños.php?vin=" . urlencode($vin));
     } else {
         header("Location: Registro_Daños.php");
     }
@@ -62,7 +63,7 @@ if (isset($_POST['guardar_danio'])) {
         $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano) VALUES (?, ?, ?, ?)");
         $stmt->bind_param('siii', $vin, $area, $tipo, $severidad);
         if ($stmt->execute()) {
-            // Redirigir para evitar duplicado al refrescar (PRG)
+            // Redirigir para evitar duplicado al refrescar (PRG) y mantener contexto VIN
             header("Location: Registro_Daños.php?vin=" . urlencode($vin));
             exit();
         } else {
@@ -72,6 +73,29 @@ if (isset($_POST['guardar_danio'])) {
     } else {
         $errores[] = 'Todos los campos son obligatorios.';
         $show_form = true;
+    }
+}
+// Editar daño
+if (isset($_POST['editar_danio']) && isset($_POST['id_danio'])) {
+    $id_danio = intval($_POST['id_danio']);
+    $vin = isset($_POST['vin']) ? trim($_POST['vin']) : '';
+    $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
+    $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
+    $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
+    if ($area && $tipo && $severidad) {
+        $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano = ?, CodTipoDano = ?, CodSeveridadDano = ? WHERE ID = ?");
+        $stmt->bind_param('iiii', $area, $tipo, $severidad, $id_danio);
+        $stmt->execute();
+        $stmt->close();
+        // Redirigir para evitar reenvío y mantener contexto VIN
+        if ($vin) {
+            header("Location: Registro_Daños.php?vin=" . urlencode($vin));
+        } else {
+            header("Location: Registro_Daños.php");
+        }
+        exit();
+    } else {
+        $errores[] = 'Todos los campos son obligatorios.';
     }
 }
 
@@ -177,6 +201,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                         </button>
                                         <form method="post" style="display:inline;">
                                             <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
+                                            <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
                                             <button type="submit" name="eliminar_danio" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este daño?');">
                                                 <span class="bi bi-trash-fill"></span>
                                             </button>
@@ -225,28 +250,6 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                            // Editar daño
-                            if (isset($_POST['editar_danio']) && isset($_POST['id_danio'])) {
-                                $id_danio = intval($_POST['id_danio']);
-                                $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
-                                $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
-                                $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
-                                if ($area && $tipo && $severidad) {
-                                    $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano=?, CodTipoDano=?, CodSeveridadDano=? WHERE ID=?");
-                                    $stmt->bind_param('iiii', $area, $tipo, $severidad, $id_danio);
-                                    $stmt->execute();
-                                    $stmt->close();
-                                    // Redirigir para evitar reenvío
-                                    if (isset($_GET['vin'])) {
-                                        header("Location: Registro_Daños.php?vin=" . urlencode($_GET['vin']));
-                                    } else {
-                                        header("Location: Registro_Daños.php");
-                                    }
-                                    exit();
-                                } else {
-                                    $errores[] = 'Todos los campos son obligatorios.';
-                                }
-                            }
                             <?php endforeach; else: ?>
                                 <tr><td colspan="4" class="text-center">Sin daños registrados</td></tr>
                             <?php endif; ?>
