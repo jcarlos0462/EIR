@@ -33,6 +33,21 @@ if (isset($_POST['buscar_vin'])) {
     $stmt->close();
 }
 
+// Eliminar daño
+if (isset($_POST['eliminar_danio']) && isset($_POST['id_danio'])) {
+    $id_danio = intval($_POST['id_danio']);
+    $stmt = $conn->prepare("DELETE FROM RegistroDanio WHERE ID = ?");
+    $stmt->bind_param('i', $id_danio);
+    $stmt->execute();
+    $stmt->close();
+    // Redirigir para evitar reenvío
+    if (isset($_GET['vin'])) {
+        header("Location: Registro_Daños.php?vin=" . urlencode($_GET['vin']));
+    } else {
+        header("Location: Registro_Daños.php");
+    }
+    exit();
+}
 // Guardar daño
 if (isset($_POST['guardar_danio'])) {
     $vin = trim($_POST['vin']);
@@ -146,23 +161,87 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                 </tr>
                             </thead>
                             <tbody>
-                            <?php if ($danios): foreach ($danios as $d): ?>
+                            <?php if (!empty($danios)): foreach ($danios as $d): ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
                                     <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
                                     <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-warning me-1" title="Editar">
-                                            <i class="bi bi-pencil"></i>
+                                        <button type="button" class="btn btn-sm btn-warning me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
+                                            <span class="bi bi-pencil-square"></span>
                                         </button>
                                         <form method="post" style="display:inline;">
                                             <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
                                             <button type="submit" name="eliminar_danio" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este daño?');">
-                                                <i class="bi bi-trash"></i>
+                                                <span class="bi bi-trash-fill"></span>
                                             </button>
                                         </form>
                                     </td>
-                                </tr>
+                                                                </tr>
+                                                                <!-- Modal editar daño -->
+                                                                <div class="modal fade" id="modalEditarDanio<?php echo $d['ID']; ?>" tabindex="-1" aria-labelledby="modalEditarLabel<?php echo $d['ID']; ?>" aria-hidden="true">
+                                                                    <div class="modal-dialog modal-dialog-centered">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header bg-warning text-dark">
+                                                                                <h5 class="modal-title" id="modalEditarLabel<?php echo $d['ID']; ?>">Editar Daño</h5>
+                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                                                            </div>
+                                                                            <div class="modal-body">
+                                                                                <form method="post" class="d-flex flex-column gap-3">
+                                                                                    <input type="hidden" name="id_danio" value="<?php echo $d['ID']; ?>">
+                                                                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                                                                    <div>
+                                                                                        <label class="label fw-bold text-primary">Tipo de Daño</label>
+                                                                                        <select name="tipo" class="form-control border-primary" required>
+                                                                                            <option value="">Seleccione</option>
+                                                                                            <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'"'.($t['NomTipoDano']==$d['NomTipoDano']?' selected':'').'>'.$t['NomTipoDano'].'</option>'; ?>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label class="label fw-bold text-primary">Área de Daño</label>
+                                                                                        <select name="area" class="form-control border-primary" required>
+                                                                                            <option value="">Seleccione</option>
+                                                                                            <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'"'.($a['NomAreaDano']==$d['NomAreaDano']?' selected':'').'>'.$a['NomAreaDano'].'</option>'; ?>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label class="label fw-bold text-primary">Severidad</label>
+                                                                                        <select name="severidad" class="form-control border-primary" required>
+                                                                                            <option value="">Seleccione</option>
+                                                                                            <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'"'.($s['NomSeveridadDano']==$d['NomSeveridadDano']?' selected':'').'>'.$s['NomSeveridadDano'].'</option>'; ?>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div class="d-grid gap-2 mt-2">
+                                                                                        <button type="submit" name="editar_danio" class="btn btn-warning">Guardar Cambios</button>
+                                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                                                    </div>
+                                                                                </form>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                            // Editar daño
+                            if (isset($_POST['editar_danio']) && isset($_POST['id_danio'])) {
+                                $id_danio = intval($_POST['id_danio']);
+                                $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
+                                $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
+                                $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
+                                if ($area && $tipo && $severidad) {
+                                    $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano=?, CodTipoDano=?, CodSeveridadDano=? WHERE ID=?");
+                                    $stmt->bind_param('iiii', $area, $tipo, $severidad, $id_danio);
+                                    $stmt->execute();
+                                    $stmt->close();
+                                    // Redirigir para evitar reenvío
+                                    if (isset($_GET['vin'])) {
+                                        header("Location: Registro_Daños.php?vin=" . urlencode($_GET['vin']));
+                                    } else {
+                                        header("Location: Registro_Daños.php");
+                                    }
+                                    exit();
+                                } else {
+                                    $errores[] = 'Todos los campos son obligatorios.';
+                                }
+                            }
                             <?php endforeach; else: ?>
                                 <tr><td colspan="4" class="text-center">Sin daños registrados</td></tr>
                             <?php endif; ?>
