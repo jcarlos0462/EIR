@@ -104,6 +104,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano FROM severidaddano ORDER BY
         <div class="col-md-3 col-lg-2">
             <?php include 'sidebar.php'; ?>
         </div>
+        <br>
         <div class="col-md-9 col-lg-10 main-content">
             <div class="row mb-4">
                 <div class="col-12">
