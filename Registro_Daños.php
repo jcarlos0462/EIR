@@ -363,7 +363,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                         <div class="modal-body">
                             <div class="qr-help" id="qr-help-msg">Apunta la cámara al código QR del VIN</div>
                             <!-- CONTENEDOR DE LA CAMARA -->
-                            <div id="qr-reader" style="width:100%; display:none;"></div>
+                            <div id="qr-reader" style="width:100%; min-height:300px; display:none;"></div>
                         </div>
                     </div>
                 </div>
@@ -530,29 +530,40 @@ let html5QrCode;
 function abrirCamara() {
     const qrReader = document.getElementById("qr-reader");
     qrReader.style.display = "block";
+    // Destruir instancia previa si existe
+    if (window.html5QrCode && typeof window.html5QrCode.stop === 'function') {
+        try { window.html5QrCode.stop(); window.html5QrCode.clear(); } catch(e){}
+        window.html5QrCode = null;
+    }
     setTimeout(() => {
-        html5QrCode = new Html5Qrcode("qr-reader");
-        html5QrCode.start(
-            { facingMode: "environment" }, // 🔥 CAMARA TRASERA
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 }
-            },
-            qrCodeMessage => {
-                document.getElementById("qrInput").value = qrCodeMessage;
-                html5QrCode.stop().then(() => {
-                    qrReader.style.display = "none";
-                });
-                document.getElementById("formBuscar").submit();
-            },
-            errorMessage => {
-                // errores silenciosos
-            }
-        ).catch(err => {
-            alert("No se pudo acceder a la cámara trasera");
-            console.error(err);
-        });
-    }, 350);
+        try {
+            html5QrCode = new Html5Qrcode("qr-reader");
+            window.html5QrCode = html5QrCode;
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                qrCodeMessage => {
+                    document.getElementById("qrInput").value = qrCodeMessage;
+                    html5QrCode.stop().then(() => {
+                        qrReader.style.display = "none";
+                    });
+                    document.getElementById("formBuscar").submit();
+                },
+                errorMessage => {
+                    // errores silenciosos
+                }
+            ).then(() => {
+                document.getElementById('qr-help-msg').style.display = 'none';
+            }).catch(err => {
+                document.getElementById('qr-help-msg').style.display = 'block';
+                document.getElementById('qr-help-msg').innerText = 'No se pudo acceder a la cámara. Permite el acceso o revisa tu dispositivo.';
+                console.error(err);
+            });
+        } catch (e) {
+            document.getElementById('qr-help-msg').style.display = 'block';
+            document.getElementById('qr-help-msg').innerText = 'No se pudo inicializar la cámara.';
+        }
+    }, 500);
 }
 
 // Mostrar el modal QR y abrir la cámara
