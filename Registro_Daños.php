@@ -523,62 +523,68 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
     <script>
-    // Abrir modal QR
-    let qrScanner;
+    let html5QrCode;
 
-    // Mostrar el modal QR
+    // Mostrar el modal QR y abrir la cámara
     document.getElementById('btnScanQR').addEventListener('click', function() {
         document.getElementById('qr-reader').innerHTML = '';
+        document.getElementById('qr-help-msg').style.display = 'block';
+        document.getElementById('qr-help-msg').innerText = 'Apunta la cámara al código QR del VIN';
         var qrModal = new bootstrap.Modal(document.getElementById('modalQR'));
         qrModal.show();
     });
 
     // Iniciar el escáner QR cuando el modal esté completamente visible
     document.getElementById('modalQR').addEventListener('shown.bs.modal', function () {
-        startQRScanner();
+        abrirCamara();
     });
 
-    function startQRScanner() {
-        if (qrScanner) {
-            qrScanner.clear().then(() => {
-                qrScanner = null;
-                iniciarQR();
+    function abrirCamara() {
+        const qrReader = document.getElementById("qr-reader");
+        qrReader.style.display = "block";
+
+        // Limpiar instancia previa
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                html5QrCode = null;
+                iniciarCamara();
             }).catch(() => {
-                qrScanner = null;
-                iniciarQR();
+                html5QrCode = null;
+                iniciarCamara();
             });
         } else {
-            iniciarQR();
+            iniciarCamara();
         }
     }
 
-    function iniciarQR() {
-        // Forzar destrucción previa
-        if (window.qrScannerInstance) {
-            try { window.qrScannerInstance.clear(); } catch(e){}
-            window.qrScannerInstance = null;
-        }
-        document.getElementById('qr-help-msg').style.display = 'block';
+    function iniciarCamara() {
+        const qrReader = document.getElementById("qr-reader");
         try {
-            qrScanner = new Html5Qrcode("qr-reader");
-            window.qrScannerInstance = qrScanner;
-            qrScanner.start(
+            html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
                 { facingMode: "environment" },
-                { fps: 10, qrbox: 250 },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
                 qrCodeMessage => {
-                    document.getElementById('vinInput').value = qrCodeMessage;
-                    bootstrap.Modal.getInstance(document.getElementById('modalQR')).hide();
-                    qrScanner.stop();
-                    // Enviar el formulario automáticamente al escanear
-                    setTimeout(function() {
-                        document.querySelector('form input[name="vin"]').form.submit();
-                    }, 300);
+                    document.getElementById("vinInput").value = qrCodeMessage;
+                    html5QrCode.stop().then(() => {
+                        qrReader.style.display = "none";
+                        // Cerrar modal
+                        bootstrap.Modal.getInstance(document.getElementById('modalQR')).hide();
+                        // Enviar el formulario automáticamente
+                        setTimeout(function() {
+                            document.querySelector('form input[name="vin"]').form.submit();
+                        }, 300);
+                    });
                 },
-                errorMessage => {}
+                errorMessage => {
+                    // errores silenciosos
+                }
             ).then(() => {
                 document.getElementById('qr-help-msg').style.display = 'none';
             }).catch(err => {
-                document.getElementById('qr-help-msg').innerText = 'No se pudo acceder a la cámara. Permite el acceso o revisa tu dispositivo.';
+                document.getElementById('qr-help-msg').innerText = 'No se pudo acceder a la cámara trasera';
+                console.error(err);
             });
         } catch (e) {
             document.getElementById('qr-help-msg').innerText = 'No se pudo inicializar la cámara.';
@@ -587,12 +593,13 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
 
     // Limpiar QR al cerrar modal
     document.getElementById('modalQR').addEventListener('hidden.bs.modal', function () {
-        if (qrScanner) {
-            qrScanner.stop().then(() => {
-                qrScanner = null;
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                html5QrCode = null;
                 document.getElementById('qr-reader').innerHTML = '';
             }).catch(() => {
-                qrScanner = null;
+                html5QrCode = null;
                 document.getElementById('qr-reader').innerHTML = '';
             });
         } else {
