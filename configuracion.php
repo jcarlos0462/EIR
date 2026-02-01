@@ -136,12 +136,20 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
             <!-- Sidebar -->
             <?php include 'sidebar.php'; ?>
             <div class="col-md-9 col-lg-10 main-content">
-                <div class="modern-card mb-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
-                    <h2 class="mb-3 mb-md-0">Configuración del Sistema</h2>
-                    <a href="Administrar.php" class="modern-btn btn-secondary">Volver</a>
+                <div class="modern-card mb-4">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        <h2 class="mb-3 mb-md-0">Configuración del Sistema</h2>
+                        <a href="Administrar.php" class="modern-btn btn-secondary">Volver</a>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3 justify-content-center mt-4 mb-2" id="configTabs">
+                        <button class="modern-btn modern-btn-primary" id="tab-estadisticas" onclick="mostrarSeccion('estadisticas', this)"><i class="bi bi-graph-up"></i> Estadísticas</button>
+                        <button class="modern-btn modern-btn-primary" id="tab-usuarios" onclick="mostrarSeccion('usuarios', this)"><i class="bi bi-people"></i> Usuarios</button>
+                        <button class="modern-btn modern-btn-primary" id="tab-roles" onclick="mostrarSeccion('roles', this)"><i class="bi bi-shield-badge"></i> Roles</button>
+                        <button class="modern-btn modern-btn-primary" id="tab-accesos" onclick="mostrarSeccion('accesos', this)"><i class="bi bi-shield-lock"></i> Accesos</button>
+                        <button class="modern-btn modern-btn-primary" id="tab-conectados" onclick="mostrarSeccion('conectados', this)"><i class="bi bi-person-check"></i> Conectados</button>
+                    </div>
                 </div>
                 <div class="modern-card" style="padding: 1.5rem 1rem;">
-            <!-- Contenido Principal -->
 
                 <!-- SECCIÓN: ESTADÍSTICAS -->
                 <div id="estadisticas" class="content-section active">
@@ -567,25 +575,25 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function mostrarSeccion(seccion) {
+        // Tabs de navegación para configuración
+        function mostrarSeccion(seccion, btn) {
             // Ocultar todas las secciones
             const secciones = document.querySelectorAll('.content-section');
             secciones.forEach(s => s.classList.remove('active'));
-
             // Mostrar la sección seleccionada
             const seccionActiva = document.getElementById(seccion);
             if (seccionActiva) {
                 seccionActiva.classList.add('active');
             }
-
-            // Actualizar nav activo
-            const links = document.querySelectorAll('.sidebar a.nav-link');
-            links.forEach(link => link.classList.remove('active'));
-            event.target.closest('a').classList.add('active');
-
-            // Prevenir scroll al inicio
-            return false;
+            // Quitar activo de todos los tabs
+            document.querySelectorAll('#configTabs button').forEach(b => b.classList.remove('active'));
+            // Poner activo al tab actual
+            if (btn) btn.classList.add('active');
         }
+        // Activar tab por defecto
+        document.addEventListener('DOMContentLoaded', function() {
+            mostrarSeccion('estadisticas', document.getElementById('tab-estadisticas'));
+        });
 
         function forzarLogout(usuarioId) {
             if (confirm('¿Estás seguro de que deseas forzar el cierre de sesión de este usuario?')) {
