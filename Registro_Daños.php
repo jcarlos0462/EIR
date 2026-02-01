@@ -36,9 +36,9 @@ if (isset($_POST['buscar_vin'])) {
 // Guardar daño
 if (isset($_POST['guardar_danio'])) {
     $vin = trim($_POST['vin']);
-    // Guardar daño
-    $tipo = intval($_POST['tipo']);
-    $severidad = intval($_POST['severidad']);
+    $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
+    $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
+    $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
     if ($vin && $area && $tipo && $severidad) {
         $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano) VALUES (?, ?, ?, ?)");
         $stmt->bind_param('siii', $vin, $area, $tipo, $severidad);
@@ -60,6 +60,11 @@ if (isset($_POST['guardar_danio'])) {
     $stmt->fetch();
     $stmt->close();
     $sql = "SELECT ID, CodAreaDano, CodTipoDano, CodSeveridadDano FROM RegistroDanio WHERE VIN = ? ORDER BY ID DESC";
+    $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano FROM RegistroDanio r
+            JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
+            JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
+            JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
+            WHERE r.VIN = ? ORDER BY r.ID DESC";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('s', $vin);
     $stmt->execute();
@@ -72,13 +77,16 @@ if (isset($_POST['guardar_danio'])) {
 }
 
 // Cargar listas para selects
-$areas = $conn->query("SELECT CodAreaDano FROM areadano ORDER BY CodAreaDano");
-$tipos = $conn->query("SELECT CodTipoDano FROM tipodano ORDER BY CodTipoDano");
-$severidades = $conn->query("SELECT CodSeveridadDano FROM severidaddano ORDER BY CodSeveridadDano");
+// Cargar listas para selects con descripciones
+$areas = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY CodAreaDano");
+$tipos = $conn->query("SELECT CodTipoDano, NomTipoDano FROM tipodano ORDER BY CodTipoDano");
+$severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM severidaddano ORDER BY CodSeveridadDano");
 ?>
+    <?php
     $areas = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY CodAreaDano");
     $tipos = $conn->query("SELECT CodTipoDano, NomTipoDano FROM tipodano ORDER BY CodTipoDano");
     $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM severidaddano ORDER BY CodSeveridadDano");
+    ?>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -153,9 +161,9 @@ $severidades = $conn->query("SELECT CodSeveridadDano FROM severidaddano ORDER BY
                             <tbody>
                             <?php if ($danios): foreach ($danios as $d): ?>
                                 <tr>
-                                    <td><?php echo $d['CodAreaDano']; ?></td>
-                                    <td><?php echo $d['CodTipoDano']; ?></td>
-                                    <td><?php echo $d['CodSeveridadDano']; ?></td>
+                                    <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
+                                    <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
+                                    <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
                                 </tr>
                             <?php endforeach; else: ?>
                                 <tr><td colspan="3" class="text-center">Sin daños registrados</td></tr>
@@ -181,21 +189,21 @@ $severidades = $conn->query("SELECT CodSeveridadDano FROM severidaddano ORDER BY
                                                         <label class="label fw-bold text-primary">Tipo de Daño</label>
                                                         <select name="tipo" class="form-control border-primary" required>
                                                             <option value="">Seleccione</option>
-                                                            <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['CodTipoDano'].'</option>'; ?>
+                                                            <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['NomTipoDano'].'</option>'; ?>
                                                         </select>
                                                     </div>
                                                     <div>
                                                         <label class="label fw-bold text-primary">Área de Daño</label>
                                                         <select name="area" class="form-control border-primary" required>
                                                             <option value="">Seleccione</option>
-                                                            <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'">'.$a['CodAreaDano'].'</option>'; ?>
+                                                            <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'">'.$a['NomAreaDano'].'</option>'; ?>
                                                         </select>
                                                     </div>
                                                     <div>
                                                         <label class="label fw-bold text-primary">Severidad</label>
                                                         <select name="severidad" class="form-control border-primary" required>
                                                             <option value="">Seleccione</option>
-                                                            <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['CodSeveridadDano'].'</option>'; ?>
+                                                            <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['NomSeveridadDano'].'</option>'; ?>
                                                         </select>
                                                     </div>
                                                     <div class="d-grid gap-2 mt-2">
