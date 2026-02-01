@@ -32,172 +32,99 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
     <link rel="stylesheet" href="navbar_styles.css">
     <style>
         body {
-            background-color: #f8f9fa;
-        }
-        .sidebar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(120deg, #6a82fb 0%, #fc5c7d 100%);
             min-height: 100vh;
-            padding: 20px;
         }
-        .sidebar h5 {
-            font-weight: 700;
-            margin-bottom: 30px;
-            border-bottom: 2px solid rgba(255,255,255,0.2);
-            padding-bottom: 15px;
+        .modern-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
+            padding: 2.5rem 2rem 2rem 2rem;
+            margin: 40px auto 0 auto;
+            max-width: 900px;
         }
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: block;
-            transition: all 0.3s;
+        .modern-table-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px 0 rgba(60,60,120,0.13);
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            margin-bottom: 2rem;
         }
-        .sidebar a:hover, .sidebar a.active {
-            background-color: rgba(255,255,255,0.2);
-            padding-left: 25px;
-        }
-        .stat-card {
-            background: white;
+        .modern-table {
             border-radius: 12px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            transition: all 0.3s;
+            overflow: hidden;
+            background: #f4f7fb;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.07);
         }
-        .stat-card:hover {
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-            transform: translateY(-5px);
+        .modern-table thead {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
+            font-size: 1.08rem;
+            letter-spacing: 0.5px;
         }
-        .stat-number {
-            font-size: 32px;
-            font-weight: 700;
-            color: #667eea;
-            margin: 15px 0;
+        .modern-table th, .modern-table td {
+            vertical-align: middle;
+            font-size: 1.08rem;
         }
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .stat-icon {
-            font-size: 32px;
-            color: #764ba2;
-        }
-        .btn-ver {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        .btn-ver:hover {
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 12px rgba(102, 126, 234, 0.4);
-        }
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .header h2 {
-            color: #333;
-            font-weight: 700;
-            margin: 0;
-        }
-        .header-subtitle {
-            color: #666;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-        .content-section {
-            display: none;
-        }
-        .content-section.active {
-            display: block;
-        }
-        .table-responsive {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .table {
-            margin: 0;
-        }
-        .table thead {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
-        }
-        .table thead th {
-            font-weight: 600;
-            color: #667eea;
+        .modern-table th {
             border: none;
         }
-        .form-card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+        .modern-table td {
+            background: #fff;
+            border-top: 1px solid #e0e6f7;
         }
-        .form-card h4 {
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #667eea;
+        .modern-table tbody tr:hover {
+            background: #f0f4ff;
+            transition: background 0.2s;
         }
-        .form-control, .form-select {
-            border-radius: 8px;
-            border: 2px solid #e0e0e0;
+        .modern-btn {
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0.7rem 1.5rem;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08);
         }
-        .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
-        }
-        .btn-primary-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .modern-btn-primary {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
             border: none;
-            color: white;
-            font-weight: 600;
-            padding: 10px 20px;
-            border-radius: 8px;
-            transition: all 0.3s;
         }
-        .btn-primary-custom:hover {
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 12px rgba(102, 126, 234, 0.4);
+        .modern-btn-primary:hover {
+            background: linear-gradient(90deg, #2d4e8c 60%, #426dc9 100%);
+            color: #fff;
         }
-        .badge-status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+        .modern-btn-success {
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+            color: #fff;
+            border: none;
+        }
+        .modern-btn-success:hover {
+            background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+            color: #fff;
+        }
+        .modern-label {
+            font-weight: 700;
+            color: #426dc9;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .modern-input {
+            font-size: 1.1rem;
+            border-radius: 12px;
+            padding: 0.7rem 1.2rem;
+            border: 2px solid #e0e6f7;
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.04);
+        }
+        .modern-modal-header-primary {
+            background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
+            color: #fff;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
         }
         @media (max-width: 768px) {
-            .sidebar {
-                padding: 10px;
-            }
-            .sidebar a {
-                padding: 8px 10px;
-                font-size: 13px;
-            }
-            .stat-number {
-                font-size: 24px;
-            }
-            .stat-icon {
-                font-size: 24px;
+            .modern-card, .modern-table-card {
+                padding: 1.2rem 0.7rem 1rem 0.7rem;
+                max-width: 100%;
             }
         }
     </style>
@@ -209,11 +136,12 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
             <!-- Sidebar -->
             <?php include 'sidebar.php'; ?>
             <div class="col-md-9 col-lg-10 main-content">
-                <!-- Todo el contenido de configuración, gestión de usuarios, accesos, roles, etc. está aquí -->
-                ...existing code...
-
+                <div class="modern-card mb-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <h2 class="mb-3 mb-md-0">Configuración del Sistema</h2>
+                    <a href="Administrar.php" class="modern-btn btn-secondary">Volver</a>
+                </div>
+                <div class="modern-card" style="padding: 1.5rem 1rem;">
             <!-- Contenido Principal -->
-            <div class="col-md-9 col-lg-10" style="padding: 25px;">
 
                 <!-- SECCIÓN: ESTADÍSTICAS -->
                 <div id="estadisticas" class="content-section active">
