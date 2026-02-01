@@ -16,211 +16,205 @@ $dbname = "u174025152_EIR";
 $conn = new mysqli($servername, $username, $password, $dbname);
 
 if ($conn->connect_error) {
-    <?php
-    // Modern, responsive listar_vehiculos.php
-    include 'database_connection.php';
-    ?>
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Lista de Vehículos</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="navbar_styles.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-        <style>
-            body {
-                background: linear-gradient(120deg, #6a82fb 0%, #fc5c7d 100%);
-                min-height: 100vh;
-            }
-            .modern-card {
-                background: #fff;
-                border-radius: 18px;
-                box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
-                padding: 2.5rem 2rem 2rem 2rem;
-                margin: 40px auto 0 auto;
-                max-width: 900px;
-            }
-            .modern-label {
-                font-weight: 700;
-                color: #426dc9;
-                font-size: 1.2rem;
-                margin-bottom: 0.5rem;
-            }
-            .modern-table-card {
-                background: #fff;
-                border-radius: 18px;
-                box-shadow: 0 4px 24px 0 rgba(60,60,120,0.13);
-                padding: 2rem 1.5rem 1.5rem 1.5rem;
-                margin-bottom: 2rem;
-            }
-            .modern-table {
-                border-radius: 12px;
-                overflow: hidden;
-                background: #f4f7fb;
-                box-shadow: 0 2px 8px 0 rgba(60,60,120,0.07);
-            }
-            .modern-table thead {
-                background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
-                color: #fff;
-                font-size: 1.08rem;
-                letter-spacing: 0.5px;
-            }
-            .modern-table th, .modern-table td {
-                vertical-align: middle;
-                font-size: 1.08rem;
-            }
-            .modern-table th {
-                border: none;
-            }
-            .modern-table td {
-                background: #fff;
-                border-top: 1px solid #e0e6f7;
-            }
-            .modern-table tbody tr:hover {
-                background: #f0f4ff;
-                transition: background 0.2s;
-            }
-            .modern-btn {
-                border-radius: 12px;
-                font-size: 1.1rem;
-                font-weight: 600;
-                padding: 0.7rem 1.5rem;
-                box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08);
-            }
-            .modern-btn-primary {
-                background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
-                color: #fff;
-                border: none;
-            }
-            .modern-btn-primary:hover {
-                background: linear-gradient(90deg, #2d4e8c 60%, #426dc9 100%);
-                color: #fff;
-            }
-            .modern-btn-warning {
-                background: linear-gradient(90deg, #f7971e 0%, #ffd200 100%);
-                color: #333;
-                border: none;
-            }
-            .modern-btn-warning:hover {
-                background: linear-gradient(90deg, #ffd200 0%, #f7971e 100%);
-                color: #222;
-            }
-            .modern-btn-danger {
-                background: linear-gradient(90deg, #f857a6 0%, #ff5858 100%);
-                color: #fff;
-                border: none;
-            }
-            .modern-btn-danger:hover {
-                background: linear-gradient(90deg, #ff5858 0%, #f857a6 100%);
-                color: #fff;
-            }
-            .modern-modal-header-primary {
-                background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
-                color: #fff;
-                border-top-left-radius: 18px;
-                border-top-right-radius: 18px;
-            }
-            .modern-modal-content {
-                border-radius: 18px;
-            }
-        </style>
-    </head>
-    <body>
-        <?php include 'navbar.php'; ?>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-3 col-lg-2">
-                    <?php include 'sidebar.php'; ?>
-                </div>
-                <div class="col-md-9 col-lg-10 main-content">
-                    <div class="modern-card">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="modern-label">Lista de Vehículos</span>
-                            <a href="agregar_vehiculo.php" class="modern-btn modern-btn-primary"><i class="bi bi-plus-lg"></i> Agregar Vehículo</a>
-                        </div>
-                        <div class="modern-table-card">
-                            <div class="table-responsive">
-                                <table class="table modern-table mb-2">
-                                    <thead>
-                                        <tr>
-                                            <th>VIN</th>
-                                            <th>Marca</th>
-                                            <th>Modelo</th>
-                                            <th>Color</th>
-                                            <th style="width:120px;">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php
-                                        $result = $conn->query("SELECT VIN, Marca, Modelo, Color FROM vehiculo ORDER BY VIN DESC");
-                                        if ($result && $result->num_rows > 0):
-                                            while ($row = $result->fetch_assoc()):
-                                        ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($row['VIN']); ?></td>
-                                            <td><?php echo htmlspecialchars($row['Marca']); ?></td>
-                                            <td><?php echo htmlspecialchars($row['Modelo']); ?></td>
-                                            <td><?php echo htmlspecialchars($row['Color']); ?></td>
-                                            <td>
-                                                <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarVehiculo<?php echo $row['VIN']; ?>">
-                                                    <span class="bi bi-pencil-square"></span>
-                                                </button>
-                                                <form method="post" action="eliminar_vehiculo.php" style="display:inline;">
-                                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($row['VIN']); ?>">
-                                                    <button type="submit" class="modern-btn modern-btn-danger btn-sm" title="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este vehículo?');">
-                                                        <span class="bi bi-trash-fill"></span>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        <!-- Modal editar vehículo -->
-                                        <div class="modal fade" id="modalEditarVehiculo<?php echo $row['VIN']; ?>" tabindex="-1" aria-labelledby="modalEditarVehiculoLabel<?php echo $row['VIN']; ?>" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <div class="modal-content modern-modal-content">
-                                                    <div class="modal-header modern-modal-header-primary">
-                                                        <h5 class="modal-title" id="modalEditarVehiculoLabel<?php echo $row['VIN']; ?>">Editar Vehículo</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <form method="post" action="editar_vehiculo.php" class="d-flex flex-column gap-3">
-                                                            <input type="hidden" name="vin" value="<?php echo htmlspecialchars($row['VIN']); ?>">
-                                                            <div>
-                                                                <label class="modern-label">Marca</label>
-                                                                <input type="text" name="marca" class="form-control modern-input" value="<?php echo htmlspecialchars($row['Marca']); ?>" required>
-                                                            </div>
-                                                            <div>
-                                                                <label class="modern-label">Modelo</label>
-                                                                <input type="text" name="modelo" class="form-control modern-input" value="<?php echo htmlspecialchars($row['Modelo']); ?>" required>
-                                                            </div>
-                                                            <div>
-                                                                <label class="modern-label">Color</label>
-                                                                <input type="text" name="color" class="form-control modern-input" value="<?php echo htmlspecialchars($row['Color']); ?>" required>
-                                                            </div>
-                                                            <div class="d-grid gap-2 mt-2">
-                                                                <button type="submit" class="modern-btn modern-btn-warning">Guardar Cambios</button>
-                                                                <button type="button" class="modern-btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <?php endwhile; else: ?>
-                                        <tr><td colspan="5" class="text-center">Sin vehículos registrados</td></tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+    die("Conexión fallida: " . $conn->connect_error);
+}
+
+// Obtener todos los vehículos
+$sql = "SELECT * FROM vehiculo ORDER BY ID DESC";
+$result = $conn->query($sql);
+
+// Procesar actualización si se envía
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
+    $id = $_POST['id'];
+    $buque = trim($_POST['buque']);
+    $viaje = trim($_POST['viaje']);
+    $marca = trim($_POST['marca']);
+    $modelo = trim($_POST['modelo']);
+    $color = trim($_POST['color']);
+    $ano = trim($_POST['ano']);
+    $puerto = trim($_POST['puerto']);
+    $terminal = trim($_POST['terminal']);
+    
+    $sql_update = "UPDATE vehiculo SET Buque=?, Viaje=?, Marca=?, Modelo=?, Color=?, Año=?, Puerto=?, Terminal=? WHERE ID=?";
+    $stmt = $conn->prepare($sql_update);
+    $stmt->bind_param("ssssssssi", $buque, $viaje, $marca, $modelo, $color, $ano, $puerto, $terminal, $id);
+    
+    if ($stmt->execute()) {
+        header("Location: listar_vehiculos.php?exito=1");
+        exit();
+    }
+    $stmt->close();
+}
+
+// Procesar eliminación si se solicita
+if (isset($_GET['eliminar'])) {
+    $id = $_GET['eliminar'];
+    $sql_delete = "DELETE FROM vehiculo WHERE ID = ?";
+    $stmt = $conn->prepare($sql_delete);
+    $stmt->bind_param("i", $id);
+    
+    if ($stmt->execute()) {
+        header("Location: listar_vehiculos.php?exito=2");
+        exit();
+    }
+    $stmt->close();
+}
+
+// Modo edición
+$edit_mode = false;
+$vehiculo_edit = null;
+if (isset($_GET['editar'])) {
+    $edit_mode = true;
+    $id_edit = $_GET['editar'];
+    $sql_edit = "SELECT * FROM vehiculo WHERE ID = ?";
+    $stmt = $conn->prepare($sql_edit);
+    $stmt->bind_param("i", $id_edit);
+    $stmt->execute();
+    $vehiculo_edit = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Vehículos - EIR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="navbar_styles.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .main-content {
+            padding: 30px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .user-info {
+            color: white;
+            font-size: 14px;
+        }
+        .table {
+            background: white;
+        }
+        .btn-edit {
+            background-color: #667eea;
+            color: white;
+            border: none;
+        }
+        .btn-edit:hover {
+            background-color: #764ba2;
+            color: white;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <?php include 'navbar.php'; ?>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3 col-lg-2">
+                <?php include 'sidebar.php'; ?>
+            </div>
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Lista de Vehículos</h2>
+                    <div>
+                        <a href="agregar_vehiculo.php" class="btn btn-primary">Agregar Vehículo</a>
+                        <a href="Administrar.php" class="btn btn-secondary ms-2">Volver</a>
                     </div>
+                </div>
+
+                <?php if (isset($_GET['exito'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?php echo $_GET['exito'] == 2 ? 'Vehículo eliminado exitosamente' : 'Vehículo actualizado exitosamente'; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>                        
+                                <th>Buque</th>
+                                <th>Viaje</th>
+                                <th>VIN</th>
+                                <th>Marca</th>
+                                <th>Modelo</th>
+                                <th>Año</th>
+                                <th>Color</th>
+                                <th>Puerto</th>
+                                <th>Terminal</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($result->num_rows > 0): ?>
+                                <?php while ($row = $result->fetch_assoc()): ?>
+                                    <tr >                                      
+                                        <td><?php echo htmlspecialchars($row['Buque']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['Viaje']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['VIN']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['Marca']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['Modelo']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['Año']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['Color']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['Puerto']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['Terminal']); ?></td>
+                                        <td>
+                                            <a href="?editar=<?php echo $row['ID']; ?>" class="btn btn-sm btn-edit">Editar</a>
+                                            <a href="?eliminar=<?php echo $row['ID']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Está seguro de que desea eliminar este vehículo?')">Eliminar</a>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="11" class="text-center text-muted py-4">No hay vehículos registrados</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
-    </html>
+    </div>
+
+    <!-- Modal para Editar -->
+    <?php if ($edit_mode && $vehiculo_edit): ?>
+        <div class="modal fade show" id="editModal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Vehículo</h5>
+                        <a href="listar_vehiculos.php" class="btn-close"></a>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" action="">
+                            <input type="hidden" name="id" value="<?php echo $vehiculo_edit['ID']; ?>">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="buque" class="form-label">Buque</label>
+                                    <input type="text" class="form-control" name="buque" value="<?php echo htmlspecialchars($vehiculo_edit['Buque']); ?>">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="viaje" class="form-label">Viaje</label>
+                                    <input type="text" class="form-control" name="viaje" value="<?php echo htmlspecialchars($vehiculo_edit['Viaje']); ?>">
+                                </div>
                             </div>
 
                             <div class="row">
