@@ -10,9 +10,9 @@ echo "<h2>Migración: Agregar columna Descripcion a RegistroDanio</h2>";
 // Verificar si la columna ya existe
 $check = $conn->query("SHOW COLUMNS FROM RegistroDanio LIKE 'Descripcion'");
 if ($check->num_rows == 0) {
-    // Agregar la columna Descripcion
-    $sql = "ALTER TABLE RegistroDanio ADD COLUMN Descripcion TEXT AFTER CodSeveridadDano";
-    if ($conn->query($sql)) {
+    // Agregar la columna Descripcion (sin especificar posición para evitar problemas de compatibilidad)
+    $sql = "ALTER TABLE RegistroDanio ADD COLUMN Descripcion TEXT";
+    if ($conn->query($sql) === true) {
         echo "<p style='color: green;'>✓ Columna 'Descripcion' agregada exitosamente a la tabla RegistroDanio.</p>";
     } else {
         echo "<p style='color: red;'>✗ Error al agregar la columna: " . $conn->error . "</p>";
