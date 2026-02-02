@@ -25,7 +25,7 @@ if ($vin) {
     if ($stmt->fetch()) {
         // Buscar daños registrados con descripciones
         $stmt->close();
-        $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano FROM RegistroDanio r
+        $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano, r.Descripcion FROM RegistroDanio r
                 JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
                 JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
                 JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
@@ -65,9 +65,10 @@ if (isset($_POST['guardar_danio'])) {
     $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
     $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
     $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
+    $descripcion = isset($_POST['descripcion']) ? trim($_POST['descripcion']) : '';
     if ($vin && $area && $tipo && $severidad) {
-        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param('siii', $vin, $area, $tipo, $severidad);
+        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, Descripcion) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param('siiis', $vin, $area, $tipo, $severidad, $descripcion);
         if ($stmt->execute()) {
             // Redirigir para evitar duplicado al refrescar (PRG) y mantener contexto VIN
             header("Location: Registro_Daños.php?vin=" . urlencode($vin));
@@ -88,9 +89,10 @@ if (isset($_POST['editar_danio']) && isset($_POST['id_danio'])) {
     $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
     $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
     $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
+    $descripcion = isset($_POST['descripcion']) ? trim($_POST['descripcion']) : '';
     if ($area && $tipo && $severidad) {
-        $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano = ?, CodTipoDano = ?, CodSeveridadDano = ? WHERE ID = ?");
-        $stmt->bind_param('iiii', $area, $tipo, $severidad, $id_danio);
+        $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano = ?, CodTipoDano = ?, CodSeveridadDano = ?, Descripcion = ? WHERE ID = ?");
+        $stmt->bind_param('iiisi', $area, $tipo, $severidad, $descripcion, $id_danio);
         $stmt->execute();
         $stmt->close();
         // Redirigir para evitar reenvío y mantener contexto VIN
@@ -404,6 +406,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             <th>Área</th>
                                             <th>Tipo</th>
                                             <th>Severidad</th>
+                                            <th>Descripción</th>
                                             <th style="width:120px;">Acciones</th>
                                         </tr>
                                     </thead>
@@ -413,6 +416,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($d['Descripcion'] ?? ''); ?></td>
                                             <td>
                                                 <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
                                                     <span class="bi bi-pencil-square"></span>
@@ -459,6 +463,10 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                                                     <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'"'.($s['NomSeveridadDano']==$d['NomSeveridadDano']?' selected':'').'>'.$s['NomSeveridadDano'].'</option>'; ?>
                                                                 </select>
                                                             </div>
+                                                            <div>
+                                                                <label class="modern-label">Descripción</label>
+                                                                <textarea name="descripcion" class="form-control modern-input" rows="3" placeholder="Detalles adicionales del daño (opcional)" style="text-align: left;"><?php echo htmlspecialchars($d['Descripcion'] ?? ''); ?></textarea>
+                                                            </div>
                                                             <div class="d-grid gap-2 mt-2">
                                                                 <button type="submit" name="editar_danio" class="modern-btn modern-btn-warning">Guardar Cambios</button>
                                                                 <button type="button" class="modern-btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -469,7 +477,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             </div>
                                         </div>
                                     <?php endforeach; else: ?>
-                                        <tr><td colspan="4" class="text-center">Sin daños registrados</td></tr>
+                                        <tr><td colspan="5" class="text-center">Sin daños registrados</td></tr>
                                     <?php endif; ?>
                                     </tbody>
                                 </table>
@@ -508,6 +516,10 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             <option value="">Seleccione</option>
                                             <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['NomSeveridadDano'].'</option>'; ?>
                                         </select>
+                                    </div>
+                                    <div>
+                                        <label class="modern-label">Descripción</label>
+                                        <textarea name="descripcion" class="form-control modern-input" rows="3" placeholder="Detalles adicionales del daño (opcional)" style="text-align: left;"></textarea>
                                     </div>
                                     <div class="d-grid gap-2 mt-2">
                                         <button type="submit" name="guardar_danio" class="modern-btn modern-btn-primary">Guardar</button>
