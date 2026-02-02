@@ -36,6 +36,7 @@ $sql = "CREATE TABLE IF NOT EXISTS RegistroDanio (
     AreaID INT NOT NULL,
     TipoID INT NOT NULL,
     SeveridadID INT NOT NULL,
+    Descripcion TEXT,
     FechaRegistro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (VIN) REFERENCES vehiculo(VIN),
     FOREIGN KEY (AreaID) REFERENCES areadano(ID),
