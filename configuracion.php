@@ -15,6 +15,44 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
 // Conexión a base de datos
 include 'database_connection.php';
 
+// Crear usuario desde Configuración
+$user_create_error = '';
+$user_create_success = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['crear_usuario'])) {
+    $nombre = trim($_POST['nombre'] ?? '');
+    $usuario = trim($_POST['usuario'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if ($nombre === '' || $usuario === '' || $password === '') {
+        $user_create_error = 'Todos los campos obligatorios deben completarse.';
+    } elseif (strlen($password) < 8) {
+        $user_create_error = 'La contraseña debe tener al menos 8 caracteres.';
+    } else {
+        $stmt_check = $conn->prepare("SELECT ID FROM usuario WHERE Usuario = ? LIMIT 1");
+        $stmt_check->bind_param('s', $usuario);
+        $stmt_check->execute();
+        $stmt_check->store_result();
+
+        if ($stmt_check->num_rows > 0) {
+            $user_create_error = 'El usuario ya existe.';
+        } else {
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt_insert = $conn->prepare("INSERT INTO usuario (Nombre, Usuario, Contraseña) VALUES (?, ?, ?)");
+            $stmt_insert->bind_param('sss', $nombre, $usuario, $password_hash);
+
+            if ($stmt_insert->execute()) {
+                $user_create_success = 'Usuario creado exitosamente.';
+            } else {
+                $user_create_error = 'Error al crear el usuario: ' . $stmt_insert->error;
+            }
+
+            $stmt_insert->close();
+        }
+
+        $stmt_check->close();
+    }
+}
+
 // Obtener estadísticas
 $totalUsuarios = $conn->query("SELECT COUNT(*) as count FROM usuario")->fetch_assoc()['count'];
 $usuariosConectados = $conn->query("SELECT COUNT(*) as count FROM usuario WHERE ultima_actividad > DATE_SUB(NOW(), INTERVAL 5 MINUTE)")->fetch_assoc()['count'];
@@ -303,7 +341,14 @@ $usuarios_count = $totalUsuarios;
 
                     <div class="form-card">
                         <h4>Agregar Nuevo Usuario</h4>
-                        <form action="crear_usuario.php" method="POST">
+                        <?php if ($user_create_error): ?>
+                            <div class="alert alert-danger py-2 mb-3"><?php echo htmlspecialchars($user_create_error); ?></div>
+                        <?php endif; ?>
+                        <?php if ($user_create_success): ?>
+                            <div class="alert alert-success py-2 mb-3"><?php echo htmlspecialchars($user_create_success); ?></div>
+                        <?php endif; ?>
+                        <form action="configuracion.php#usuarios" method="POST">
+                            <input type="hidden" name="crear_usuario" value="1">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="nombre" class="form-label">Nombre Completo</label>

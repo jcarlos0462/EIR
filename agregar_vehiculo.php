@@ -101,15 +101,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <div class="container-fluid">
         <div class="row">
-            <?php include 'sidebar.php'; ?>
+            <div class="col-md-3 col-lg-2">
+                <?php include 'sidebar.php'; ?>
+            </div>
             <div class="col-md-9 col-lg-10 main-content">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Agregar Nuevo Vehículo</h2>
                     <a href="listar_vehiculos.php" class="btn btn-secondary">Ver Lista de Vehículos</a>
                 </div>
-            </div>
-        </div>
 
         <?php if ($error): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -183,6 +182,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
             </div>
         </div>
     </div>
