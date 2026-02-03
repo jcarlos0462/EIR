@@ -51,9 +51,7 @@
 /* Botón hamburguesa del sidebar - oculto por defecto */
 .sidebar-toggler {
     display: none;
-    position: absolute;
-    top: 8px;
-    left: 8px;
+    position: static;
     z-index: 1040;
     border: none;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -109,13 +107,18 @@
 }
 
 .navbar-with-toggler {
-    position: relative;
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center;
     gap: 12px;
 }
 
 .navbar-brand {
     font-size: 1.25rem;
     color: white !important;
+    justify-self: center;
+    text-align: center;
+    margin: 0;
 }
 
 .navbar-dark .navbar-brand {
@@ -128,6 +131,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    justify-self: end;
 }
 
 .user-info a {
@@ -168,9 +172,7 @@ body {
         visibility: visible !important;
         opacity: 1 !important;
         pointer-events: auto !important;
-        position: absolute !important;
-        top: 6px !important;
-        left: 6px !important;
+        position: static !important;
         z-index: 1100 !important;
         width: 44px;
         height: 44px;
