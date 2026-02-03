@@ -133,7 +133,7 @@ if (isset($_GET['editar'])) {
                     <h2>Lista de Vehículos</h2>
                     <div>
                         <a href="agregar_vehiculo.php" class="btn btn-primary">Agregar Vehículo</a>
-                        <a href="listar_vehiculos.php" class="btn btn-secondary ms-2">Volver</a>
+                        
                     </div>
                 </div>
 
