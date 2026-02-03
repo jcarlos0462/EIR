@@ -267,28 +267,10 @@ $usuarios_count = $totalUsuarios;
                     <div class="row">
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
-                                <div class="stat-icon"><i class="bi bi-truck"></i></div>
-                                <div class="stat-label">Vehículos</div>
-                                <div class="stat-number"><?php echo $vehiculos_count; ?></div>
-                                <a href="listar_vehiculos.php" class="btn btn-ver">Ver</a>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg-3">
-                            <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
                                 <div class="stat-label">Daños Registrados</div>
                                 <div class="stat-number"><?php echo $danios_count; ?></div>
                                 <a href="Registro_Daños.php" class="btn btn-ver">Ver</a>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg-3">
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="bi bi-people"></i></div>
-                                <div class="stat-label">Usuarios</div>
-                                <div class="stat-number"><?php echo $usuarios_count; ?></div>
-                                <a href="gestionar_usuarios.php" class="btn btn-ver">Ver</a>
                             </div>
                         </div>
                     </div>
