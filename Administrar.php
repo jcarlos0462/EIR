@@ -112,32 +112,6 @@ if ($res && $row = $res->fetch_assoc()) $usuarios_count = $row['total'];
                     <h2 class="mb-2">Dashboard</h2>
                     <p class="text-muted mb-0">Bienvenido al sistema EIR</p>
                 </div>
-                <div class="row justify-content-center">
-                    <div class="col-12 col-md-6 col-lg-4 mb-4">
-                        <div class="modern-dashboard-card">
-                            <div class="modern-dashboard-icon"><i class="bi bi-truck"></i></div>
-                            <div class="modern-dashboard-title">Vehículos</div>
-                            <div class="modern-dashboard-count"><?php echo $vehiculos_count; ?></div>
-                            <a href="listar_vehiculos.php" class="modern-btn modern-btn-primary">Ver</a>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6 col-lg-4 mb-4">
-                        <div class="modern-dashboard-card">
-                            <div class="modern-dashboard-icon"><i class="bi bi-exclamation-triangle"></i></div>
-                            <div class="modern-dashboard-title">Daños Registrados</div>
-                            <div class="modern-dashboard-count"><?php echo $danios_count; ?></div>
-                            <a href="Registro_Daños.php" class="modern-btn modern-btn-primary">Ver</a>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6 col-lg-4 mb-4">
-                        <div class="modern-dashboard-card">
-                            <div class="modern-dashboard-icon"><i class="bi bi-people"></i></div>
-                            <div class="modern-dashboard-title">Usuarios</div>
-                            <div class="modern-dashboard-count"><?php echo $usuarios_count; ?></div>
-                            <a href="gestionar_usuarios.php" class="modern-btn modern-btn-primary">Ver</a>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

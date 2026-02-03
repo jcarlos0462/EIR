@@ -20,6 +20,15 @@ $totalUsuarios = $conn->query("SELECT COUNT(*) as count FROM usuario")->fetch_as
 $usuariosConectados = $conn->query("SELECT COUNT(*) as count FROM usuario WHERE ultima_actividad > DATE_SUB(NOW(), INTERVAL 5 MINUTE)")->fetch_assoc()['count'];
 $totalRoles = $conn->query("SELECT COUNT(*) as count FROM roles")->fetch_assoc()['count'];
 $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_assoc()['count'];
+// Contadores de dashboard
+$vehiculos_count = 0;
+$danios_count = 0;
+$usuarios_count = 0;
+$res = $conn->query("SELECT COUNT(*) AS total FROM vehiculo");
+if ($res && $row = $res->fetch_assoc()) $vehiculos_count = $row['total'];
+$res = $conn->query("SELECT COUNT(*) AS total FROM RegistroDanio");
+if ($res && $row = $res->fetch_assoc()) $danios_count = $row['total'];
+$usuarios_count = $totalUsuarios;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -221,6 +230,33 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
                     <div class="header">
                         <h2><i class="bi bi-graph-up"></i> Estadísticas del Sistema</h2>
                         <div class="header-subtitle">Resumen general de configuración y usuarios</div>
+                    </div>
+
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-12 col-md-6 col-lg-4 mb-4">
+                            <div class="modern-dashboard-card">
+                                <div class="modern-dashboard-icon"><i class="bi bi-truck"></i></div>
+                                <div class="modern-dashboard-title">Vehículos</div>
+                                <div class="modern-dashboard-count"><?php echo $vehiculos_count; ?></div>
+                                <a href="listar_vehiculos.php" class="modern-btn modern-btn-primary">Ver</a>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-4 mb-4">
+                            <div class="modern-dashboard-card">
+                                <div class="modern-dashboard-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                                <div class="modern-dashboard-title">Daños Registrados</div>
+                                <div class="modern-dashboard-count"><?php echo $danios_count; ?></div>
+                                <a href="Registro_Daños.php" class="modern-btn modern-btn-primary">Ver</a>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-4 mb-4">
+                            <div class="modern-dashboard-card">
+                                <div class="modern-dashboard-icon"><i class="bi bi-people"></i></div>
+                                <div class="modern-dashboard-title">Usuarios</div>
+                                <div class="modern-dashboard-count"><?php echo $usuarios_count; ?></div>
+                                <a href="gestionar_usuarios.php" class="modern-btn modern-btn-primary">Ver</a>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row">
