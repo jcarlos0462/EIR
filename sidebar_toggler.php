@@ -27,6 +27,16 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Toggle clicked, current classes:', sidebarMenu.className);
             sidebarMenu.classList.toggle('show');
             sidebarOverlay.classList.toggle('show');
+            
+            // Ocultar el botón cuando el sidebar está abierto
+            if (sidebarMenu.classList.contains('show')) {
+                sidebarToggler.style.opacity = '0';
+                sidebarToggler.style.pointerEvents = 'none';
+            } else {
+                sidebarToggler.style.opacity = '1';
+                sidebarToggler.style.pointerEvents = 'auto';
+            }
+            
             console.log('After toggle, classes:', sidebarMenu.className);
             console.log('Transform applied:', window.getComputedStyle(sidebarMenu).transform);
         });
@@ -36,6 +46,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Overlay clicked, closing sidebar');
             sidebarMenu.classList.remove('show');
             sidebarOverlay.classList.remove('show');
+            sidebarToggler.style.opacity = '1';
+            sidebarToggler.style.pointerEvents = 'auto';
         });
 
         // Cerrar el sidebar al hacer clic en un enlace (en móviles)
@@ -45,6 +57,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Link clicked in mobile view');
                     sidebarMenu.classList.remove('show');
                     sidebarOverlay.classList.remove('show');
+                    sidebarToggler.style.opacity = '1';
+                    sidebarToggler.style.pointerEvents = 'auto';
                 }
             });
         });
@@ -59,11 +73,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.innerWidth <= 1024) {
             toggler.style.display = 'flex';
             toggler.style.visibility = 'visible';
-            toggler.style.opacity = '1';
+            if (!document.getElementById('sidebarMenu').classList.contains('show')) {
+                toggler.style.opacity = '1';
+                toggler.style.pointerEvents = 'auto';
+            }
         } else {
             toggler.style.display = '';
             toggler.style.visibility = '';
             toggler.style.opacity = '';
+            toggler.style.pointerEvents = '';
         }
     }
 

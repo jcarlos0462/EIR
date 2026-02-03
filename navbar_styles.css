@@ -172,6 +172,13 @@ body {
         border: 1px solid rgba(255, 255, 255, 0.25);
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        transition: opacity 0.3s ease !important;
+    }
+
+    /* Ocultar botón cuando el sidebar está abierto */
+    .sidebar.show ~ .sidebar-toggler {
+        opacity: 0 !important;
+        pointer-events: none !important;
     }
 
     /* Sidebar oculto por defecto en móviles */
