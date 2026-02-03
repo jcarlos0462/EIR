@@ -327,17 +327,22 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
             border-top-right-radius: 18px;
         }
         .modal-body {
-            max-height: calc(100vh - 200px);
+            max-height: 60vh;
             overflow-y: auto;
+            padding: 1.5rem;
         }
         .modal-body select.modern-input {
             font-size: 1rem;
             padding: 0.6rem 0.8rem;
             height: auto;
+            min-height: 38px;
         }
         .modal-body select.modern-input option {
             padding: 0.5rem;
             line-height: 1.5;
+        }
+        .modal-dialog {
+            max-height: 90vh;
         }
         @media (max-width: 768px) {
             #formBuscar {
@@ -455,7 +460,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                         </tr>
                                         <!-- Modal editar daño -->
                                         <div class="modal fade" id="modalEditarDanio<?php echo $d['ID']; ?>" tabindex="-1" aria-labelledby="modalEditarLabel<?php echo $d['ID']; ?>" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-dialog modal-dialog-scrollable">
                                                 <div class="modal-content modern-modal-content">
                                                     <div class="modal-header modern-modal-header-warning">
                                                         <h5 class="modal-title" id="modalEditarLabel<?php echo $d['ID']; ?>">Editar Daño</h5>
@@ -506,7 +511,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                 </div>
                 <!-- Modal para registrar daño -->
                 <div class="modal fade" id="modalDanio" tabindex="-1" aria-labelledby="modalDanioLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-dialog modal-dialog-scrollable">
                         <div class="modal-content modern-modal-content">
                             <div class="modal-header modern-modal-header-primary">
                                 <h5 class="modal-title" id="modalDanioLabel">Registrar Daño</h5>
