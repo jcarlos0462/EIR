@@ -326,6 +326,19 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
             border-top-left-radius: 18px;
             border-top-right-radius: 18px;
         }
+        .modal-body {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        .modal-body select.modern-input {
+            font-size: 1rem;
+            padding: 0.6rem 0.8rem;
+            height: auto;
+        }
+        .modal-body select.modern-input option {
+            padding: 0.5rem;
+            line-height: 1.5;
+        }
         @media (max-width: 768px) {
             #formBuscar {
                 flex-direction: column !important;
