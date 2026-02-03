@@ -27,7 +27,7 @@ if ($vin) {
     if ($stmt->fetch()) {
         // Buscar daños registrados con descripciones
         $stmt->close();
-        $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano, r.Origen FROM RegistroDanio r
+        $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano, r.TipoOperacion FROM RegistroDanio r
                 JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
                 JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
                 JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
@@ -71,8 +71,8 @@ if (isset($_POST['guardar_danio'])) {
         $errores[] = 'Debe iniciar sesión y seleccionar el tipo de operación.';
         $show_form = true;
     } elseif ($vin && $area && $tipo && $severidad) {
-        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion, Origen) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param('siiiiss', $vin, $area, $tipo, $severidad, $usuario_id, $tipo_operacion, $tipo_operacion);
+        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('siiiis', $vin, $area, $tipo, $severidad, $usuario_id, $tipo_operacion);
         if ($stmt->execute()) {
             // Redirigir para evitar duplicado al refrescar (PRG) y mantener contexto VIN
             header("Location: Registro_Daños.php?vin=" . urlencode($vin));
@@ -453,7 +453,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['Origen']); ?></td>
+                                            <td><?php echo htmlspecialchars($d['TipoOperacion']); ?></td>
                                             <td>
                                                 <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
                                                     <span class="bi bi-pencil-square"></span>
