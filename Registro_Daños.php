@@ -358,6 +358,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
 </head>
 <body>
 <?php include 'navbar.php'; ?>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-3 col-lg-2">
@@ -502,17 +503,17 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                 <form method="post" class="d-flex flex-column gap-3">
                                     <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
                                     <div>
-                                        <label class="modern-label">Tipo de Daño</label>
-                                        <select name="tipo" class="form-control modern-input" required>
-                                            <option value="">Seleccione</option>
-                                            <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['NomTipoDano'].'</option>'; ?>
-                                        </select>
-                                    </div>
-                                    <div>
                                         <label class="modern-label">Área de Daño</label>
                                         <select name="area" class="form-control modern-input" required>
                                             <option value="">Seleccione</option>
                                             <?php foreach ($areas as $a) echo '<option value="'.$a['CodAreaDano'].'">'.$a['NomAreaDano'].'</option>'; ?>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="modern-label">Tipo de Daño</label>
+                                        <select name="tipo" class="form-control modern-input" required>
+                                            <option value="">Seleccione</option>
+                                            <?php foreach ($tipos as $t) echo '<option value="'.$t['CodTipoDano'].'">'.$t['NomTipoDano'].'</option>'; ?>
                                         </select>
                                     </div>
                                     <div>
