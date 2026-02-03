@@ -440,20 +440,20 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                 <table class="table modern-table mb-2">
                                     <thead>
                                         <tr>
+                                            <th>Origen</th>
                                             <th>Área</th>
                                             <th>Tipo</th>
                                             <th>Severidad</th>
-                                            <th>Origen</th>
                                             <th style="width:120px;">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                     <?php if (!empty($danios)): foreach ($danios as $d): ?>
                                         <tr>
+                                            <td><?php echo htmlspecialchars($d['TipoOperacion']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['TipoOperacion']); ?></td>
                                             <td>
                                                 <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
                                                     <span class="bi bi-pencil-square"></span>
