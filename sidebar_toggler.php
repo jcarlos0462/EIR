@@ -24,21 +24,31 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebarToggler.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Toggle clicked, current classes:', sidebarMenu.className);
+            console.log('Toggle clicked');
+            
+            var isOpen = sidebarMenu.classList.contains('show');
+            console.log('Current state - is open:', isOpen);
+            
+            // Toggle la clase
             sidebarMenu.classList.toggle('show');
             sidebarOverlay.classList.toggle('show');
             
-            // Ocultar el botón cuando el sidebar está abierto
-            if (sidebarMenu.classList.contains('show')) {
+            // También aplicar estilos directos como fallback
+            if (!isOpen) {
+                // Abrir
+                console.log('Opening sidebar');
+                sidebarMenu.style.transform = 'translateX(0)';
+                sidebarOverlay.style.display = 'block';
                 sidebarToggler.style.opacity = '0';
                 sidebarToggler.style.pointerEvents = 'none';
             } else {
+                // Cerrar
+                console.log('Closing sidebar');
+                sidebarMenu.style.transform = 'translateX(-100%)';
+                sidebarOverlay.style.display = 'none';
                 sidebarToggler.style.opacity = '1';
                 sidebarToggler.style.pointerEvents = 'auto';
             }
-            
-            console.log('After toggle, classes:', sidebarMenu.className);
-            console.log('Transform applied:', window.getComputedStyle(sidebarMenu).transform);
         });
 
         // Cerrar el sidebar al hacer clic en el overlay
@@ -46,6 +56,10 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Overlay clicked, closing sidebar');
             sidebarMenu.classList.remove('show');
             sidebarOverlay.classList.remove('show');
+            
+            // Estilos directos
+            sidebarMenu.style.transform = 'translateX(-100%)';
+            sidebarOverlay.style.display = 'none';
             sidebarToggler.style.opacity = '1';
             sidebarToggler.style.pointerEvents = 'auto';
         });
@@ -57,6 +71,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Link clicked in mobile view');
                     sidebarMenu.classList.remove('show');
                     sidebarOverlay.classList.remove('show');
+                    
+                    // Estilos directos
+                    sidebarMenu.style.transform = 'translateX(-100%)';
+                    sidebarOverlay.style.display = 'none';
                     sidebarToggler.style.opacity = '1';
                     sidebarToggler.style.pointerEvents = 'auto';
                 }
