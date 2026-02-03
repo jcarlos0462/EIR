@@ -12,6 +12,7 @@ $sql = "CREATE TABLE IF NOT EXISTS RegistroDanio (
     CodSeveridadDano INT NOT NULL,
     UsuarioID INT NOT NULL,
     TipoOperacion VARCHAR(100) NOT NULL,
+    Origen VARCHAR(100),
     FechaRegistro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (VIN) REFERENCES vehiculo(VIN),
     FOREIGN KEY (CodAreaDano) REFERENCES areadano(CodAreaDano),

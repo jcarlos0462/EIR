@@ -27,7 +27,7 @@ if ($vin) {
     if ($stmt->fetch()) {
         // Buscar daños registrados con descripciones
         $stmt->close();
-        $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano FROM RegistroDanio r
+        $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano, r.Origen FROM RegistroDanio r
                 JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
                 JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
                 JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
@@ -71,8 +71,9 @@ if (isset($_POST['guardar_danio'])) {
         $errores[] = 'Debe iniciar sesión y seleccionar el tipo de operación.';
         $show_form = true;
     } elseif ($vin && $area && $tipo && $severidad) {
-        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param('siiiis', $vin, $area, $tipo, $severidad, $usuario_id, $tipo_operacion);
+        $origen = isset($_POST['origen']) ? trim($_POST['origen']) : '';
+        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion, Origen) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('siiiiiss', $vin, $area, $tipo, $severidad, $usuario_id, $tipo_operacion, $origen);
         if ($stmt->execute()) {
             // Redirigir para evitar duplicado al refrescar (PRG) y mantener contexto VIN
             header("Location: Registro_Daños.php?vin=" . urlencode($vin));
@@ -94,8 +95,9 @@ if (isset($_POST['editar_danio']) && isset($_POST['id_danio'])) {
     $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
     $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
     if ($area && $tipo && $severidad) {
-        $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano = ?, CodTipoDano = ?, CodSeveridadDano = ? WHERE ID = ?");
-        $stmt->bind_param('iiii', $area, $tipo, $severidad, $id_danio);
+        $origen = isset($_POST['origen']) ? trim($_POST['origen']) : '';
+        $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano = ?, CodTipoDano = ?, CodSeveridadDano = ?, Origen = ? WHERE ID = ?");
+        $stmt->bind_param('iiisi', $area, $tipo, $severidad, $origen, $id_danio);
         $stmt->execute();
         $stmt->close();
         // Redirigir para evitar reenvío y mantener contexto VIN
@@ -443,6 +445,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             <th>Área</th>
                                             <th>Tipo</th>
                                             <th>Severidad</th>
+                                            <th>Origen</th>
                                             <th style="width:120px;">Acciones</th>
                                         </tr>
                                     </thead>
@@ -452,6 +455,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($d['Origen']); ?></td>
                                             <td>
                                                 <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
                                                     <span class="bi bi-pencil-square"></span>
@@ -467,7 +471,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                         </tr>
                                         <!-- Modal editar daño -->
                                         <div class="modal fade" id="modalEditarDanio<?php echo $d['ID']; ?>" tabindex="-1" aria-labelledby="modalEditarLabel<?php echo $d['ID']; ?>" aria-hidden="true">
-                                            <div class="modal-dialog">
+                                            <div class="modal-dialog modal-dialog-scrollable">
                                                 <div class="modal-content modern-modal-content">
                                                     <div class="modal-header modern-modal-header-warning">
                                                         <h5 class="modal-title" id="modalEditarLabel<?php echo $d['ID']; ?>">Editar Daño</h5>
@@ -497,6 +501,10 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                                                     <option value="">Seleccione</option>
                                                                     <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'"'.($s['NomSeveridadDano']==$d['NomSeveridadDano']?' selected':'').'>'.$s['NomSeveridadDano'].'</option>'; ?>
                                                                 </select>
+                                                            </div>
+                                                            <div>
+                                                                <label class="modern-label">Origen</label>
+                                                                <input type="text" name="origen" class="form-control modern-input" value="<?php echo htmlspecialchars($d['Origen']); ?>" placeholder="Ej: Descarga, Transporte, Almacenaje">
                                                             </div>
                                                             <div class="d-grid gap-2 mt-2">
                                                                 <button type="submit" name="editar_danio" class="modern-btn modern-btn-warning">Guardar Cambios</button>
@@ -547,6 +555,10 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             <option value="">Seleccione</option>
                                             <?php foreach ($severidades as $s) echo '<option value="'.$s['CodSeveridadDano'].'">'.$s['NomSeveridadDano'].'</option>'; ?>
                                         </select>
+                                    </div>
+                                    <div>
+                                        <label class="modern-label">Origen</label>
+                                        <input type="text" name="origen" class="form-control modern-input" placeholder="Ej: Descarga, Transporte, Almacenaje">
                                     </div>
                                     <div class="d-grid gap-2 mt-2">
                                         <button type="submit" name="guardar_danio" class="modern-btn modern-btn-primary">Guardar</button>
