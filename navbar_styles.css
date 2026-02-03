@@ -120,7 +120,7 @@ body {
 
     /* Menú colapsado por defecto */
     .user-info {
-        display: none;
+        display: none !important;
         position: absolute;
         top: 100%;
         right: 0;
@@ -136,7 +136,7 @@ body {
 
     /* Menú desplegado */
     .user-info.show {
-        display: flex;
+        display: flex !important;
     }
 
     .user-info span {
