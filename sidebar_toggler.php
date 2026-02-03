@@ -7,50 +7,56 @@
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <script>
-// Toggle del sidebar en móviles
-document.getElementById('sidebarToggler').addEventListener('click', function() {
-    var sidebar = document.getElementById('sidebarMenu');
-    var overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.toggle('show');
-    overlay.classList.toggle('show');
-});
+// Esperar a que el DOM cargue completamente
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle del sidebar en móviles
+    var sidebarToggler = document.getElementById('sidebarToggler');
+    var sidebarOverlay = document.getElementById('sidebarOverlay');
+    var sidebarMenu = document.getElementById('sidebarMenu');
+    
+    if (sidebarToggler && sidebarMenu && sidebarOverlay) {
+        sidebarToggler.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Toggling sidebar');
+            sidebarMenu.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+        });
 
-// Cerrar el sidebar al hacer clic en el overlay
-document.getElementById('sidebarOverlay').addEventListener('click', function() {
-    var sidebar = document.getElementById('sidebarMenu');
-    var overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.remove('show');
-    overlay.classList.remove('show');
-});
+        // Cerrar el sidebar al hacer clic en el overlay
+        sidebarOverlay.addEventListener('click', function() {
+            sidebarMenu.classList.remove('show');
+            sidebarOverlay.classList.remove('show');
+        });
 
-// Cerrar el sidebar al hacer clic en un enlace (en móviles)
-document.querySelectorAll('.sidebar-link').forEach(function(link) {
-    link.addEventListener('click', function() {
-        if (window.innerWidth <= 1024) {
-            var sidebar = document.getElementById('sidebarMenu');
-            var overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.remove('show');
-            overlay.classList.remove('show');
-        }
-    });
-});
-
-// Asegurar visibilidad del botón en móviles/tablets
-function ensureSidebarToggler() {
-    var toggler = document.getElementById('sidebarToggler');
-    if (!toggler) return;
-    if (window.innerWidth <= 1024) {
-        toggler.style.display = 'flex';
-        toggler.style.visibility = 'visible';
-        toggler.style.opacity = '1';
-    } else {
-        toggler.style.display = '';
-        toggler.style.visibility = '';
-        toggler.style.opacity = '';
+        // Cerrar el sidebar al hacer clic en un enlace (en móviles)
+        document.querySelectorAll('.sidebar-link').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 1024) {
+                    sidebarMenu.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                }
+            });
+        });
     }
-}
 
-window.addEventListener('resize', ensureSidebarToggler);
-window.addEventListener('orientationchange', ensureSidebarToggler);
-ensureSidebarToggler();
+    // Asegurar visibilidad del botón en móviles/tablets
+    function ensureSidebarToggler() {
+        var toggler = document.getElementById('sidebarToggler');
+        if (!toggler) return;
+        if (window.innerWidth <= 1024) {
+            toggler.style.display = 'flex';
+            toggler.style.visibility = 'visible';
+            toggler.style.opacity = '1';
+        } else {
+            toggler.style.display = '';
+            toggler.style.visibility = '';
+            toggler.style.opacity = '';
+        }
+    }
+
+    window.addEventListener('resize', ensureSidebarToggler);
+    window.addEventListener('orientationchange', ensureSidebarToggler);
+    ensureSidebarToggler();
+});
 </script>

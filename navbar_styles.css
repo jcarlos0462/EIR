@@ -52,7 +52,7 @@
 .sidebar-toggler {
     display: none;
     position: fixed;
-    top: 70px;
+    top: 120px;
     left: 15px;
     z-index: 1040;
     border: none;
@@ -164,7 +164,7 @@ body {
         opacity: 1 !important;
         pointer-events: auto !important;
         position: fixed !important;
-        top: 12px !important;
+        top: 80px !important;
         left: 12px !important;
         z-index: 1100 !important;
         width: 44px;
