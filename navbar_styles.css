@@ -175,12 +175,6 @@ body {
         transition: opacity 0.3s ease !important;
     }
 
-    /* Ocultar botón cuando el sidebar está abierto */
-    .sidebar.show ~ .sidebar-toggler {
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
     /* Sidebar oculto por defecto en móviles */
     .sidebar {
         position: fixed !important;
