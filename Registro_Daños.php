@@ -451,7 +451,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                     <?php if (!empty($danios)): foreach ($danios as $d): ?>
                                         <tr>
                                             <td><?php echo htmlspecialchars($d['TipoOperacion']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['NomAreaDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($d['CodAreaDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
                                             <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
                                             <td>
