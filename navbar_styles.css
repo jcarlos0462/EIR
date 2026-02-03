@@ -133,18 +133,25 @@ body {
 @media (max-width: 1024px) {
     /* SIDEBAR RESPONSIVE */
     /* Ocultar la columna del sidebar completamente */
-    .row > .col-md-3,
-    .row > .col-lg-2,
+    div[class*="col-md-3"],
+    div[class*="col-lg-2"],
+    .col-md-3,
+    .col-lg-2,
     .col-md-3.col-lg-2 {
         display: none !important;
         width: 0 !important;
+        flex: 0 !important;
+        flex-basis: 0 !important;
         padding: 0 !important;
         margin: 0 !important;
+        visibility: hidden !important;
+        height: 0 !important;
     }
 
     /* Mostrar botón hamburguesa */
     .sidebar-toggler {
         display: block !important;
+        visibility: visible !important;
     }
 
     /* Sidebar oculto por defecto en móviles */
@@ -157,10 +164,12 @@ body {
         width: 280px !important;
         max-width: 280px !important;
         min-width: 280px !important;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        flex-basis: auto !important;
         height: 100vh !important;
         overflow-y: auto !important;
         display: flex !important;
+        flex-direction: column !important;
+        visibility: visible !important;
     }
 
     /* Sidebar visible cuando tiene clase show */
@@ -169,12 +178,14 @@ body {
     }
 
     /* Expandir contenido principal en móviles */
-    .row > .col-md-9,
-    .row > .col-lg-10,
+    .col-md-9,
+    .col-lg-10,
     .col-md-9.col-lg-10 {
         flex: 0 0 100% !important;
         max-width: 100% !important;
         width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 
     /* NAVBAR RESPONSIVE */
