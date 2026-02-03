@@ -368,31 +368,11 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                 <label class="modern-label">VIN</label>
                                 <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required autofocus placeholder="Escanea o ingresa el VIN">
                             </div>
-                            <div class="d-flex align-items-end gap-2 vin-actions">
-                                <button type="button" class="modern-btn modern-btn-success" data-bs-toggle="modal" data-bs-target="#modalQR" title="Escanear VIN">
-                                    <i class="bi bi-camera" style="font-size: 1.5rem;"></i>
-                                </button>
-                            </div>
+                            <div class="d-flex align-items-end gap-2 vin-actions"></div>
                             <div class="vin-submit">
                                 <button type="submit" name="buscar_vin" class="modern-btn modern-btn-primary">Buscar</button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            </div>
-            <!-- Modal QR para escanear VIN -->
-            <div class="modal fade" id="modalQR" tabindex="-1" aria-labelledby="modalQRLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content modern-modal-content">
-                        <div class="modal-header modern-modal-header">
-                            <span class="modern-modal-icon bi bi-qr-code-scan"></span>
-                            <h5 class="modal-title mb-0" id="modalQRLabel">Escanear VIN (QR)</h5>
-                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="qr-help" id="qr-help-msg">Apunta la cámara al código QR del VIN</div>
-                            <div id="qr-reader" style="width:100%; min-height:300px;"></div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -551,56 +531,5 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
     </div>
 </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script>
-let html5QrCode;
-
-// Iniciar el escáner QR cuando el modal esté completamente visible
-document.getElementById('modalQR').addEventListener('shown.bs.modal', function () {
-    const qrReader = document.getElementById("qr-reader");
-    document.getElementById('qr-help-msg').style.display = 'block';
-    document.getElementById('qr-help-msg').innerText = 'Apunta la cámara al código QR del VIN';
-    html5QrCode = new Html5Qrcode("qr-reader");
-    html5QrCode.start(
-        { facingMode: "environment" },
-        {
-            fps: 10,
-            qrbox: { width: 250, height: 250 }
-        },
-        qrCodeMessage => {
-            document.getElementById("qrInput").value = qrCodeMessage;
-            html5QrCode.stop().then(() => {
-                // Limpiar y ocultar el lector
-                qrReader.innerHTML = '';
-            });
-            document.getElementById("modalQR").classList.remove('show');
-            document.body.classList.remove('modal-open');
-            document.getElementById("formBuscar").submit();
-        },
-        errorMessage => {
-            // errores silenciosos
-        }
-    ).catch(err => {
-        document.getElementById('qr-help-msg').innerText = 'No se pudo acceder a la cámara trasera';
-        console.error(err);
-    });
-});
-
-// Detener el escáner QR al cerrar el modal
-document.getElementById('modalQR').addEventListener('hidden.bs.modal', function () {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            html5QrCode.clear();
-            html5QrCode = null;
-            document.getElementById('qr-reader').innerHTML = '';
-        }).catch(() => {
-            html5QrCode = null;
-            document.getElementById('qr-reader').innerHTML = '';
-        });
-    } else {
-        document.getElementById('qr-reader').innerHTML = '';
-    }
-});
-    </script>
 </body>
 </html>
