@@ -150,14 +150,14 @@ body {
     .col-md-3,
     .col-lg-2,
     .col-md-3.col-lg-2 {
-        display: none !important;
+        display: block !important;
         width: 0 !important;
-        flex: 0 !important;
+        max-width: 0 !important;
+        flex: 0 0 0 !important;
         flex-basis: 0 !important;
         padding: 0 !important;
         margin: 0 !important;
-        visibility: hidden !important;
-        height: 0 !important;
+        overflow: visible !important;
     }
 
     /* Mostrar botón hamburguesa */
