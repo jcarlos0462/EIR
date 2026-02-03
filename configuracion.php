@@ -218,12 +218,7 @@ $usuarios_count = $totalUsuarios;
         <div class="row" style="min-height: 100vh;">
             <!-- Sidebar -->
             <?php include 'sidebar.php'; ?>
-            <div class="col-md-9 col-lg-10 main-content">
-                <!-- Todo el contenido de configuración, gestión de usuarios, accesos, roles, etc. está aquí -->
-                ...existing code...
-
-            <!-- Contenido Principal -->
-            <div class="col-md-9 col-lg-10" style="padding: 25px;">
+            <div class="col-md-9 col-lg-10 main-content" style="padding: 25px;">
 
                 <!-- SECCIÓN: ESTADÍSTICAS -->
                 <div id="estadisticas" class="content-section active">
@@ -232,29 +227,31 @@ $usuarios_count = $totalUsuarios;
                         <div class="header-subtitle">Resumen general de configuración y usuarios</div>
                     </div>
 
-                    <div class="row justify-content-center mb-4">
-                        <div class="col-12 col-md-6 col-lg-4 mb-4">
-                            <div class="modern-dashboard-card">
-                                <div class="modern-dashboard-icon"><i class="bi bi-truck"></i></div>
-                                <div class="modern-dashboard-title">Vehículos</div>
-                                <div class="modern-dashboard-count"><?php echo $vehiculos_count; ?></div>
-                                <a href="listar_vehiculos.php" class="modern-btn modern-btn-primary">Ver</a>
+                    <div class="row">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="bi bi-truck"></i></div>
+                                <div class="stat-label">Vehículos</div>
+                                <div class="stat-number"><?php echo $vehiculos_count; ?></div>
+                                <a href="listar_vehiculos.php" class="btn btn-ver">Ver</a>
                             </div>
                         </div>
-                        <div class="col-12 col-md-6 col-lg-4 mb-4">
-                            <div class="modern-dashboard-card">
-                                <div class="modern-dashboard-icon"><i class="bi bi-exclamation-triangle"></i></div>
-                                <div class="modern-dashboard-title">Daños Registrados</div>
-                                <div class="modern-dashboard-count"><?php echo $danios_count; ?></div>
-                                <a href="Registro_Daños.php" class="modern-btn modern-btn-primary">Ver</a>
+
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                                <div class="stat-label">Daños Registrados</div>
+                                <div class="stat-number"><?php echo $danios_count; ?></div>
+                                <a href="Registro_Daños.php" class="btn btn-ver">Ver</a>
                             </div>
                         </div>
-                        <div class="col-12 col-md-6 col-lg-4 mb-4">
-                            <div class="modern-dashboard-card">
-                                <div class="modern-dashboard-icon"><i class="bi bi-people"></i></div>
-                                <div class="modern-dashboard-title">Usuarios</div>
-                                <div class="modern-dashboard-count"><?php echo $usuarios_count; ?></div>
-                                <a href="gestionar_usuarios.php" class="modern-btn modern-btn-primary">Ver</a>
+
+                        <div class="col-md-6 col-lg-3">
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="bi bi-people"></i></div>
+                                <div class="stat-label">Usuarios</div>
+                                <div class="stat-number"><?php echo $usuarios_count; ?></div>
+                                <a href="gestionar_usuarios.php" class="btn btn-ver">Ver</a>
                             </div>
                         </div>
                     </div>
