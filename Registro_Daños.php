@@ -7,6 +7,8 @@ $vin = $marca = $modelo = $color = '';
 $errores = [];
 $danios = [];
 $show_form = false;
+$usuario_id = $_SESSION['id'] ?? null;
+$tipo_operacion = $_SESSION['tipo_operacion'] ?? '';
 
 // Buscar VIN (por POST, GET o contexto de acción)
 if (isset($_POST['buscar_vin'])) {
@@ -65,9 +67,12 @@ if (isset($_POST['guardar_danio'])) {
     $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
     $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
     $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
-    if ($vin && $area && $tipo && $severidad) {
-        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param('siii', $vin, $area, $tipo, $severidad);
+    if (!$usuario_id || $tipo_operacion === '') {
+        $errores[] = 'Debe iniciar sesión y seleccionar el tipo de operación.';
+        $show_form = true;
+    } elseif ($vin && $area && $tipo && $severidad) {
+        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param('siiiis', $vin, $area, $tipo, $severidad, $usuario_id, $tipo_operacion);
         if ($stmt->execute()) {
             // Redirigir para evitar duplicado al refrescar (PRG) y mantener contexto VIN
             header("Location: Registro_Daños.php?vin=" . urlencode($vin));

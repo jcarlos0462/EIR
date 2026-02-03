@@ -103,6 +103,20 @@ session_start();
                         <label for="password" class="form-label">Contraseña</label>
                         <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese su contraseña" required>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="tipo_operacion" class="form-label">Tipo de operación</label>
+                        <select class="form-select" id="tipo_operacion" name="tipo_operacion" required>
+                            <option value="" selected disabled>Seleccione una opción</option>
+                            <option value="Descarga Buque">Descarga Buque</option>
+                            <option value="Carga Buque">Carga Buque</option>
+                            <option value="Descarga FFCC">Descarga FFCC</option>
+                            <option value="Carga FFCC">Carga FFCC</option>
+                            <option value="Salida GATE">Salida GATE</option>
+                            <option value="Ingreso GATE">Ingreso GATE</option>
+                            <option value="Almacenaje - Patio">Almacenaje - Patio</option>
+                        </select>
+                    </div>
                     
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="recuerdame" name="recuerdame">

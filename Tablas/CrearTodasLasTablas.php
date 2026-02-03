@@ -46,6 +46,18 @@ $tablas = array(
         )"
     ),
 
+    // Tabla usuario_operacion
+    array(
+        "nombre" => "usuario_operacion",
+        "sql" => "CREATE TABLE IF NOT EXISTS usuario_operacion (
+            ID INT(10) PRIMARY KEY AUTO_INCREMENT,
+            UsuarioID INT(10) NOT NULL,
+            TipoOperacion VARCHAR(100) NOT NULL,
+            FechaRegistro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (UsuarioID) REFERENCES usuario(ID)
+        )"
+    ),
+
     // Tabla operador
     array(
         "nombre" => "operador",

@@ -10,11 +10,14 @@ $sql = "CREATE TABLE IF NOT EXISTS RegistroDanio (
     CodAreaDano INT NOT NULL,
     CodTipoDano INT NOT NULL,
     CodSeveridadDano INT NOT NULL,
+    UsuarioID INT NOT NULL,
+    TipoOperacion VARCHAR(100) NOT NULL,
     FechaRegistro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (VIN) REFERENCES vehiculo(VIN),
     FOREIGN KEY (CodAreaDano) REFERENCES areadano(CodAreaDano),
     FOREIGN KEY (CodTipoDano) REFERENCES tipodano(CodTipoDano),
-    FOREIGN KEY (CodSeveridadDano) REFERENCES severidaddano(CodSeveridadDano)
+    FOREIGN KEY (CodSeveridadDano) REFERENCES severidaddano(CodSeveridadDano),
+    FOREIGN KEY (UsuarioID) REFERENCES usuario(ID)
 ) ENGINE=InnoDB;";
 
 if ($conn->query($sql) === TRUE) {

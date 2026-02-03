@@ -17,11 +17,18 @@ if ($conn->connect_error) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $usuario = trim($_POST['usuario']);
     $password = trim($_POST['password']);
+    $tipo_operacion = trim($_POST['tipo_operacion'] ?? '');
     
     // Validar que no estén vacíos
     if (empty($usuario) || empty($password)) {
         $_SESSION['error'] = "Usuario y contraseña son requeridos";
-        header("Location: index.html");
+        header("Location: index.php");
+        exit();
+    }
+
+    if ($tipo_operacion === '') {
+        $_SESSION['error'] = "Debe seleccionar el tipo de operación";
+        header("Location: index.php");
         exit();
     }
     
@@ -53,24 +60,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['nombre'] = $row['Nombre'];
             $_SESSION['usuario'] = $row['Usuario'];
             $_SESSION['logueado'] = true;
+            $_SESSION['tipo_operacion'] = $tipo_operacion;
+
+            // Asegurar tabla de operaciones por usuario
+            $sql_create_operacion = "CREATE TABLE IF NOT EXISTS usuario_operacion (
+                ID INT AUTO_INCREMENT PRIMARY KEY,
+                UsuarioID INT NOT NULL,
+                TipoOperacion VARCHAR(100) NOT NULL,
+                FechaRegistro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (UsuarioID) REFERENCES usuario(ID)
+            ) ENGINE=InnoDB;";
+            $conn->query($sql_create_operacion);
+
+            // Registrar operación seleccionada
+            $stmt_op = $conn->prepare("INSERT INTO usuario_operacion (UsuarioID, TipoOperacion) VALUES (?, ?)");
+            $stmt_op->bind_param("is", $row['ID'], $tipo_operacion);
+            if (!$stmt_op->execute()) {
+                $_SESSION['error'] = "No se pudo registrar la operación seleccionada";
+                $stmt_op->close();
+                header("Location: index.php");
+                exit();
+            }
+            $stmt_op->close();
             
             header("Location: Registro_Daños.php");
             exit();
         } else {
             $_SESSION['error'] = "Usuario o contraseña incorrectos";
-            header("Location: index.html");
+            header("Location: index.php");
             exit();
         }
     } else {
         $_SESSION['error'] = "Usuario o contraseña incorrectos";
-        header("Location: index.html");
+        header("Location: index.php");
         exit();
     }
     
     $stmt->close();
 } else {
     // Si acceden directamente sin POST, redirigir al index
-    header("Location: index.html");
+    header("Location: index.php");
     exit();
 }
 

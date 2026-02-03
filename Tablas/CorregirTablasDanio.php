@@ -36,11 +36,14 @@ $sql = "CREATE TABLE IF NOT EXISTS RegistroDanio (
     AreaID INT NOT NULL,
     TipoID INT NOT NULL,
     SeveridadID INT NOT NULL,
+    UsuarioID INT NOT NULL,
+    TipoOperacion VARCHAR(100) NOT NULL,
     FechaRegistro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (VIN) REFERENCES vehiculo(VIN),
     FOREIGN KEY (AreaID) REFERENCES areadano(ID),
     FOREIGN KEY (TipoID) REFERENCES tipodano(ID),
-    FOREIGN KEY (SeveridadID) REFERENCES severidaddano(ID)
+    FOREIGN KEY (SeveridadID) REFERENCES severidaddano(ID),
+    FOREIGN KEY (UsuarioID) REFERENCES usuario(ID)
 ) ENGINE=InnoDB;";
 if (!$conn->query($sql)) {
     $errores[] = "Error creando RegistroDanio: " . $conn->error;
