@@ -34,4 +34,23 @@ document.querySelectorAll('.sidebar-link').forEach(function(link) {
         }
     });
 });
+
+// Asegurar visibilidad del botón en móviles/tablets
+function ensureSidebarToggler() {
+    var toggler = document.getElementById('sidebarToggler');
+    if (!toggler) return;
+    if (window.innerWidth <= 1024) {
+        toggler.style.display = 'flex';
+        toggler.style.visibility = 'visible';
+        toggler.style.opacity = '1';
+    } else {
+        toggler.style.display = '';
+        toggler.style.visibility = '';
+        toggler.style.opacity = '';
+    }
+}
+
+window.addEventListener('resize', ensureSidebarToggler);
+window.addEventListener('orientationchange', ensureSidebarToggler);
+ensureSidebarToggler();
 </script>
