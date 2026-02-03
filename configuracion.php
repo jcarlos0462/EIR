@@ -204,6 +204,7 @@ $totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_ass
 </head>
 <body>
     <?php include 'navbar.php'; ?>
+    <?php include 'sidebar_toggler.php'; ?>
     <div class="container-fluid">
         <div class="row" style="min-height: 100vh;">
             <!-- Sidebar -->

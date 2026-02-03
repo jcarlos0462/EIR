@@ -98,6 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
     <?php include 'navbar.php'; ?>
+    <?php include 'sidebar_toggler.php'; ?>
 
     <div class="container-fluid">
         <div class="row">

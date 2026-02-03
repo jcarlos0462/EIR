@@ -325,6 +325,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
 </head>
 <body>
 <?php include 'navbar.php'; ?>
+<?php include 'sidebar_toggler.php'; ?>
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-3 col-lg-2">
