@@ -178,7 +178,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="row mt-4">
                         <div class="col-12">
                             <button type="submit" class="btn btn-submit">Registrar Vehículo</button>
-                            <a href="Administrar.php" class="btn btn-secondary ms-2">Volver</a>
+                            <a href="listar_vehiculos.php" class="btn btn-secondary ms-2">Volver</a>
                         </div>
                     </div>
                 </form>
