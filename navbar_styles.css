@@ -69,36 +69,105 @@
     margin-left: 10px;
 }
 
+/* Botón hamburguesa - oculto por defecto en desktop */
+.navbar-toggler {
+    display: none;
+    border: none;
+    background: transparent;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+}
+
+.navbar-toggler-icon {
+    display: inline-block;
+    width: 1.5em;
+    height: 1.5em;
+    vertical-align: middle;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.85)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100%;
+}
+
 /* Ajustar el cuerpo de la página para que no quede bajo la navbar */
 body {
     padding-top: 0;
 }
 
-@media (max-width: 768px) {
+/* Responsive: Tablets y móviles */
+@media (max-width: 1024px) {
     .navbar {
         padding: 0.5rem 1rem;
+        position: relative;
+    }
+
+    .navbar .container-fluid {
+        flex-wrap: nowrap;
+        position: relative;
     }
 
     .navbar-brand {
         font-size: 1rem;
+        flex: 1;
     }
 
+    /* Mostrar botón hamburguesa */
+    .navbar-toggler {
+        display: block;
+        order: 2;
+        z-index: 1031;
+    }
+
+    /* Menú colapsado por defecto */
     .user-info {
-        font-size: 12px;
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         flex-direction: column;
-        align-items: flex-end;
-        gap: 5px;
+        align-items: stretch;
+        gap: 0;
+        padding: 1rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        font-size: 14px;
+    }
+
+    /* Menú desplegado */
+    .user-info.show {
+        display: flex;
     }
 
     .user-info span {
         display: block;
-        white-space: nowrap;
+        padding: 0.75rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .user-info a {
-        padding: 0.25rem 0.75rem !important;
-        font-size: 12px;
         margin-left: 0 !important;
+        margin-top: 0.5rem;
+        padding: 0.5rem 1rem !important;
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+    .navbar-brand {
+        font-size: 0.9rem;
+    }
+
+    .user-info {
+        font-size: 13px;
+    }
+
+    .user-info a {
+        font-size: 13px;
     }
 }
 
