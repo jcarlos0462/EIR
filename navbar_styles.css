@@ -85,6 +85,11 @@
 
 /* Responsive: Tablets y móviles */
 @media (max-width: 1024px) {
+    /* Ocultar la columna del sidebar */
+    .col-md-3.col-lg-2 {
+        display: none !important;
+    }
+
     /* Mostrar botón hamburguesa */
     .sidebar-toggler {
         display: block;
@@ -92,20 +97,28 @@
 
     /* Sidebar oculto por defecto en móviles */
     .sidebar {
-        position: fixed;
+        position: fixed !important;
         top: 0;
         left: 0;
         z-index: 1030;
         transform: translateX(-100%);
-        width: 260px !important;
-        max-width: 260px !important;
-        min-width: 260px !important;
+        width: 280px !important;
+        max-width: 280px !important;
+        min-width: 280px !important;
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        height: 100vh;
+        overflow-y: auto;
     }
 
     /* Sidebar visible cuando tiene clase show */
     .sidebar.show {
         transform: translateX(0);
+    }
+
+    /* Expandir contenido principal en móviles */
+    .col-md-9.col-lg-10 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
     }
 }
 /* Navbar Styles */
