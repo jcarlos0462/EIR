@@ -190,6 +190,7 @@ body {
         display: flex !important;
         flex-direction: column !important;
         visibility: visible !important;
+        transition: transform 0.3s ease-in-out !important;
     }
 
     /* Sidebar visible cuando tiene clase show */

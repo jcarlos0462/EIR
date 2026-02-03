@@ -14,17 +14,26 @@ document.addEventListener('DOMContentLoaded', function() {
     var sidebarOverlay = document.getElementById('sidebarOverlay');
     var sidebarMenu = document.getElementById('sidebarMenu');
     
+    console.log('Sidebar elements found:', {
+        toggler: !!sidebarToggler,
+        overlay: !!sidebarOverlay,
+        menu: !!sidebarMenu
+    });
+    
     if (sidebarToggler && sidebarMenu && sidebarOverlay) {
         sidebarToggler.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Toggling sidebar');
+            console.log('Toggle clicked, current classes:', sidebarMenu.className);
             sidebarMenu.classList.toggle('show');
             sidebarOverlay.classList.toggle('show');
+            console.log('After toggle, classes:', sidebarMenu.className);
+            console.log('Transform applied:', window.getComputedStyle(sidebarMenu).transform);
         });
 
         // Cerrar el sidebar al hacer clic en el overlay
         sidebarOverlay.addEventListener('click', function() {
+            console.log('Overlay clicked, closing sidebar');
             sidebarMenu.classList.remove('show');
             sidebarOverlay.classList.remove('show');
         });
@@ -33,11 +42,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.sidebar-link').forEach(function(link) {
             link.addEventListener('click', function() {
                 if (window.innerWidth <= 1024) {
+                    console.log('Link clicked in mobile view');
                     sidebarMenu.classList.remove('show');
                     sidebarOverlay.classList.remove('show');
                 }
             });
         });
+    } else {
+        console.error('Sidebar elements not found!');
     }
 
     // Asegurar visibilidad del botón en móviles/tablets
