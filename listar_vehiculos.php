@@ -122,7 +122,6 @@ if (isset($_GET['editar'])) {
 </head>
 <body>
     <?php include 'navbar.php'; ?>
-    <?php include 'sidebar_toggler.php'; ?>
 
     <div class="container-fluid">
         <div class="row">

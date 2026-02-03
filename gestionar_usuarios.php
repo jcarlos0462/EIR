@@ -163,7 +163,6 @@ $result_usuarios = $conn->query($sql_usuarios);
 </head>
 <body>
     <?php include 'navbar.php'; ?>
-    <?php include 'sidebar_toggler.php'; ?>
     <div class="container-fluid">
         <div class="row">
             <?php include 'sidebar.php'; ?>

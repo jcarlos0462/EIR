@@ -100,7 +100,6 @@ if ($res && $row = $res->fetch_assoc()) $usuarios_count = $row['total'];
 </head>
 <body>
     <?php include 'navbar.php'; ?>
-    <?php include 'sidebar_toggler.php'; ?>
 
     <div class="container-fluid">
         <div class="row">
