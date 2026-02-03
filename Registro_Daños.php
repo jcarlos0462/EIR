@@ -321,6 +321,34 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
             border-top-left-radius: 18px;
             border-top-right-radius: 18px;
         }
+        @media (max-width: 768px) {
+            #formBuscar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            #formBuscar .flex-grow-1,
+            #formBuscar .vin-actions,
+            #formBuscar .vin-submit {
+                width: 100% !important;
+            }
+            #formBuscar .vin-actions {
+                justify-content: space-between;
+            }
+            #formBuscar .modern-input {
+                width: 100% !important;
+            }
+            #formBuscar .modern-btn {
+                width: 100% !important;
+            }
+            .vehiculo-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .vehiculo-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -341,12 +369,12 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                 <label class="modern-label">VIN</label>
                                 <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required autofocus placeholder="Escanea o ingresa el VIN">
                             </div>
-                            <div class="d-flex align-items-end gap-2">
+                            <div class="d-flex align-items-end gap-2 vin-actions">
                                 <button type="button" class="modern-btn modern-btn-success" data-bs-toggle="modal" data-bs-target="#modalQR" title="Escanear VIN">
                                     <i class="bi bi-camera" style="font-size: 1.5rem;"></i>
                                 </button>
                             </div>
-                            <div>
+                            <div class="vin-submit">
                                 <button type="submit" name="buscar_vin" class="modern-btn modern-btn-primary">Buscar</button>
                             </div>
                         </form>

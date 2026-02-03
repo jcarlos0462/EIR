@@ -1,6 +1,6 @@
 <!-- Botón hamburguesa para sidebar (solo móviles) -->
-<button class="sidebar-toggler" type="button" id="sidebarToggler">
-    <span class="sidebar-toggler-icon"></span>
+<button class="sidebar-toggler" type="button" id="sidebarToggler" aria-label="Abrir menú" title="Menú">
+    <span class="sidebar-toggler-icon" aria-hidden="true">☰</span>
 </button>
 
 <!-- Overlay para cerrar sidebar -->

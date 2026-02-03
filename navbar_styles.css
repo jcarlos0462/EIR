@@ -61,6 +61,8 @@
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    line-height: 1;
 }
 
 .sidebar-toggler-icon {
@@ -72,6 +74,9 @@
     background-repeat: no-repeat;
     background-position: center;
     background-size: 100%;
+    font-size: 1.4rem;
+    text-align: center;
+    color: #fff;
 }
 
 /* Overlay oscuro para cerrar sidebar */
