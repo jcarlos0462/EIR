@@ -6,6 +6,33 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 $debug = true; // poner a false en producción
 include 'database_connection.php';
+// Helper: buscar ID existente de 'Revisado' en una tabla de referencia
+function findRevisadoId($conn, $table, $codeCol, $nameCol) {
+    $name = 'Revisado';
+    $nameEsc = $conn->real_escape_string($name);
+    $sql = "SELECT $codeCol AS id FROM $table WHERE $nameCol = '$nameEsc' LIMIT 1";
+    $res = $conn->query($sql);
+    if ($res && $row = $res->fetch_assoc()) return $row['id'];
+    return null;
+}
+
+// Helper: crear fila 'Revisado' y devolver su ID
+function createRevisadoIfMissing($conn, $table, $codeCol, $nameCol) {
+    $existing = findRevisadoId($conn, $table, $codeCol, $nameCol);
+    if ($existing !== null) return intval($existing);
+    $name = 'Revisado';
+    $nameEsc = $conn->real_escape_string($name);
+    $sql = "INSERT INTO $table ($nameCol) VALUES ('$nameEsc')";
+    if ($conn->query($sql)) {
+        return intval($conn->insert_id);
+    }
+    return null;
+}
+
+// Cargar IDs sentinel (si existen) para mapearlos a 0 en la vista
+$sentinelAreaId = findRevisadoId($conn, 'areadano', 'CodAreaDano', 'NomAreaDano');
+$sentinelTipoId = findRevisadoId($conn, 'tipodano', 'CodTipoDano', 'NomTipoDano');
+$sentinelSeveridadId = findRevisadoId($conn, 'severidaddano', 'CodSeveridadDano', 'NomSeveridadDano');
 
 // Inicializar variables
 $vin = $marca = $modelo = $color = '';
@@ -69,14 +96,24 @@ if (isset($_POST['eliminar_danio']) && isset($_POST['id_danio'])) {
 // Marcar como revisado: insertar un nuevo registro con area/tipo/severidad = 0 para el VIN
 if (isset($_POST['marcar_revisado'])) {
     $vin_revisado = isset($_POST['vin']) ? trim($_POST['vin']) : '';
-    if ($vin_revisado) {
+        if ($vin_revisado) {
         $tipo_operacion_revisado = 'Revisado';
-        // Si hay usuario en sesión, lo insertamos; si no, insertamos NULL para UsuarioID
+        // Crear o obtener las filas 'Revisado' en tablas de referencia para poder usar sus IDs (cumplir FK)
+        $areaId = createRevisadoIfMissing($conn, 'areadano', 'CodAreaDano', 'NomAreaDano');
+        $tipoId = createRevisadoIfMissing($conn, 'tipodano', 'CodTipoDano', 'NomTipoDano');
+        $severId = createRevisadoIfMissing($conn, 'severidaddano', 'CodSeveridadDano', 'NomSeveridadDano');
+
+        if ($areaId === null || $tipoId === null || $severId === null) {
+            error_log('No se pudieron crear filas Revisado en tablas de referencia');
+            if (!empty($debug)) echo '<pre>No se pudieron crear filas Revisado en tablas de referencia</pre>';
+            exit();
+        }
+
         if (!empty($usuario_id)) {
             $usuario_val = intval($usuario_id);
-            $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, NULL, NULL, NULL, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, ?, ?, ?, ?, ?)");
             if ($stmt) {
-                $stmt->bind_param('sis', $vin_revisado, $usuario_val, $tipo_operacion_revisado);
+                $stmt->bind_param('siiiis', $vin_revisado, $areaId, $tipoId, $severId, $usuario_val, $tipo_operacion_revisado);
                 if (!$stmt->execute()) {
                     error_log('Ejecutar INSERT Revisado fallo (con usuario): ' . $stmt->error);
                     if (!empty($debug)) echo '<pre>Ejecutar INSERT Revisado fallo (con usuario): ' . htmlspecialchars($stmt->error) . '</pre>';
@@ -90,9 +127,9 @@ if (isset($_POST['marcar_revisado'])) {
                 exit();
             }
         } else {
-            $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, NULL, NULL, NULL, NULL, ?)");
+            $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, ?, ?, ?, NULL, ?)");
             if ($stmt) {
-                $stmt->bind_param('ss', $vin_revisado, $tipo_operacion_revisado);
+                $stmt->bind_param('siiis', $vin_revisado, $areaId, $tipoId, $severId, $tipo_operacion_revisado);
                 if (!$stmt->execute()) {
                     error_log('Ejecutar INSERT Revisado fallo (sin usuario): ' . $stmt->error);
                     if (!empty($debug)) echo '<pre>Ejecutar INSERT Revisado fallo (sin usuario): ' . htmlspecialchars($stmt->error) . '</pre>';
@@ -512,9 +549,9 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                     <?php if (!empty($danios)): foreach ($danios as $d): ?>
                                         <tr>
                                             <td><?php echo htmlspecialchars($d['TipoOperacion']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['CodAreaDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['CodTipoDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['CodSeveridadDano']); ?></td>
+                                                <td><?php echo htmlspecialchars((isset($sentinelAreaId) && $sentinelAreaId !== null && $d['CodAreaDano']==$sentinelAreaId) ? '0' : $d['CodAreaDano']); ?></td>
+                                                <td><?php echo htmlspecialchars((isset($sentinelTipoId) && $sentinelTipoId !== null && $d['CodTipoDano']==$sentinelTipoId) ? '0' : $d['CodTipoDano']); ?></td>
+                                                <td><?php echo htmlspecialchars((isset($sentinelSeveridadId) && $sentinelSeveridadId !== null && $d['CodSeveridadDano']==$sentinelSeveridadId) ? '0' : $d['CodSeveridadDano']); ?></td>
                                             <td>
                                                 <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
                                                     <span class="bi bi-pencil-square"></span>
