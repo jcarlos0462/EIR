@@ -442,10 +442,17 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
             line-height: 1.5;
         }
         .same-size-btn {
-            min-width: 140px;
-            padding: 0.7rem 1.5rem;
-            font-size: 1.1rem;
-            border-radius: 12px;
+            min-width: 140px !important;
+            padding: 0.7rem 1.5rem !important;
+            font-size: 1.1rem !important;
+            border-radius: 12px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: auto !important;
+        }
+        .modern-btn.same-size-btn {
+            box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08) !important;
         }
         @media (max-width: 768px) {
             #formBuscar {
