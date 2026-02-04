@@ -441,6 +441,12 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
             padding: 0.5rem;
             line-height: 1.5;
         }
+        .same-size-btn {
+            min-width: 140px;
+            padding: 0.7rem 1.5rem;
+            font-size: 1.1rem;
+            border-radius: 12px;
+        }
         @media (max-width: 768px) {
             #formBuscar {
                 flex-direction: column !important;
@@ -525,7 +531,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                 <div class="d-flex gap-2">
                                     <form method="post" style="display:inline;" onsubmit="return confirm('¿Marcar como revisado? Esto pondrá área, tipo y severidad en 0 para todos los daños de este VIN.');">
                                         <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                        <button type="submit" name="marcar_revisado" class="modern-btn modern-btn-success">
+                                        <button type="submit" name="marcar_revisado" class="modern-btn modern-btn-success same-size-btn">
                                             <i class="bi bi-check2-circle"></i> Revisado
                                         </button>
                                     </form>
@@ -649,7 +655,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                         </select>
                                     </div>
                                     <div class="d-grid gap-2 mt-2">
-                                        <button type="submit" name="guardar_danio" class="modern-btn modern-btn-primary">Guardar</button>
+                                        <button type="submit" name="guardar_danio" class="modern-btn modern-btn-primary same-size-btn">Guardar</button>
                                         <button type="button" class="modern-btn btn-secondary" data-bs-dismiss="modal">Regresar</button>
                                     </div>
                                 </form>
