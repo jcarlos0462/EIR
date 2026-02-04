@@ -1,5 +1,10 @@
 <?php
 session_start();
+// Habilitar reporte de errores para depuración temporal
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+$debug = true; // poner a false en producción
 include 'database_connection.php';
 
 // Inicializar variables
@@ -70,11 +75,22 @@ if (isset($_POST['marcar_revisado'])) {
         $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, 0, 0, 0, ?, ?)");
         if ($stmt) {
             $stmt->bind_param('sis', $vin_revisado, $usuario_val, $tipo_operacion_revisado);
-            $stmt->execute();
+            if (!$stmt->execute()) {
+                error_log('Ejecutar INSERT Revisado fallo: ' . $stmt->error);
+                if (!empty($debug)) {
+                    echo '<pre>Ejecutar INSERT Revisado fallo: ' . htmlspecialchars($stmt->error) . '</pre>';
+                }
+                $stmt->close();
+                exit();
+            }
             $stmt->close();
         } else {
-            // opcional: capturar error de preparación
+            // capturar error de preparación
             error_log('Preparar INSERT Revisado fallo: ' . $conn->error);
+            if (!empty($debug)) {
+                echo '<pre>Preparar INSERT Revisado fallo: ' . htmlspecialchars($conn->error) . '</pre>';
+            }
+            exit();
         }
     }
     if ($vin_revisado) {
