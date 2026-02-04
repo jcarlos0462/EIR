@@ -61,14 +61,21 @@ if (isset($_POST['eliminar_danio']) && isset($_POST['id_danio'])) {
     }
     exit();
 }
-// Marcar como revisado: poner area/tipo/severidad en 0 para el VIN
+// Marcar como revisado: insertar un nuevo registro con area/tipo/severidad = 0 para el VIN
 if (isset($_POST['marcar_revisado'])) {
     $vin_revisado = isset($_POST['vin']) ? trim($_POST['vin']) : '';
     if ($vin_revisado) {
-        $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano = 0, CodTipoDano = 0, CodSeveridadDano = 0 WHERE VIN = ?");
-        $stmt->bind_param('s', $vin_revisado);
-        $stmt->execute();
-        $stmt->close();
+        $usuario_val = $usuario_id ? intval($usuario_id) : 0;
+        $tipo_operacion_revisado = 'Revisado';
+        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, 0, 0, 0, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param('sis', $vin_revisado, $usuario_val, $tipo_operacion_revisado);
+            $stmt->execute();
+            $stmt->close();
+        } else {
+            // opcional: capturar error de preparación
+            error_log('Preparar INSERT Revisado fallo: ' . $conn->error);
+        }
     }
     if ($vin_revisado) {
         header("Location: Registro_Daños.php?vin=" . urlencode($vin_revisado));
