@@ -70,27 +70,41 @@ if (isset($_POST['eliminar_danio']) && isset($_POST['id_danio'])) {
 if (isset($_POST['marcar_revisado'])) {
     $vin_revisado = isset($_POST['vin']) ? trim($_POST['vin']) : '';
     if ($vin_revisado) {
-        $usuario_val = $usuario_id ? intval($usuario_id) : 0;
         $tipo_operacion_revisado = 'Revisado';
-        $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, 0, 0, 0, ?, ?)");
-        if ($stmt) {
-            $stmt->bind_param('sis', $vin_revisado, $usuario_val, $tipo_operacion_revisado);
-            if (!$stmt->execute()) {
-                error_log('Ejecutar INSERT Revisado fallo: ' . $stmt->error);
-                if (!empty($debug)) {
-                    echo '<pre>Ejecutar INSERT Revisado fallo: ' . htmlspecialchars($stmt->error) . '</pre>';
+        // Si hay usuario en sesión, lo insertamos; si no, insertamos NULL para UsuarioID
+        if (!empty($usuario_id)) {
+            $usuario_val = intval($usuario_id);
+            $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, NULL, NULL, NULL, ?, ?)");
+            if ($stmt) {
+                $stmt->bind_param('sis', $vin_revisado, $usuario_val, $tipo_operacion_revisado);
+                if (!$stmt->execute()) {
+                    error_log('Ejecutar INSERT Revisado fallo (con usuario): ' . $stmt->error);
+                    if (!empty($debug)) echo '<pre>Ejecutar INSERT Revisado fallo (con usuario): ' . htmlspecialchars($stmt->error) . '</pre>';
+                    $stmt->close();
+                    exit();
                 }
                 $stmt->close();
+            } else {
+                error_log('Preparar INSERT Revisado fallo (con usuario): ' . $conn->error);
+                if (!empty($debug)) echo '<pre>Preparar INSERT Revisado fallo (con usuario): ' . htmlspecialchars($conn->error) . '</pre>';
                 exit();
             }
-            $stmt->close();
         } else {
-            // capturar error de preparación
-            error_log('Preparar INSERT Revisado fallo: ' . $conn->error);
-            if (!empty($debug)) {
-                echo '<pre>Preparar INSERT Revisado fallo: ' . htmlspecialchars($conn->error) . '</pre>';
+            $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, NULL, NULL, NULL, NULL, ?)");
+            if ($stmt) {
+                $stmt->bind_param('ss', $vin_revisado, $tipo_operacion_revisado);
+                if (!$stmt->execute()) {
+                    error_log('Ejecutar INSERT Revisado fallo (sin usuario): ' . $stmt->error);
+                    if (!empty($debug)) echo '<pre>Ejecutar INSERT Revisado fallo (sin usuario): ' . htmlspecialchars($stmt->error) . '</pre>';
+                    $stmt->close();
+                    exit();
+                }
+                $stmt->close();
+            } else {
+                error_log('Preparar INSERT Revisado fallo (sin usuario): ' . $conn->error);
+                if (!empty($debug)) echo '<pre>Preparar INSERT Revisado fallo (sin usuario): ' . htmlspecialchars($conn->error) . '</pre>';
+                exit();
             }
-            exit();
         }
     }
     if ($vin_revisado) {
