@@ -61,6 +61,22 @@ if (isset($_POST['eliminar_danio']) && isset($_POST['id_danio'])) {
     }
     exit();
 }
+// Marcar como revisado: poner area/tipo/severidad en 0 para el VIN
+if (isset($_POST['marcar_revisado'])) {
+    $vin_revisado = isset($_POST['vin']) ? trim($_POST['vin']) : '';
+    if ($vin_revisado) {
+        $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano = 0, CodTipoDano = 0, CodSeveridadDano = 0 WHERE VIN = ?");
+        $stmt->bind_param('s', $vin_revisado);
+        $stmt->execute();
+        $stmt->close();
+    }
+    if ($vin_revisado) {
+        header("Location: Registro_Daños.php?vin=" . urlencode($vin_revisado));
+    } else {
+        header("Location: Registro_Daños.php");
+    }
+    exit();
+}
 // Guardar daño
 if (isset($_POST['guardar_danio'])) {
     $vin = trim($_POST['vin']);
@@ -432,9 +448,17 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                         <div class="modern-table-card">
                             <div class="mb-3 d-flex justify-content-between align-items-center">
                                 <span class="modern-label mb-0">Daños Registrados</span>
-                                <button type="button" class="modern-btn modern-btn-primary" data-bs-toggle="modal" data-bs-target="#modalDanio">
-                                    <i class="bi bi-plus-lg"></i> Agregar Daño
-                                </button>
+                                <div class="d-flex gap-2">
+                                    <form method="post" style="display:inline;" onsubmit="return confirm('¿Marcar como revisado? Esto pondrá área, tipo y severidad en 0 para todos los daños de este VIN.');">
+                                        <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                        <button type="submit" name="marcar_revisado" class="modern-btn modern-btn-success">
+                                            <i class="bi bi-check2-circle"></i> Revisado
+                                        </button>
+                                    </form>
+                                    <button type="button" class="modern-btn modern-btn-primary" data-bs-toggle="modal" data-bs-target="#modalDanio">
+                                        <i class="bi bi-plus-lg"></i> Agregar Daño
+                                    </button>
+                                </div>
                             </div>
                             <div class="table-responsive">
                                 <table class="table modern-table mb-2">
