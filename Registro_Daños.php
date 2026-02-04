@@ -97,7 +97,7 @@ if (isset($_POST['eliminar_danio']) && isset($_POST['id_danio'])) {
 if (isset($_POST['marcar_revisado'])) {
     $vin_revisado = isset($_POST['vin']) ? trim($_POST['vin']) : '';
         if ($vin_revisado) {
-        $tipo_operacion_revisado = 'Revisado';
+        $tipo_operacion_to_use = !empty($tipo_operacion) ? $tipo_operacion : 'Revisado';
         // Crear o obtener las filas 'Revisado' en tablas de referencia para poder usar sus IDs (cumplir FK)
         $areaId = createRevisadoIfMissing($conn, 'areadano', 'CodAreaDano', 'NomAreaDano');
         $tipoId = createRevisadoIfMissing($conn, 'tipodano', 'CodTipoDano', 'NomTipoDano');
@@ -113,7 +113,7 @@ if (isset($_POST['marcar_revisado'])) {
             $usuario_val = intval($usuario_id);
             $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, ?, ?, ?, ?, ?)");
             if ($stmt) {
-                $stmt->bind_param('siiiis', $vin_revisado, $areaId, $tipoId, $severId, $usuario_val, $tipo_operacion_revisado);
+                $stmt->bind_param('siiiis', $vin_revisado, $areaId, $tipoId, $severId, $usuario_val, $tipo_operacion_to_use);
                 if (!$stmt->execute()) {
                     error_log('Ejecutar INSERT Revisado fallo (con usuario): ' . $stmt->error);
                     if (!empty($debug)) echo '<pre>Ejecutar INSERT Revisado fallo (con usuario): ' . htmlspecialchars($stmt->error) . '</pre>';
@@ -129,7 +129,7 @@ if (isset($_POST['marcar_revisado'])) {
         } else {
             $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion) VALUES (?, ?, ?, ?, NULL, ?)");
             if ($stmt) {
-                $stmt->bind_param('siiis', $vin_revisado, $areaId, $tipoId, $severId, $tipo_operacion_revisado);
+                $stmt->bind_param('siiis', $vin_revisado, $areaId, $tipoId, $severId, $tipo_operacion_to_use);
                 if (!$stmt->execute()) {
                     error_log('Ejecutar INSERT Revisado fallo (sin usuario): ' . $stmt->error);
                     if (!empty($debug)) echo '<pre>Ejecutar INSERT Revisado fallo (sin usuario): ' . htmlspecialchars($stmt->error) . '</pre>';
