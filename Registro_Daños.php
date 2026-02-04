@@ -542,7 +542,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             <i class="bi bi-check2-circle"></i> Revisado
                                         </button>
                                     </form>
-                                    <button type="button" class="modern-btn modern-btn-primary" data-bs-toggle="modal" data-bs-target="#modalDanio">
+                                    <button type="button" class="modern-btn modern-btn-danger same-size-btn" data-bs-toggle="modal" data-bs-target="#modalDanio">
                                         <i class="bi bi-plus-lg"></i> Agregar Daño
                                     </button>
                                 </div>
