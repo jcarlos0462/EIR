@@ -27,7 +27,7 @@ if ($vin) {
     if ($stmt->fetch()) {
         // Buscar daños registrados con descripciones
         $stmt->close();
-        $sql = "SELECT r.ID, a.NomAreaDano, t.NomTipoDano, s.NomSeveridadDano, r.TipoOperacion FROM RegistroDanio r
+        $sql = "SELECT r.ID, a.CodAreaDano, a.NomAreaDano, t.CodTipoDano, t.NomTipoDano, s.CodSeveridadDano, s.NomSeveridadDano, r.TipoOperacion FROM RegistroDanio r
                 JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
                 JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
                 JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
@@ -452,8 +452,8 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                         <tr>
                                             <td><?php echo htmlspecialchars($d['TipoOperacion']); ?></td>
                                             <td><?php echo htmlspecialchars($d['CodAreaDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['NomTipoDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($d['NomSeveridadDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($d['CodTipoDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($d['CodSeveridadDano']); ?></td>
                                             <td>
                                                 <button type="button" class="modern-btn modern-btn-warning btn-sm me-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo $d['ID']; ?>">
                                                     <span class="bi bi-pencil-square"></span>
@@ -510,7 +510,7 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                             </div>
                                         </div>
                                     <?php endforeach; else: ?>
-                                        <tr><td colspan="4" class="text-center">Sin daños registrados</td></tr>
+                                        <tr><td colspan="5" class="text-center">Sin daños registrados</td></tr>
                                     <?php endif; ?>
                                     </tbody>
                                 </table>
