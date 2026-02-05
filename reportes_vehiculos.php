@@ -137,6 +137,223 @@ if (isset($_POST['export_csv'])) {
     exit();
 }
 
+// Export XLSX (PhpSpreadsheet) if requested
+if (isset($_POST['export_xlsx'])) {
+    // execute same query (no limit)
+    $res = $conn->query($sql);
+
+    // try to load PhpSpreadsheet
+    $vendor = __DIR__ . '/vendor/autoload.php';
+    if (!file_exists($vendor)) {
+        echo '<div class="alert alert-danger">PhpSpreadsheet no está instalado. Para habilitar exportación .xlsx ejecuta en el servidor:<br><code>composer require phpoffice/phpspreadsheet</code></div>';
+        exit();
+    }
+    require $vendor;
+
+    try {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header row
+        $headers = ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
+        $col = 1;
+        foreach ($headers as $h) {
+            $sheet->setCellValueByColumnAndRow($col, 1, $h);
+            $col++;
+        }
+
+        // Data rows
+        $rowNum = 2;
+        if ($res) {
+            while ($r = $res->fetch_assoc()) {
+                $col = 1;
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['FechaRegistro'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['VIN'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['Marca'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['Modelo'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['Color'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['Ano'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['Puerto'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['Terminal'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['Buque'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['Viaje'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['CodAreaDano'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['CodTipoDano'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['CodSeveridadDano'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['Origen'] ?? '');
+                $sheet->setCellValueByColumnAndRow($col++, $rowNum, $r['TipoOperacion'] ?? '');
+                $rowNum++;
+            }
+        }
+
+        // Style header: bold + background
+        $styleArray = [
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'DDEBF7']
+            ]
+        ];
+        $sheet->getStyle('A1:O1')->applyFromArray($styleArray);
+
+        // Auto-size columns
+        foreach (range('A', $sheet->getHighestColumn()) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Freeze header
+        $sheet->freezePane('A2');
+
+        // Send to browser
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="report_vehiculos.xlsx"');
+        header('Cache-Control: max-age=0');
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit();
+    } catch (Exception $e) {
+        echo '<div class="alert alert-danger">Error generando XLSX: ' . htmlspecialchars($e->getMessage()) . '</div>';
+        exit();
+    }
+}
+
+// Export XLSX (simple generator without external libs)
+if (isset($_POST['export_xlsx'])) {
+    // run query without limit
+    if ($registro_danio_empty) {
+        // output empty xlsx with header only
+        $rows = [];
+    } else {
+        $resx = $conn->query($sql);
+        $rows = [];
+        if ($resx) while ($r = $resx->fetch_assoc()) $rows[] = $r;
+    }
+
+    $headers_x = ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
+
+    // build sheet rows (array of arrays)
+    $sheet_rows = [];
+    $sheet_rows[] = $headers_x;
+    foreach ($rows as $r) {
+        $sheet_rows[] = [
+            $r['FechaRegistro'] ?? '',
+            $r['VIN'] ?? '',
+            $r['Marca'] ?? '',
+            $r['Modelo'] ?? '',
+            $r['Color'] ?? '',
+            $r['Ano'] ?? '',
+            $r['Puerto'] ?? '',
+            $r['Terminal'] ?? '',
+            $r['Buque'] ?? '',
+            $r['Viaje'] ?? '',
+            $r['CodAreaDano'] ?? '',
+            $r['CodTipoDano'] ?? '',
+            $r['CodSeveridadDano'] ?? '',
+            $r['Origen'] ?? '',
+            $r['TipoOperacion'] ?? ''
+        ];
+    }
+
+    // Function to create minimal xlsx using inline strings and a header style
+    $zip = new ZipArchive();
+    $tmpfile = tempnam(sys_get_temp_dir(), 'xlsx');
+    if ($zip->open($tmpfile, ZipArchive::OVERWRITE) !== true) {
+        header('HTTP/1.1 500 Internal Server Error');
+        echo 'No se pudo crear archivo temporal.';
+        exit();
+    }
+
+    // [Content_Types].xml
+    $content_types = '<?xml version="1.0" encoding="UTF-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n' .
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n' .
+        '<Default Extension="xml" ContentType="application/xml"/>\n' .
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>\n' .
+        '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>\n' .
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>\n' .
+        '</Types>';
+    $zip->addFromString('[Content_Types].xml', $content_types);
+
+    // _rels/.rels
+    $rels = '<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n' .
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="/xl/workbook.xml"/>\n' .
+        '</Relationships>';
+    $zip->addFromString('_rels/.rels', $rels);
+
+    // xl/workbook.xml
+    $workbook = '<?xml version="1.0" encoding="UTF-8"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"\n xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n<sheets>\n' .
+        '<sheet name="Report" sheetId="1" r:id="rId1"/>\n</sheets>\n</workbook>';
+    $zip->addFromString('xl/workbook.xml', $workbook);
+
+    // xl/_rels/workbook.xml.rels
+    $wb_rels = '<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n' .
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>\n' .
+        '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>\n' .
+        '</Relationships>';
+    $zip->addFromString('xl/_rels/workbook.xml.rels', $wb_rels);
+
+    // xl/styles.xml (basic: header style with bold and fill)
+    $styles = '<?xml version="1.0" encoding="UTF-8"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">\n' .
+        '<fonts count="2">\n<font><sz val="11"/><color theme="1"/><name val="Calibri"/></font>\n' .
+        '<font><b/><sz val="11"/><color theme="1"/><name val="Calibri"/></font>\n</fonts>\n' .
+        '<fills count="2">\n<fill><patternFill patternType="none"/></fill>\n' .
+        '<fill><patternFill patternType="solid"><fgColor rgb="FFD9E1F2"/><bgColor indexed="64"/></patternFill></fill>\n</fills>\n' .
+        '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>\n' .
+        '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>\n' .
+        '<cellXfs count="2">\n<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>\n' .
+        '<xf numFmtId="0" fontId="1" fillId="1" borderId="0" xfId="0" applyFont="1" applyFill="1"/>\n</cellXfs>\n' .
+        '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>\n' .
+        '</styleSheet>';
+    $zip->addFromString('xl/styles.xml', $styles);
+
+    // xl/worksheets/sheet1.xml
+    $sheetXml = '<?xml version="1.0" encoding="UTF-8"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">\n<sheetData>\n';
+
+    // helper to convert column index to letter
+    $colLetter = function($c) {
+        $letters = '';
+        while ($c >= 0) {
+            $letters = chr(65 + ($c % 26)) . $letters;
+            $c = intval($c / 26) - 1;
+        }
+        return $letters;
+    };
+
+    foreach ($sheet_rows as $rindex => $rvals) {
+        $rowNum = $rindex + 1;
+        $sheetXml .= "<row r=\"$rowNum\">\n";
+        foreach ($rvals as $cindex => $val) {
+            $col = $colLetter($cindex);
+            $cellRef = $col . $rowNum;
+            // header row -> style 1
+            if ($rindex === 0) {
+                $sheetXml .= "<c r=\"$cellRef\" t=\"inlineStr\" s=\"1\"><is><t>" . htmlspecialchars($val) . "</t></is></c>\n";
+            } else {
+                // try numeric detection
+                if (is_numeric($val)) {
+                    $sheetXml .= "<c r=\"$cellRef\"><v>" . $val . "</v></c>\n";
+                } else {
+                    $sheetXml .= "<c r=\"$cellRef\" t=\"inlineStr\"><is><t>" . htmlspecialchars($val) . "</t></is></c>\n";
+                }
+            }
+        }
+        $sheetXml .= "</row>\n";
+    }
+
+    $sheetXml .= '</sheetData>\n</worksheet>';
+    $zip->addFromString('xl/worksheets/sheet1.xml', $sheetXml);
+
+    $zip->close();
+
+    // send file
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="report_vehiculos.xlsx"');
+    header('Content-Length: ' . filesize($tmpfile));
+    readfile($tmpfile);
+    unlink($tmpfile);
+    exit();
+}
+
 // Decide whether to run the display query: only when user applied any filter or requested export
 $res = null;
 $has_filter = false;
@@ -228,6 +445,7 @@ if ($has_filter) {
                         <div class="col-12 mt-2">
                             <button type="submit" class="btn btn-primary">Generar reporte</button>
                             <button type="submit" name="export_csv" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-success ms-2">Exportar CSV (completo)</button>
+                            <button type="submit" name="export_xlsx" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-outline-success ms-2">Exportar XLSX (formato)</button>
                         </div>
                     </form>
                 </div>
