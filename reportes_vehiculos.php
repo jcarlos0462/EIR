@@ -51,6 +51,8 @@ $date_to = isset($_REQUEST['date_to']) ? trim($_REQUEST['date_to']) : '';
 $area = isset($_REQUEST['area']) ? trim($_REQUEST['area']) : '';
 $maniobra = isset($_REQUEST['maniobra']) ? trim($_REQUEST['maniobra']) : '';
 $origen = isset($_REQUEST['origen']) ? trim($_REQUEST['origen']) : '';
+// print mode (open printable view)
+$print_mode = isset($_GET['print']) || isset($_POST['print']);
 
 // build WHERE separately for vehicle filters and damage filters so each can work independently
 $where_v = []; // conditions on vehiculo
@@ -404,7 +406,7 @@ $res = null;
 $has_filter = false;
 if (
     $vin !== '' || $buque !== '' || $date_from !== '' || $date_to !== '' ||
-    $area !== '' || $maniobra !== '' || $origen !== '' || isset($_POST['export_csv'])
+    $area !== '' || $maniobra !== '' || $origen !== '' || isset($_POST['export_csv']) || $print_mode
 ) {
     $has_filter = true;
 }
@@ -416,7 +418,12 @@ if ($has_filter) {
         $display_sql = "SELECT rd.FechaRegistro, rd.VIN FROM RegistroDanio rd WHERE 0 LIMIT 0";
         $res = $conn->query($display_sql);
     } else {
-        $display_sql = $sql . " LIMIT 200";
+        // if printing, return full result; otherwise limit to 200 for display
+        if ($print_mode) {
+            $display_sql = $sql; // full
+        } else {
+            $display_sql = $sql . " LIMIT 200";
+        }
         $res = $conn->query($display_sql);
     }
 }
@@ -431,6 +438,22 @@ if ($has_filter) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="navbar_styles.css">
+    <style>
+        /* Report styling */
+        .report-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .report-meta { font-size: 0.9rem; color: #444; margin-bottom: 1rem; }
+        table.report-table { border-collapse: collapse; width: 100%; }
+        table.report-table th, table.report-table td { padding: 6px 8px; border: 1px solid #ddd; }
+        table.report-table thead th { background:#f1f5f9; font-weight:600; }
+        @media print {
+            body { font-size: 12px; }
+            .no-print { display:none !important; }
+            .container-fluid { padding: 0; }
+            .sidebar, .navbar { display: none !important; }
+            .main-content { margin: 0; }
+            a[href]:after { content: none !important; }
+        }
+    </style>
 </head>
 <body>
 <?php include 'navbar.php'; ?>
@@ -487,11 +510,9 @@ if ($has_filter) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-12 mt-2">
+                        <div class="col-12 mt-2 no-print">
                             <button type="submit" class="btn btn-primary">Generar reporte</button>
-                            <button type="submit" name="export_csv" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-success ms-2">Exportar CSV (completo)</button>
-                            <button type="submit" name="export_xml" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-warning ms-2">Exportar XLS (XML)</button>
-                            <button type="submit" name="export_xlsx" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-outline-success ms-2">Exportar XLSX (formato)</button>
+                            <button type="submit" name="print" value="1" formaction="reportes_vehiculos.php" formmethod="get" formtarget="_blank" class="btn btn-secondary ms-2">Imprimir PDF</button>
                         </div>
                     </form>
                 </div>
@@ -506,7 +527,21 @@ if ($has_filter) {
                         <div class="alert alert-warning">La tabla <strong>RegistroDanio</strong> no contiene registros. No se mostrarán resultados.</div>
                     <?php else: ?>
                     <div class="table-responsive">
-                        <table class="table table-sm table-striped">
+                        <?php if ($has_filter): ?>
+                            <?php $generated_at = date('Y-m-d H:i');
+                                $f = [];
+                                if ($vin!=='') $f[] = 'VIN="'.htmlspecialchars($vin).'"';
+                                if ($buque!=='') $f[] = 'Buque="'.htmlspecialchars($buque).'"';
+                                if ($date_from!=='') $f[] = 'Desde="'.htmlspecialchars($date_from).'"';
+                                if ($date_to!=='') $f[] = 'Hasta="'.htmlspecialchars($date_to).'"';
+                                if ($area!=='') $f[] = 'Area="'.htmlspecialchars($area).'"';
+                                if ($maniobra!=='') $f[] = 'Maniobra="'.htmlspecialchars($maniobra).'"';
+                                if ($origen!=='') $f[] = 'Origen="'.htmlspecialchars($origen).'"';
+                                $filters_text = $f ? implode(' / ', $f) : '(sin filtros)';
+                            ?>
+                            <div class="report-meta">Generado: <?php echo $generated_at; ?> — Filtros: <?php echo $filters_text; ?></div>
+                        <?php endif; ?>
+                        <table class="table table-sm table-striped report-table">
                             <thead>
                                 <tr>
                                     <th>Fecha</th>
