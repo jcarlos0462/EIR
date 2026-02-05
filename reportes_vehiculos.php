@@ -5,6 +5,11 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
     exit();
 }
 
+// Enable errors for debugging (remove or disable on production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // DB connection (same credentials used elsewhere)
 $servername = "localhost";
 $username = "u174025152_Administrador";
@@ -153,7 +158,7 @@ $res = $conn->query($display_sql);
                         </div>
                         <div class="col-12 mt-2">
                             <button type="submit" class="btn btn-primary">Generar reporte</button>
-                            <button type="submit" name="export" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-success ms-2">Exportar CSV (completo)</button>
+                            <button type="submit" name="export_csv" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-success ms-2">Exportar CSV (completo)</button>
                         </div>
                     </form>
                 </div>
