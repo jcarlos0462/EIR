@@ -34,6 +34,15 @@ $origenes = [];
 $res = $conn->query("SELECT DISTINCT IFNULL(TipoOperacion,'') AS Origen FROM RegistroDanio WHERE IFNULL(TipoOperacion,'')<>'' ORDER BY Origen");
 if ($res) { while ($r = $res->fetch_assoc()) $origenes[] = $r['Origen']; }
 
+// Check if RegistroDanio has any rows; if empty, we will force queries to return no results
+$rd_count = 0;
+$tmp = $conn->query("SELECT COUNT(*) AS c FROM RegistroDanio");
+if ($tmp) {
+    $rowc = $tmp->fetch_assoc();
+    $rd_count = intval($rowc['c']);
+}
+$registro_danio_empty = ($rd_count === 0);
+
 // read inputs
 $vin = isset($_REQUEST['vin']) ? trim($_REQUEST['vin']) : '';
 $buque = isset($_REQUEST['buque']) ? trim($_REQUEST['buque']) : '';
@@ -71,7 +80,7 @@ $has_rd = count($where_rd) > 0;
 if ($has_v && !$has_rd) {
     $where_sql = 'WHERE ' . implode(' AND ', $where_v);
     $sql = "SELECT rd.FechaRegistro, v.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
-                a.NomAreaDano AS Area, t.NomTipoDano AS Tipo, s.NomSeveridadDano AS Severidad, rd.TipoOperacion AS Origen, rd.TipoOperacion
+                rd.CodAreaDano AS CodAreaDano, rd.CodTipoDano AS CodTipoDano, rd.CodSeveridadDano AS CodSeveridadDano, rd.TipoOperacion AS Origen, rd.TipoOperacion
             FROM vehiculo v
             LEFT JOIN RegistroDanio rd ON v.VIN = rd.VIN
             LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
@@ -85,7 +94,7 @@ if ($has_v && !$has_rd) {
     $where_sql = '';
     if (count($all_where) > 0) $where_sql = 'WHERE ' . implode(' AND ', $all_where);
     $sql = "SELECT rd.FechaRegistro, rd.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
-                a.NomAreaDano AS Area, t.NomTipoDano AS Tipo, s.NomSeveridadDano AS Severidad, rd.TipoOperacion AS Origen, rd.TipoOperacion
+                rd.CodAreaDano AS CodAreaDano, rd.CodTipoDano AS CodTipoDano, rd.CodSeveridadDano AS CodSeveridadDano, rd.TipoOperacion AS Origen, rd.TipoOperacion
             FROM RegistroDanio rd
             LEFT JOIN vehiculo v ON rd.VIN = v.VIN
             LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
@@ -101,7 +110,7 @@ if (isset($_POST['export_csv'])) {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=report_vehiculos.csv');
     $out = fopen('php://output', 'w');
-    fputcsv($out, ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','Area','Tipo','Severidad','Origen','Maniobra']);
+    fputcsv($out, ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra']);
     if ($res) {
         while ($r = $res->fetch_assoc()) {
             fputcsv($out, [
@@ -115,9 +124,9 @@ if (isset($_POST['export_csv'])) {
                 $r['Terminal'] ?? '',
                 $r['Buque'] ?? '',
                 $r['Viaje'] ?? '',
-                $r['Area'] ?? '',
-                $r['Tipo'] ?? '',
-                $r['Severidad'] ?? '',
+                $r['CodAreaDano'] ?? '',
+                $r['CodTipoDano'] ?? '',
+                $r['CodSeveridadDano'] ?? '',
                 $r['Origen'] ?? '',
                 $r['TipoOperacion'] ?? ''
             ]);
@@ -139,8 +148,14 @@ if (
 
 if ($has_filter) {
     // run query for display (limit to 200 rows to avoid heavy pages)
-    $display_sql = $sql . " LIMIT 200";
-    $res = $conn->query($display_sql);
+    if ($registro_danio_empty) {
+        // force empty result set
+        $display_sql = "SELECT rd.FechaRegistro, rd.VIN FROM RegistroDanio rd WHERE 0 LIMIT 0";
+        $res = $conn->query($display_sql);
+    } else {
+        $display_sql = $sql . " LIMIT 200";
+        $res = $conn->query($display_sql);
+    }
 }
 
 ?>
@@ -221,6 +236,8 @@ if ($has_filter) {
                     <h5>Resultados (muestra hasta 200 filas)</h5>
                     <?php if (!$has_filter): ?>
                         <div class="alert alert-secondary">No se muestran datos. Aplique filtros y presione "Generar reporte".</div>
+                    <?php elseif ($registro_danio_empty): ?>
+                        <div class="alert alert-warning">La tabla <strong>RegistroDanio</strong> no contiene registros. No se mostrarán resultados.</div>
                     <?php else: ?>
                     <div class="table-responsive">
                         <table class="table table-sm table-striped">
@@ -236,9 +253,9 @@ if ($has_filter) {
                                     <th>Terminal</th>
                                     <th>Buque</th>
                                     <th>Viaje</th>
-                                    <th>Area</th>
-                                    <th>Tipo</th>
-                                    <th>Severidad</th>
+                                    <th>CodAreaDano</th>
+                                    <th>CodTipoDano</th>
+                                    <th>CodSeveridadDano</th>
                                     <th>Origen</th>
                                     <th>Maniobra</th>
                                 </tr>
@@ -256,9 +273,9 @@ if ($has_filter) {
         <td><?php echo htmlspecialchars($row['Terminal'] ?? ''); ?></td>
         <td><?php echo htmlspecialchars($row['Buque'] ?? ''); ?></td>
         <td><?php echo htmlspecialchars($row['Viaje'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Area'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Tipo'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Severidad'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['CodAreaDano'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['CodTipoDano'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['CodSeveridadDano'] ?? ''); ?></td>
         <td><?php echo htmlspecialchars($row['Origen'] ?? ''); ?></td>
         <td><?php echo htmlspecialchars($row['TipoOperacion'] ?? ''); ?></td>
     </tr>
