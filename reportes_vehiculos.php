@@ -25,7 +25,7 @@ $res = $conn->query("SELECT DISTINCT Buque FROM vehiculo WHERE IFNULL(Buque,'')<
 if ($res) { while ($r = $res->fetch_assoc()) $buques[] = $r['Buque']; }
 
 $areas = [];
-$res = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY NomAreaDano");
+$res = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY CodAreaDano");
 if ($res) { while ($r = $res->fetch_assoc()) $areas[] = $r; }
 
 // Origen values from RegistroDanio if available
