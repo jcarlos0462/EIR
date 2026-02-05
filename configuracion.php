@@ -15,6 +15,57 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
 // Conexión a base de datos
 include 'database_connection.php';
 
+// Mensajes para roles
+$rol_msg_success = '';
+$rol_msg_error = '';
+
+// Manejo de creación/edición de rol (ahora el formulario apunta a este archivo)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Eliminar rol
+    if (isset($_POST['eliminar_rol']) && isset($_POST['rol_id'])) {
+        $rid = intval($_POST['rol_id']);
+        $stmt = $conn->prepare("DELETE FROM roles WHERE id = ?");
+        $stmt->bind_param('i', $rid);
+        if ($stmt->execute()) {
+            $rol_msg_success = 'Rol eliminado correctamente.';
+        } else {
+            $rol_msg_error = 'Error al eliminar rol: ' . $stmt->error;
+        }
+        $stmt->close();
+    }
+
+    // Guardar (crear o actualizar) rol
+    if (isset($_POST['guardar_rol'])) {
+        $rid = isset($_POST['rol_id']) && $_POST['rol_id'] !== '' ? intval($_POST['rol_id']) : null;
+        $nombre = trim($_POST['rol_nombre'] ?? '');
+        $descripcion = trim($_POST['rol_descripcion'] ?? '');
+
+        if ($nombre === '') {
+            $rol_msg_error = 'El nombre del rol no puede estar vacío.';
+        } else {
+            if ($rid) {
+                $stmt = $conn->prepare("UPDATE roles SET nombre = ?, descripcion = ? WHERE id = ?");
+                $stmt->bind_param('ssi', $nombre, $descripcion, $rid);
+                if ($stmt->execute()) {
+                    $rol_msg_success = 'Rol actualizado correctamente.';
+                } else {
+                    $rol_msg_error = 'Error al actualizar rol: ' . $stmt->error;
+                }
+                $stmt->close();
+            } else {
+                $stmt = $conn->prepare("INSERT INTO roles (nombre, descripcion) VALUES (?, ?)");
+                $stmt->bind_param('ss', $nombre, $descripcion);
+                if ($stmt->execute()) {
+                    $rol_msg_success = 'Rol creado correctamente.';
+                } else {
+                    $rol_msg_error = 'Error al crear rol: ' . $stmt->error;
+                }
+                $stmt->close();
+            }
+        }
+    }
+}
+
 // Crear usuario desde Configuración
 $user_create_error = '';
 $user_create_success = '';
@@ -563,8 +614,16 @@ $usuarios_count = $totalUsuarios;
                     </div>
 
                     <div class="form-card">
-                        <h4>Crear Nuevo Rol</h4>
-                        <form action="crear_rol.php" method="POST">
+                        <h4>Crear / Editar Rol</h4>
+                        <?php if ($rol_msg_error): ?>
+                            <div class="alert alert-danger py-2 mb-3"><?php echo htmlspecialchars($rol_msg_error); ?></div>
+                        <?php endif; ?>
+                        <?php if ($rol_msg_success): ?>
+                            <div class="alert alert-success py-2 mb-3"><?php echo htmlspecialchars($rol_msg_success); ?></div>
+                        <?php endif; ?>
+                        <form action="configuracion.php#roles" method="POST">
+                            <input type="hidden" name="guardar_rol" value="1">
+                            <input type="hidden" name="rol_id" id="rol_id" value="">
                             <div class="mb-3">
                                 <label for="rol_nombre" class="form-label">Nombre del Rol</label>
                                 <input type="text" class="form-control" id="rol_nombre" name="rol_nombre" placeholder="Ej: Inspector Jefe" required>
@@ -573,65 +632,8 @@ $usuarios_count = $totalUsuarios;
                                 <label for="rol_descripcion" class="form-label">Descripción</label>
                                 <textarea class="form-control" id="rol_descripcion" name="rol_descripcion" rows="3" placeholder="Descripción del rol y responsabilidades"></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Permisos del Rol</label>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="perm_ver_vehiculos" name="permisos[]" value="ver_vehiculos">
-                                            <label class="form-check-label" for="perm_ver_vehiculos">
-                                                Ver Vehículos
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="perm_crear_vehiculos" name="permisos[]" value="crear_vehiculos">
-                                            <label class="form-check-label" for="perm_crear_vehiculos">
-                                                Crear Vehículos
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="perm_editar_vehiculos" name="permisos[]" value="editar_vehiculos">
-                                            <label class="form-check-label" for="perm_editar_vehiculos">
-                                                Editar Vehículos
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="perm_eliminar_vehiculos" name="permisos[]" value="eliminar_vehiculos">
-                                            <label class="form-check-label" for="perm_eliminar_vehiculos">
-                                                Eliminar Vehículos
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="perm_ver_danos" name="permisos[]" value="ver_danos">
-                                            <label class="form-check-label" for="perm_ver_danos">
-                                                Ver Daños
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="perm_registrar_danos" name="permisos[]" value="registrar_danos">
-                                            <label class="form-check-label" for="perm_registrar_danos">
-                                                Registrar Daños
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="perm_ver_reportes" name="permisos[]" value="ver_reportes">
-                                            <label class="form-check-label" for="perm_ver_reportes">
-                                                Ver Reportes
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="perm_admin" name="permisos[]" value="administrador">
-                                            <label class="form-check-label" for="perm_admin">
-                                                <strong>Acceso Administrativo</strong>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                             <button type="submit" class="btn btn-primary-custom">
-                                <i class="bi bi-plus-circle"></i> Crear Rol
+                                <i class="bi bi-plus-circle"></i> Guardar Rol
                             </button>
                         </form>
                     </div>
@@ -649,45 +651,75 @@ $usuarios_count = $totalUsuarios;
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Administrador</td>
-                                    <td>Acceso total al sistema</td>
-                                    <td><span class="badge bg-success">Todos</span></td>
-                                    <td>1</td>
-                                    <td>
-                                        <button class='btn btn-sm btn-outline-primary' title='Editar'>
-                                            <i class='bi bi-pencil'></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Inspector</td>
-                                    <td>Inspecciona vehículos y registra daños</td>
-                                    <td><span class="badge bg-info">5 permisos</span></td>
-                                    <td>0</td>
-                                    <td>
-                                        <button class='btn btn-sm btn-outline-primary' title='Editar'>
-                                            <i class='bi bi-pencil'></i>
-                                        </button>
-                                        <button class='btn btn-sm btn-outline-danger' title='Eliminar'>
-                                            <i class='bi bi-trash'></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Operador</td>
-                                    <td>Opera el sistema bajo supervisión</td>
-                                    <td><span class="badge bg-info">3 permisos</span></td>
-                                    <td>0</td>
-                                    <td>
-                                        <button class='btn btn-sm btn-outline-primary' title='Editar'>
-                                            <i class='bi bi-pencil'></i>
-                                        </button>
-                                        <button class='btn btn-sm btn-outline-danger' title='Eliminar'>
-                                            <i class='bi bi-trash'></i>
-                                        </button>
-                                    </td>
-                                </tr>
+                                <?php
+                                $roles_res = $conn->query("SELECT * FROM roles ORDER BY id ASC");
+                                if ($roles_res && $roles_res->num_rows > 0) {
+                                    while ($r = $roles_res->fetch_assoc()) {
+                                        $rid = intval($r['id']);
+                                        $rnombre_raw = $r['nombre'];
+                                        $rdesc_raw = $r['descripcion'];
+                                        $rnombre = htmlspecialchars($rnombre_raw);
+                                        $rdesc = htmlspecialchars($rdesc_raw);
+                                        // Count users with this role
+                                        $user_count = 0;
+                                        $uc = $conn->prepare("SELECT COUNT(*) as c FROM usuario_rol WHERE rol_id = ?");
+                                        $uc->bind_param('i', $rid);
+                                        $uc->execute();
+                                        $uc->bind_result($c); $uc->fetch(); $user_count = $c; $uc->close();
+                                        ?>
+                                        <tr>
+                                            <td><?php echo $rnombre; ?></td>
+                                            <td><?php echo $rdesc; ?></td>
+                                            <td><span class='badge bg-secondary'>--</span></td>
+                                            <td><?php echo $user_count; ?></td>
+                                            <td>
+                                                <button class='btn btn-sm btn-outline-primary' title='Editar' data-bs-toggle='modal' data-bs-target='#modalEditarRol<?php echo $rid; ?>'>
+                                                    <i class='bi bi-pencil'></i>
+                                                </button>
+                                                <form method='post' style='display:inline;' onsubmit="return confirm('¿Eliminar rol <?php echo addslashes($rnombre_raw); ?>? Esta acción no se puede deshacer.');">
+                                                    <input type='hidden' name='rol_id' value='<?php echo $rid; ?>'>
+                                                    <button type='submit' name='eliminar_rol' value='1' class='btn btn-sm btn-outline-danger' title='Eliminar'>
+                                                        <i class='bi bi-trash'></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Modal editar rol -->
+                                        <div class='modal fade' id='modalEditarRol<?php echo $rid; ?>' tabindex='-1' aria-labelledby='modalEditarRolLabel<?php echo $rid; ?>' aria-hidden='true'>
+                                            <div class='modal-dialog'>
+                                                <div class='modal-content'>
+                                                    <div class='modal-header'>
+                                                        <h5 class='modal-title' id='modalEditarRolLabel<?php echo $rid; ?>'>Editar Rol: <?php echo $rnombre; ?></h5>
+                                                        <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Cerrar'></button>
+                                                    </div>
+                                                    <div class='modal-body'>
+                                                        <form method='post' action='configuracion.php#roles'>
+                                                            <input type='hidden' name='guardar_rol' value='1'>
+                                                            <input type='hidden' name='rol_id' value='<?php echo $rid; ?>'>
+                                                            <div class='mb-3'>
+                                                                <label class='form-label'>Nombre del Rol</label>
+                                                                <input type='text' name='rol_nombre' class='form-control' value='<?php echo htmlspecialchars($rnombre_raw); ?>' required>
+                                                            </div>
+                                                            <div class='mb-3'>
+                                                                <label class='form-label'>Descripción</label>
+                                                                <textarea name='rol_descripcion' class='form-control' rows='3'><?php echo htmlspecialchars($rdesc_raw); ?></textarea>
+                                                            </div>
+                                                            <div class='d-flex justify-content-end'>
+                                                                <button type='button' class='btn btn-secondary me-2' data-bs-dismiss='modal'>Cancelar</button>
+                                                                <button type='submit' class='btn btn-primary'>Guardar</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <?php
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='5' class='text-center text-muted'>No hay roles definidos</td></tr>";
+                                }
+                                ?>
                             </tbody>
                         </table>
                     </div>
