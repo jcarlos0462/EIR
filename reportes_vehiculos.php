@@ -43,37 +43,57 @@ $area = isset($_REQUEST['area']) ? trim($_REQUEST['area']) : '';
 $maniobra = isset($_REQUEST['maniobra']) ? trim($_REQUEST['maniobra']) : '';
 $origen = isset($_REQUEST['origen']) ? trim($_REQUEST['origen']) : '';
 
-// build WHERE
-$where = [];
-// VIN partial match (substring)
-if ($vin !== '') $where[] = "rd.VIN LIKE '%" . $conn->real_escape_string($vin) . "%'";
-if ($buque !== '') $where[] = "v.Buque = '" . $conn->real_escape_string($buque) . "'";
+// build WHERE separately for vehicle filters and damage filters so each can work independently
+$where_v = []; // conditions on vehiculo
+$where_rd = []; // conditions on RegistroDanio
+
+if ($vin !== '') $where_v[] = "v.VIN LIKE '%" . $conn->real_escape_string($vin) . "%'";
+if ($buque !== '') $where_v[] = "v.Buque = '" . $conn->real_escape_string($buque) . "'";
 if ($date_from !== '') {
     $d = $conn->real_escape_string($date_from);
-    $where[] = "rd.FechaRegistro >= '" . $d . "'";
+    $where_rd[] = "rd.FechaRegistro >= '" . $d . "'";
 }
 if ($date_to !== '') {
     $d = $conn->real_escape_string($date_to);
-    $where[] = "rd.FechaRegistro <= '" . $d . "'";
+    $where_rd[] = "rd.FechaRegistro <= '" . $d . "'";
 }
-if ($area !== '') $where[] = "rd.CodAreaDano = '" . $conn->real_escape_string($area) . "'";
-if ($maniobra !== '') $where[] = "rd.TipoOperacion LIKE '%" . $conn->real_escape_string($maniobra) . "%'";
-// 'Origen' filter maps to TipoOperacion in this schema
-if ($origen !== '') $where[] = "rd.TipoOperacion = '" . $conn->real_escape_string($origen) . "'";
+if ($area !== '') $where_rd[] = "rd.CodAreaDano = '" . $conn->real_escape_string($area) . "'";
+if ($maniobra !== '') $where_rd[] = "rd.TipoOperacion LIKE '%" . $conn->real_escape_string($maniobra) . "%'";
+if ($origen !== '') $where_rd[] = "rd.TipoOperacion = '" . $conn->real_escape_string($origen) . "'";
 
-$where_sql = '';
-if (count($where) > 0) $where_sql = 'WHERE ' . implode(' AND ', $where);
+// Decide which base to use:
+// - If only vehicle filters provided (VIN/Buque) and no damage filters, start from vehiculo LEFT JOIN RegistroDanio
+// - Otherwise, start from RegistroDanio (existing behaviour)
 
-// main query returning vehicle + damage details
-$sql = "SELECT rd.FechaRegistro, rd.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
-            a.NomAreaDano AS Area, t.NomTipoDano AS Tipo, s.NomSeveridadDano AS Severidad, rd.TipoOperacion AS Origen, rd.TipoOperacion
-        FROM RegistroDanio rd
-        LEFT JOIN vehiculo v ON rd.VIN = v.VIN
-        LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
-        LEFT JOIN tipodano t ON rd.CodTipoDano = t.CodTipoDano
-        LEFT JOIN severidaddano s ON rd.CodSeveridadDano = s.CodSeveridadDano
-        " . $where_sql . "
-        ORDER BY rd.FechaRegistro DESC";
+$has_v = count($where_v) > 0;
+$has_rd = count($where_rd) > 0;
+
+if ($has_v && !$has_rd) {
+    $where_sql = 'WHERE ' . implode(' AND ', $where_v);
+    $sql = "SELECT rd.FechaRegistro, v.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
+                a.NomAreaDano AS Area, t.NomTipoDano AS Tipo, s.NomSeveridadDano AS Severidad, rd.TipoOperacion AS Origen, rd.TipoOperacion
+            FROM vehiculo v
+            LEFT JOIN RegistroDanio rd ON v.VIN = rd.VIN
+            LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
+            LEFT JOIN tipodano t ON rd.CodTipoDano = t.CodTipoDano
+            LEFT JOIN severidaddano s ON rd.CodSeveridadDano = s.CodSeveridadDano
+            " . $where_sql . "
+            ORDER BY rd.FechaRegistro DESC";
+} else {
+    // merge both sets so filters combine when user provides multiple filter types
+    $all_where = array_merge($where_rd, $where_v);
+    $where_sql = '';
+    if (count($all_where) > 0) $where_sql = 'WHERE ' . implode(' AND ', $all_where);
+    $sql = "SELECT rd.FechaRegistro, rd.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
+                a.NomAreaDano AS Area, t.NomTipoDano AS Tipo, s.NomSeveridadDano AS Severidad, rd.TipoOperacion AS Origen, rd.TipoOperacion
+            FROM RegistroDanio rd
+            LEFT JOIN vehiculo v ON rd.VIN = v.VIN
+            LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
+            LEFT JOIN tipodano t ON rd.CodTipoDano = t.CodTipoDano
+            LEFT JOIN severidaddano s ON rd.CodSeveridadDano = s.CodSeveridadDano
+            " . $where_sql . "
+            ORDER BY rd.FechaRegistro DESC";
+}
 
 // Export CSV if requested
 if (isset($_POST['export_csv'])) {
