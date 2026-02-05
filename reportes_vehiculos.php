@@ -172,7 +172,7 @@ if ($has_filter) {
 </head>
 <body>
 <?php include 'navbar.php'; ?>
-<div class="container-fluid mt-4">
+<div class="container-fluid">
     <div class="row">
         <div class="col-md-3 col-lg-2">
             <?php include 'sidebar.php'; ?>
