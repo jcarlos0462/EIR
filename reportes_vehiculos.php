@@ -518,11 +518,28 @@ if ($has_filter) {
         table.report-table th, table.report-table td { padding: 6px 8px; border: 1px solid #ddd; }
         table.report-table thead th { background:#f1f5f9; font-weight:600; }
         @media print {
-            body { font-size: 12px; }
+            /* Force A4 landscape and tighten margins */
+            @page { size: A4 landscape; margin: 8mm; }
+            /* Some browsers also accept 'landscape' alone */
+            @page { size: landscape; }
+
+            /* Make viewport match landscape page dimensions to encourage correct rendering */
+            html, body { width: 297mm; height: 210mm; }
+            body { font-size: 10px; color:#222; -webkit-print-color-adjust: exact; }
             .no-print { display:none !important; }
             .container-fluid { padding: 0; }
-            .sidebar, .navbar { display: none !important; }
-            .main-content { margin: 0; }
+            .sidebar, .navbar, .card { display: none !important; }
+            .main-content { margin: 0; padding: 0; }
+            .report-meta { font-size: 10px; margin-bottom: 6px; }
+            table.report-table { font-size: 9px; table-layout: fixed; border-collapse: collapse; width:100%; }
+            table.report-table th, table.report-table td { padding: 4px 6px; border: 1px solid #bbb; }
+            table.report-table thead th { background:#f1f5f9; font-weight:700; }
+            table.report-table th { white-space: nowrap; }
+            table.report-table td { word-wrap: break-word; white-space: normal; }
+            .table-responsive { overflow: visible !important; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr { page-break-inside: avoid; }
             a[href]:after { content: none !important; }
         }
     </style>
