@@ -45,7 +45,8 @@ $origen = isset($_REQUEST['origen']) ? trim($_REQUEST['origen']) : '';
 
 // build WHERE
 $where = [];
-if ($vin !== '') $where[] = "rd.VIN = '" . $conn->real_escape_string($vin) . "'";
+// VIN partial match (substring)
+if ($vin !== '') $where[] = "rd.VIN LIKE '%" . $conn->real_escape_string($vin) . "%'";
 if ($buque !== '') $where[] = "v.Buque = '" . $conn->real_escape_string($buque) . "'";
 if ($date_from !== '') {
     $d = $conn->real_escape_string($date_from);
