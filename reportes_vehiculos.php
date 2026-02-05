@@ -552,8 +552,8 @@ if ($has_filter) {
             .filters-card .form-label { font-size: 0.95rem; }
             .filters-card .form-control, .filters-card .form-select { font-size: 0.95rem; }
 
-            /* Buttons stack and become full width on small screens */
-            .no-print .btn { display: block !important; width: 100% !important; margin-bottom: 0.5rem; }
+            /* Buttons: keep inline on small/medium screens; full-width only on very small screens */
+            .no-print .btn { display: inline-block !important; width: auto !important; margin-bottom: 0.5rem; }
 
             /* Improve table scrolling on touch devices */
             .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -570,6 +570,10 @@ if ($has_filter) {
 
             /* Reduce margins to avoid overlap with navbar on small viewports */
             .main-content { padding-top: 0.5rem; }
+        }
+        /* For extra-small screens, make action buttons stack and become full-width */
+        @media (max-width: 575.98px) {
+            .no-print .btn { display: block !important; width: 100% !important; margin-bottom: 0.5rem; }
         }
     </style>
 </head>
