@@ -90,9 +90,21 @@ if (isset($_POST['export_csv'])) {
     exit();
 }
 
-// run query for display (limit to 200 rows to avoid heavy pages)
-$display_sql = $sql . " LIMIT 200";
-$res = $conn->query($display_sql);
+// Decide whether to run the display query: only when user applied any filter or requested export
+$res = null;
+$has_filter = false;
+if (
+    $vin !== '' || $buque !== '' || $date_from !== '' || $date_to !== '' ||
+    $area !== '' || $maniobra !== '' || $origen !== '' || isset($_POST['export_csv'])
+) {
+    $has_filter = true;
+}
+
+if ($has_filter) {
+    // run query for display (limit to 200 rows to avoid heavy pages)
+    $display_sql = $sql . " LIMIT 200";
+    $res = $conn->query($display_sql);
+}
 
 ?>
 <!DOCTYPE html>
@@ -102,6 +114,7 @@ $res = $conn->query($display_sql);
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Reportes Vehículos - EIR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="navbar_styles.css">
 </head>
 <body>
 <?php include 'navbar.php'; ?>
@@ -169,6 +182,9 @@ $res = $conn->query($display_sql);
             <div class="card mt-3">
                 <div class="card-body">
                     <h5>Resultados (muestra hasta 200 filas)</h5>
+                    <?php if (!$has_filter): ?>
+                        <div class="alert alert-secondary">No se muestran datos. Aplique filtros y presione "Generar reporte".</div>
+                    <?php else: ?>
                     <div class="table-responsive">
                         <table class="table table-sm table-striped">
                             <thead>
@@ -215,6 +231,7 @@ $res = $conn->query($display_sql);
                             </tbody>
                         </table>
                     </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
