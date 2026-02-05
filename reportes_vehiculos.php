@@ -552,8 +552,22 @@ if ($has_filter) {
             .filters-card .form-label { font-size: 0.95rem; }
             .filters-card .form-control, .filters-card .form-select { font-size: 0.95rem; }
 
-            /* Buttons: keep inline on small/medium screens; full-width only on very small screens */
-            .no-print .btn { display: inline-block !important; width: auto !important; margin-bottom: 0.5rem; }
+            /* Keep buttons inline and grouped so they don't cover filters */
+            .no-print {
+                display: flex !important;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                align-items: center;
+            }
+            .no-print .btn {
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                width: auto !important;
+                padding: .45rem .9rem !important;
+                font-size: .95rem !important;
+                margin-bottom: 0 !important;
+            }
 
             /* Improve table scrolling on touch devices */
             .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -573,7 +587,9 @@ if ($has_filter) {
         }
         /* For extra-small screens, make action buttons stack and become full-width */
         @media (max-width: 575.98px) {
-            .no-print .btn { display: block !important; width: 100% !important; margin-bottom: 0.5rem; }
+            /* On very narrow screens keep buttons stacked but with reduced height */
+            .no-print { flex-direction: column; align-items: stretch; }
+            .no-print .btn { display: block !important; width: 100% !important; padding: .45rem .6rem !important; font-size: .95rem !important; }
         }
     </style>
 </head>
