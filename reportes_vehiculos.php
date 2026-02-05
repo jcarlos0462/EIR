@@ -592,6 +592,23 @@ if ($has_filter) {
             .no-print .btn { display: block !important; width: 100% !important; padding: .45rem .6rem !important; font-size: .95rem !important; }
         }
     </style>
+    <style>
+        /* Fix filters stacking/overlap on small screens */
+        .filters-card .card-body .form-label { display:block; margin-bottom: .25rem; }
+        .filters-card .card-body .form-control, .filters-card .card-body .form-select { width:100%; }
+        .filters-card .card-body .row > [class*="col-"] { margin-bottom: .5rem; }
+
+        @media (max-width: 767.98px) {
+            /* Ensure filter columns stack and occupy full width on small devices */
+            .filters-card .card-body form.row.g-2.align-items-end { gap: .5rem; align-items: stretch; }
+            .filters-card .card-body form.row.g-2.align-items-end > [class*="col-"] {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+            }
+            /* Give some separation between filters and action buttons */
+            .filters-card + .no-print, .filters-card .no-print { margin-top: .5rem; }
+        }
+    </style>
 </head>
 <body>
 <?php include 'navbar.php'; ?>
