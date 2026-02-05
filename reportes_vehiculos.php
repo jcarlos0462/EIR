@@ -173,10 +173,10 @@ if ($has_filter) {
 <?php include 'navbar.php'; ?>
 <div class="container-fluid mt-4">
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-3 col-lg-2">
             <?php include 'sidebar.php'; ?>
         </div>
-        <div class="col-md-9">
+        <div class="col-md-9 col-lg-10 main-content">
             <div class="card">
                 <div class="card-body">
                     <h4>Reportes - Vehículos y Daños</h4>
