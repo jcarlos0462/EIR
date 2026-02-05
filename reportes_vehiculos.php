@@ -104,7 +104,23 @@ if (isset($_POST['export_csv'])) {
     fputcsv($out, ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','Area','Tipo','Severidad','Origen','Maniobra']);
     if ($res) {
         while ($r = $res->fetch_assoc()) {
-            fputcsv($out, [$r['FechaRegistro'],$r['VIN'],$r['Marca'],$r['Modelo'],$r['Color'],$r['Ano'],$r['Puerto'],$r['Terminal'],$r['Buque'],$r['Viaje'],$r['Area'],$r['Tipo'],$r['Severidad'],$r['Origen'],$r['TipoOperacion']]);
+            fputcsv($out, [
+                $r['FechaRegistro'] ?? '',
+                $r['VIN'] ?? '',
+                $r['Marca'] ?? '',
+                $r['Modelo'] ?? '',
+                $r['Color'] ?? '',
+                $r['Ano'] ?? '',
+                $r['Puerto'] ?? '',
+                $r['Terminal'] ?? '',
+                $r['Buque'] ?? '',
+                $r['Viaje'] ?? '',
+                $r['Area'] ?? '',
+                $r['Tipo'] ?? '',
+                $r['Severidad'] ?? '',
+                $r['Origen'] ?? '',
+                $r['TipoOperacion'] ?? ''
+            ]);
         }
     }
     fclose($out);
@@ -230,21 +246,21 @@ if ($has_filter) {
                             <tbody>
 <?php if ($res && $res->num_rows>0): while($row = $res->fetch_assoc()): ?>
     <tr>
-        <td><?php echo htmlspecialchars($row['FechaRegistro']); ?></td>
-        <td><?php echo htmlspecialchars($row['VIN']); ?></td>
-        <td><?php echo htmlspecialchars($row['Marca']); ?></td>
-        <td><?php echo htmlspecialchars($row['Modelo']); ?></td>
-        <td><?php echo htmlspecialchars($row['Color']); ?></td>
-        <td><?php echo htmlspecialchars($row['Ano']); ?></td>
-        <td><?php echo htmlspecialchars($row['Puerto']); ?></td>
-        <td><?php echo htmlspecialchars($row['Terminal']); ?></td>
-        <td><?php echo htmlspecialchars($row['Buque']); ?></td>
-        <td><?php echo htmlspecialchars($row['Viaje']); ?></td>
-        <td><?php echo htmlspecialchars($row['Area']); ?></td>
-        <td><?php echo htmlspecialchars($row['Tipo']); ?></td>
-        <td><?php echo htmlspecialchars($row['Severidad']); ?></td>
-        <td><?php echo htmlspecialchars($row['Origen']); ?></td>
-        <td><?php echo htmlspecialchars($row['TipoOperacion']); ?></td>
+        <td><?php echo htmlspecialchars($row['FechaRegistro'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['VIN'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Marca'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Modelo'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Color'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Ano'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Puerto'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Terminal'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Buque'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Viaje'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Area'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Tipo'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Severidad'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['Origen'] ?? ''); ?></td>
+        <td><?php echo htmlspecialchars($row['TipoOperacion'] ?? ''); ?></td>
     </tr>
 <?php endwhile; else: ?>
     <tr><td colspan="15" class="text-center">No se encontraron resultados</td></tr>
