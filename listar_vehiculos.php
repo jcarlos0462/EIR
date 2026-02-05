@@ -97,7 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
             $rows = parse_xlsx_simple($tmp);
             if ($rows === false || count($rows) === 0) {
                 $import_summary = ['error' => 'No se pudo parsear el archivo XLSX o está vacío.'];
-            } else {
                 $cols = array_map(function($c){ return mb_strtolower(trim($c)); }, $rows[0]);
                 $dataRows = array_slice($rows, 1);
             }
@@ -131,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                 if (array_key_exists($name, $expected)) $expected[$name] = $i;
             }
 
-            $rowCount = 0; $inserted = 0; $skipped = 0; $errors = [];
+            $rowCount = 0; $inserted = 0; $skipped = 0; $errors = []; $duplicates = [];
             $sql_insert = "INSERT INTO vehiculo (Buque, Viaje, VIN, Marca, Modelo, Color, Año, Puerto, Terminal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt_insert = $conn->prepare($sql_insert);
             if (!$stmt_insert) {
@@ -163,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $stmt_check->bind_param('s', $vin);
                         $stmt_check->execute();
                         $resc = $stmt_check->get_result();
-                        if ($resc && $resc->num_rows > 0) { $skipped++; $stmt_check->close(); continue; }
+                        if ($resc && $resc->num_rows > 0) { $skipped++; $duplicates[] = "Fila {$rowCount}: {$vin}"; $stmt_check->close(); continue; }
                         $stmt_check->close();
                         $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $ano, $puerto, $terminal);
                         if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
@@ -194,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $stmt_check->bind_param('s', $vin);
                         $stmt_check->execute();
                         $resc = $stmt_check->get_result();
-                        if ($resc && $resc->num_rows > 0) { $skipped++; $stmt_check->close(); continue; }
+                        if ($resc && $resc->num_rows > 0) { $skipped++; $duplicates[] = "Fila {$rowCount}: {$vin}"; $stmt_check->close(); continue; }
                         $stmt_check->close();
                         $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $ano, $puerto, $terminal);
                         if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
@@ -207,11 +206,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                     'rows' => $rowCount,
                     'inserted' => $inserted,
                     'skipped' => $skipped,
-                    'errors' => $errors
+                    'errors' => $errors,
+                    'duplicates' => $duplicates
                 ];
             }
         }
     }
+}
+
+// Si se realizó una importación, volver a consultar los vehículos para mostrar los nuevos registros
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) {
+    $sql = "SELECT * FROM vehiculo ORDER BY ID DESC";
+    $result = $conn->query($sql);
 }
 
 // Procesar actualización si se envía
@@ -323,7 +329,6 @@ if (isset($_GET['editar'])) {
                     <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Lista de Vehículos</h2>
                     <div class="d-flex gap-2 align-items-center">
-                        <a href="agregar_vehiculo.php" class="btn btn-primary">Agregar Vehículo</a>
                         <form method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
                             <input type="file" name="import_file" accept=".csv,.xlsx" class="form-control form-control-sm">
                             <button type="submit" name="import_vehiculos" class="btn btn-success btn-sm">Importar archivo</button>
@@ -344,6 +349,13 @@ if (isset($_GET['editar'])) {
                                 <ul>
                                 <?php foreach ($import_summary['errors'] as $e): ?><li><?php echo htmlspecialchars($e); ?></li><?php endforeach; ?>
                                 </ul>
+                            <?php endif; ?>
+                            <?php if (!empty($import_summary['duplicates'])): ?>
+                                <div class="mt-2 alert alert-warning p-2">Duplicados omitidos:
+                                    <ul class="mb-0">
+                                        <?php foreach ($import_summary['duplicates'] as $d): ?><li><?php echo htmlspecialchars($d); ?></li><?php endforeach; ?>
+                                    </ul>
+                                </div>
                             <?php endif; ?>
                         <?php endif; ?>
                     </div>
