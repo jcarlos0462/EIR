@@ -212,7 +212,7 @@ if ($has_filter) {
                             <select name="area" class="form-select">
                                 <option value="">(todas)</option>
                                 <?php foreach ($areas as $a): ?>
-                                    <option value="<?php echo htmlspecialchars($a['CodAreaDano']); ?>" <?php if ($a['CodAreaDano']===$area) echo 'selected'; ?>><?php echo htmlspecialchars($a['NomAreaDano']); ?></option>
+                                    <option value="<?php echo htmlspecialchars($a['CodAreaDano']); ?>" <?php if ($a['CodAreaDano']==$area) echo 'selected'; ?>><?php echo htmlspecialchars($a['CodAreaDano']); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
