@@ -562,20 +562,11 @@ if ($has_filter) {
             table.report-table { font-size: 13px; }
             table.report-table th, table.report-table td { padding: 8px 6px; }
 
-            /* Hide less-essential columns to fit the screen:
-               Fecha(1), VIN(2), Marca(3), Modelo(4), Color(5), Año(6), keep Origen(14) and Maniobra(15) */
-            table.report-table th:nth-child(7), table.report-table td:nth-child(7),
-            table.report-table th:nth-child(8), table.report-table td:nth-child(8),
-            table.report-table th:nth-child(9), table.report-table td:nth-child(9),
-            table.report-table th:nth-child(10), table.report-table td:nth-child(10),
-            table.report-table th:nth-child(11), table.report-table td:nth-child(11),
-            table.report-table th:nth-child(12), table.report-table td:nth-child(12),
-            table.report-table th:nth-child(13), table.report-table td:nth-child(13) {
-                display: none !important;
-            }
+            /* Do not hide columns on mobile — allow horizontal scroll instead */
+            table.report-table { min-width: 1100px; }
 
             /* Keep header visible when scrolling (small screens) */
-            table.report-table thead th { position: sticky; top: 56px; background: #fff; z-index: 3; }
+            table.report-table thead th { position: sticky; top: 72px; background: #fff; z-index: 3; }
 
             /* Reduce margins to avoid overlap with navbar on small viewports */
             .main-content { padding-top: 0.5rem; }
