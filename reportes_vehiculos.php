@@ -466,6 +466,19 @@ if ($has_filter) {
             <div class="card">
                 <div class="card-body">
                     <h4>Reportes - Vehículos y Daños</h4>
+                    <?php
+                        // build print URL with current filters
+                        $print_params = [];
+                        if ($vin !== '') $print_params['vin'] = $vin;
+                        if ($buque !== '') $print_params['buque'] = $buque;
+                        if ($date_from !== '') $print_params['date_from'] = $date_from;
+                        if ($date_to !== '') $print_params['date_to'] = $date_to;
+                        if ($area !== '') $print_params['area'] = $area;
+                        if ($maniobra !== '') $print_params['maniobra'] = $maniobra;
+                        if ($origen !== '') $print_params['origen'] = $origen;
+                        $print_params['print'] = 1;
+                        $print_url = 'reportes_vehiculos.php' . (count($print_params) ? ('?' . http_build_query($print_params)) : '');
+                    ?>
                     <form method="get" class="row g-2 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label">VIN</label>
@@ -513,7 +526,7 @@ if ($has_filter) {
                         <div class="col-12 mt-2 no-print">
                             <button type="submit" class="btn btn-primary">Generar reporte</button>
                             <button type="submit" name="export_xml" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-warning ms-2">Exportar XLS (XML)</button>
-                            <button type="submit" name="print" value="1" formaction="reportes_vehiculos.php" formmethod="get" formtarget="_blank" class="btn btn-secondary ms-2">Imprimir PDF</button>
+                            <a href="<?php echo htmlspecialchars($print_url); ?>" target="_blank" class="btn btn-secondary ms-2">Imprimir PDF</a>
                         </div>
                     </form>
                 </div>
