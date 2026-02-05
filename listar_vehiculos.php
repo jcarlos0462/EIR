@@ -23,6 +23,197 @@ if ($conn->connect_error) {
 $sql = "SELECT * FROM vehiculo ORDER BY ID DESC";
 $result = $conn->query($sql);
 
+// Helper: parse simple XLSX (sheet1) into array of rows (supports sharedStrings)
+function parse_xlsx_simple($file) {
+    $zip = new ZipArchive();
+    $res = $zip->open($file);
+    if ($res !== true) return false;
+    // read shared strings
+    $shared = [];
+    if (($idx = $zip->locateName('xl/sharedStrings.xml')) !== false) {
+        $sxml = simplexml_load_string($zip->getFromIndex($idx));
+        $sxml->registerXPathNamespace('a', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
+        foreach ($sxml->si as $si) {
+            if (isset($si->t)) $shared[] = (string)$si->t;
+            else {
+                $text = '';
+                foreach ($si->r as $r) $text .= (string)$r->t;
+                $shared[] = $text;
+            }
+        }
+    }
+    // read sheet1
+    $rows = [];
+    if (($idx = $zip->locateName('xl/worksheets/sheet1.xml')) !== false) {
+        $sheet = simplexml_load_string($zip->getFromIndex($idx));
+        $sheet->registerXPathNamespace('x', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
+        foreach ($sheet->sheetData->row as $r) {
+            $row = [];
+            foreach ($r->c as $c) {
+                $v = '';
+                $t = (string)$c['t'];
+                if ($t === 's') {
+                    $idxs = (int)$c->v;
+                    $v = isset($shared[$idxs]) ? (string)$shared[$idxs] : '';
+                } else {
+                    if (isset($c->v)) $v = (string)$c->v;
+                    else $v = '';
+                }
+                $row[] = $v;
+            }
+            $rows[] = $row;
+        }
+    }
+    $zip->close();
+    return $rows;
+}
+// Procesar importación de CSV/XLSX (exportado desde Excel)
+$import_summary = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) {
+    if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
+        $import_summary = ['error' => 'No se seleccionó archivo o hubo un error al subirlo.'];
+    } else {
+        $tmp = $_FILES['import_file']['tmp_name'];
+        $ext = strtolower(pathinfo($_FILES['import_file']['name'], PATHINFO_EXTENSION));
+
+        // columnas esperadas (claves a mapear)
+        $expected = [
+            'terminal' => null,
+            'buque' => null,
+            'viaje' => null,
+            'vin' => null,
+            'marca' => null,
+            'modelo' => null,
+            'color' => null,
+            'año' => null,
+            'ano' => null,
+            'puerto' => null
+        ];
+
+        $cols = [];
+        $dataRows = [];
+
+        if ($ext === 'xlsx') {
+            $rows = parse_xlsx_simple($tmp);
+            if ($rows === false || count($rows) === 0) {
+                $import_summary = ['error' => 'No se pudo parsear el archivo XLSX o está vacío.'];
+            } else {
+                $cols = array_map(function($c){ return mb_strtolower(trim($c)); }, $rows[0]);
+                $dataRows = array_slice($rows, 1);
+            }
+        } else {
+            // CSV
+            $firstLine = file($tmp, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if (!$firstLine) {
+                $import_summary = ['error' => 'Archivo vacío o no legible.'];
+            } else {
+                $sample = $firstLine[0];
+                $delimiter = (substr_count($sample, ',') >= substr_count($sample, ';')) ? ',' : ';';
+                $handle = fopen($tmp, 'r');
+                if ($handle === false) {
+                    $import_summary = ['error' => 'No se pudo abrir el archivo.'];
+                } else {
+                    $header = fgetcsv($handle, 0, $delimiter);
+                    if (!$header) {
+                        $import_summary = ['error' => 'No se pudo leer cabecera del archivo.'];
+                        fclose($handle);
+                    } else {
+                        $cols = array_map(function($c){ return mb_strtolower(trim($c)); }, $header);
+                        // dejar $handle abierto para lectura secuencial más abajo
+                    }
+                }
+            }
+        }
+
+        // si tenemos columnas, mapear y procesar
+        if (!empty($cols)) {
+            foreach ($cols as $i => $name) {
+                if (array_key_exists($name, $expected)) $expected[$name] = $i;
+            }
+
+            $rowCount = 0; $inserted = 0; $skipped = 0; $errors = [];
+            $sql_insert = "INSERT INTO vehiculo (Buque, Viaje, VIN, Marca, Modelo, Color, Año, Puerto, Terminal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt_insert = $conn->prepare($sql_insert);
+            if (!$stmt_insert) {
+                $import_summary = ['error' => 'Error preparando la inserción: '.$conn->error];
+                if (isset($handle) && is_resource($handle)) fclose($handle);
+            } else {
+                if ($ext === 'xlsx') {
+                    foreach ($dataRows as $data) {
+                        $rowCount++;
+                        $allEmpty = true; foreach ($data as $v) if (trim($v) !== '') { $allEmpty = false; break; }
+                        if ($allEmpty) continue;
+                        $get = function($keys) use ($data, $expected) {
+                            foreach ((array)$keys as $k) {
+                                if (isset($expected[$k]) && $expected[$k] !== null && isset($data[$expected[$k]])) return trim($data[$expected[$k]]);
+                            }
+                            return '';
+                        };
+                        $terminal = $get('terminal');
+                        $buque = $get('buque');
+                        $viaje = $get('viaje');
+                        $vin = $get('vin');
+                        $marca = $get('marca');
+                        $modelo = $get('modelo');
+                        $color = $get('color');
+                        $ano = $get(['año','ano']);
+                        $puerto = $get('puerto');
+                        if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; continue; }
+                        $stmt_check = $conn->prepare("SELECT ID FROM vehiculo WHERE VIN = ? LIMIT 1");
+                        $stmt_check->bind_param('s', $vin);
+                        $stmt_check->execute();
+                        $resc = $stmt_check->get_result();
+                        if ($resc && $resc->num_rows > 0) { $skipped++; $stmt_check->close(); continue; }
+                        $stmt_check->close();
+                        $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $ano, $puerto, $terminal);
+                        if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
+                    }
+                } else {
+                    // CSV - continuar leyendo desde el handle abierto
+                    while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
+                        $rowCount++;
+                        $allEmpty = true; foreach ($data as $v) if (trim($v) !== '') { $allEmpty = false; break; }
+                        if ($allEmpty) continue;
+                        $get = function($keys) use ($data, $expected) {
+                            foreach ((array)$keys as $k) {
+                                if (isset($expected[$k]) && $expected[$k] !== null && isset($data[$expected[$k]])) return trim($data[$expected[$k]]);
+                            }
+                            return '';
+                        };
+                        $terminal = $get('terminal');
+                        $buque = $get('buque');
+                        $viaje = $get('viaje');
+                        $vin = $get('vin');
+                        $marca = $get('marca');
+                        $modelo = $get('modelo');
+                        $color = $get('color');
+                        $ano = $get(['año','ano']);
+                        $puerto = $get('puerto');
+                        if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; continue; }
+                        $stmt_check = $conn->prepare("SELECT ID FROM vehiculo WHERE VIN = ? LIMIT 1");
+                        $stmt_check->bind_param('s', $vin);
+                        $stmt_check->execute();
+                        $resc = $stmt_check->get_result();
+                        if ($resc && $resc->num_rows > 0) { $skipped++; $stmt_check->close(); continue; }
+                        $stmt_check->close();
+                        $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $ano, $puerto, $terminal);
+                        if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
+                    }
+                }
+
+                $stmt_insert->close();
+                if (isset($handle) && is_resource($handle)) fclose($handle);
+                $import_summary = [
+                    'rows' => $rowCount,
+                    'inserted' => $inserted,
+                    'skipped' => $skipped,
+                    'errors' => $errors
+                ];
+            }
+        }
+    }
+}
+
 // Procesar actualización si se envía
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
     $id = $_POST['id'];
@@ -129,13 +320,34 @@ if (isset($_GET['editar'])) {
                 <?php include 'sidebar.php'; ?>
             </div>
             <div class="col-md-9 col-lg-10 main-content">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Lista de Vehículos</h2>
-                    <div>
+                    <div class="d-flex gap-2 align-items-center">
                         <a href="agregar_vehiculo.php" class="btn btn-primary">Agregar Vehículo</a>
-                        
+                        <form method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                            <input type="file" name="import_file" accept=".csv,.xlsx" class="form-control form-control-sm">
+                            <button type="submit" name="import_vehiculos" class="btn btn-success btn-sm">Importar archivo</button>
+                        </form>
                     </div>
                 </div>
+                <?php if ($import_summary !== null): ?>
+                    <div class="alert alert-info">
+                        <strong>Importación:</strong>
+                        <?php if (isset($import_summary['error'])): ?>
+                            <div><?php echo htmlspecialchars($import_summary['error']); ?></div>
+                        <?php else: ?>
+                            <div>Filas leídas: <?php echo $import_summary['rows']; ?></div>
+                            <div>Insertados: <?php echo $import_summary['inserted']; ?></div>
+                            <div>Omitidos (duplicados/errores): <?php echo $import_summary['skipped']; ?></div>
+                            <?php if (!empty($import_summary['errors'])): ?>
+                                <div class="mt-2">Errores:</div>
+                                <ul>
+                                <?php foreach ($import_summary['errors'] as $e): ?><li><?php echo htmlspecialchars($e); ?></li><?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
 
                 <?php if (isset($_GET['exito'])): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
