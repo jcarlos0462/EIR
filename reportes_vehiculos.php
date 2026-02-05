@@ -598,16 +598,7 @@ if ($has_filter) {
                         <div class="col-12 mt-2 no-print">
                             <button type="submit" class="btn btn-primary">Generar reporte</button>
                             <button type="submit" name="export_xml" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-warning ms-2">Exportar XLS (XML)</button>
-                            <form method="post" action="reportes_vehiculos.php" target="_blank" style="display:inline;margin:0;padding:0">
-                                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                <input type="hidden" name="buque" value="<?php echo htmlspecialchars($buque); ?>">
-                                <input type="hidden" name="date_from" value="<?php echo htmlspecialchars($date_from); ?>">
-                                <input type="hidden" name="date_to" value="<?php echo htmlspecialchars($date_to); ?>">
-                                <input type="hidden" name="area" value="<?php echo htmlspecialchars($area); ?>">
-                                <input type="hidden" name="maniobra" value="<?php echo htmlspecialchars($maniobra); ?>">
-                                <input type="hidden" name="origen" value="<?php echo htmlspecialchars($origen); ?>">
-                                <button type="submit" name="export_pdf" value="1" class="btn btn-secondary ms-2">Imprimir PDF</button>
-                            </form>
+                            <a href="<?php echo htmlspecialchars($print_url); ?>" class="btn btn-secondary ms-2">Imprimir PDF</a>
                         </div>
                     </form>
                 </div>
@@ -689,6 +680,11 @@ if ($has_filter) {
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<?php if ($print_mode): ?>
+<script>
+    window.onload = function() { setTimeout(function(){ window.print(); }, 300); };
+</script>
+<?php endif; ?>
 </body>
 </html>
 <?php $conn->close(); ?>
