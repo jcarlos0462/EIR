@@ -184,6 +184,78 @@ if (isset($_POST['export_xml'])) {
     exit();
 }
 
+// Export PDF (server-side) using Dompdf if available
+if (isset($_POST['export_pdf'])) {
+    $resx = $conn->query($sql);
+    $rows = [];
+    if ($resx) while ($r = $resx->fetch_assoc()) $rows[] = $r;
+
+    $generated_at = date('Y-m-d H:i');
+    $filters = [];
+    if ($vin !== '') $filters[] = 'VIN: '.htmlspecialchars($vin);
+    if ($buque !== '') $filters[] = 'Buque: '.htmlspecialchars($buque);
+    if ($date_from !== '') $filters[] = 'Desde: '.htmlspecialchars($date_from);
+    if ($date_to !== '') $filters[] = 'Hasta: '.htmlspecialchars($date_to);
+    if ($area !== '') $filters[] = 'Área: '.htmlspecialchars($area);
+    if ($maniobra !== '') $filters[] = 'Maniobra: '.htmlspecialchars($maniobra);
+    if ($origen !== '') $filters[] = 'Origen: '.htmlspecialchars($origen);
+    $filters_text = $filters ? implode(' / ', $filters) : '(sin filtros)';
+
+    $html = '<!doctype html><html><head><meta charset="utf-8"><style>' .
+        'body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#222} ' .
+        '.hdr{margin-bottom:10px} .title{font-size:18px;font-weight:700} .meta{font-size:11px;color:#444;margin-top:4px} ' .
+        'table{border-collapse:collapse;width:100%;margin-top:8px} th,td{border:1px solid #ddd;padding:6px 8px;text-align:left} th{background:#f1f5f9;font-weight:700}' .
+        '</style></head><body>';
+    $html .= '<div class="hdr"><div class="title">Reporte - Vehículos y Daños</div>';
+    $html .= '<div class="meta">Generado: '.htmlspecialchars($generated_at).' &nbsp; | &nbsp; Filtros: '.htmlspecialchars($filters_text).'</div></div>';
+
+    $html .= '<table><thead><tr>' .
+        '<th>Fecha</th><th>VIN</th><th>Marca</th><th>Modelo</th><th>Color</th><th>Año</th>' .
+        '<th>Puerto</th><th>Terminal</th><th>Buque</th><th>Viaje</th>' .
+        '<th>CodAreaDano</th><th>CodTipoDano</th><th>CodSeveridadDano</th><th>Origen</th><th>Maniobra</th>' .
+        '</tr></thead><tbody>';
+
+    foreach ($rows as $r) {
+        $html .= '<tr>' .
+            '<td>'.htmlspecialchars($r['FechaRegistro'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['VIN'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['Marca'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['Modelo'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['Color'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['Ano'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['Puerto'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['Terminal'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['Buque'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['Viaje'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['CodAreaDano'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['CodTipoDano'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['CodSeveridadDano'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['Origen'] ?? '').'</td>' .
+            '<td>'.htmlspecialchars($r['TipoOperacion'] ?? '').'</td>' .
+            '</tr>';
+    }
+
+    $html .= '</tbody></table></body></html>';
+
+    $vendor = __DIR__ . '/vendor/autoload.php';
+    if (!file_exists($vendor)) {
+        echo '<div class="alert alert-danger">Dompdf no está instalado en el servidor. Para habilitar PDF server-side ejecuta en el servidor:<br><code>composer require dompdf/dompdf</code></div>';
+        exit();
+    }
+    require $vendor;
+    try {
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream('report_vehiculos.pdf', ['Attachment' => 1]);
+        exit();
+    } catch (Exception $e) {
+        echo '<div class="alert alert-danger">Error generando PDF: '.htmlspecialchars($e->getMessage()).'</div>';
+        exit();
+    }
+}
+
 // Export XLSX (PhpSpreadsheet) if requested
 if (isset($_POST['export_xlsx'])) {
     // execute same query (no limit)
@@ -526,7 +598,16 @@ if ($has_filter) {
                         <div class="col-12 mt-2 no-print">
                             <button type="submit" class="btn btn-primary">Generar reporte</button>
                             <button type="submit" name="export_xml" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-warning ms-2">Exportar XLS (XML)</button>
-                            <a href="<?php echo htmlspecialchars($print_url); ?>" target="_blank" class="btn btn-secondary ms-2">Imprimir PDF</a>
+                            <form method="post" action="reportes_vehiculos.php" target="_blank" style="display:inline;margin:0;padding:0">
+                                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                <input type="hidden" name="buque" value="<?php echo htmlspecialchars($buque); ?>">
+                                <input type="hidden" name="date_from" value="<?php echo htmlspecialchars($date_from); ?>">
+                                <input type="hidden" name="date_to" value="<?php echo htmlspecialchars($date_to); ?>">
+                                <input type="hidden" name="area" value="<?php echo htmlspecialchars($area); ?>">
+                                <input type="hidden" name="maniobra" value="<?php echo htmlspecialchars($maniobra); ?>">
+                                <input type="hidden" name="origen" value="<?php echo htmlspecialchars($origen); ?>">
+                                <button type="submit" name="export_pdf" value="1" class="btn btn-secondary ms-2">Imprimir PDF</button>
+                            </form>
                         </div>
                     </form>
                 </div>
