@@ -543,6 +543,44 @@ if ($has_filter) {
             a[href]:after { content: none !important; }
         }
     </style>
+    <style>
+        /* Mobile-specific improvements */
+        @media (max-width: 767.98px) {
+            .filters-card .card-body h4 { font-size: 1.05rem; margin-bottom: 0.5rem; }
+            .report-meta { font-size: 0.85rem; }
+            .report-title { font-size: 1rem; }
+            .filters-card .form-label { font-size: 0.95rem; }
+            .filters-card .form-control, .filters-card .form-select { font-size: 0.95rem; }
+
+            /* Buttons stack and become full width on small screens */
+            .no-print .btn { display: block !important; width: 100% !important; margin-bottom: 0.5rem; }
+
+            /* Improve table scrolling on touch devices */
+            .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+            /* Slightly larger touch targets in the table */
+            table.report-table { font-size: 13px; }
+            table.report-table th, table.report-table td { padding: 8px 6px; }
+
+            /* Hide less-essential columns to fit the screen:
+               Fecha(1), VIN(2), Marca(3), Modelo(4), Color(5), Año(6), keep Origen(14) and Maniobra(15) */
+            table.report-table th:nth-child(7), table.report-table td:nth-child(7),
+            table.report-table th:nth-child(8), table.report-table td:nth-child(8),
+            table.report-table th:nth-child(9), table.report-table td:nth-child(9),
+            table.report-table th:nth-child(10), table.report-table td:nth-child(10),
+            table.report-table th:nth-child(11), table.report-table td:nth-child(11),
+            table.report-table th:nth-child(12), table.report-table td:nth-child(12),
+            table.report-table th:nth-child(13), table.report-table td:nth-child(13) {
+                display: none !important;
+            }
+
+            /* Keep header visible when scrolling (small screens) */
+            table.report-table thead th { position: sticky; top: 56px; background: #fff; z-index: 3; }
+
+            /* Reduce margins to avoid overlap with navbar on small viewports */
+            .main-content { padding-top: 0.5rem; }
+        }
+    </style>
 </head>
 <body>
 <?php include 'navbar.php'; ?>
