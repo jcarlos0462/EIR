@@ -59,11 +59,12 @@ $where_rd = []; // conditions on RegistroDanio
 if ($vin !== '') $where_v[] = "v.VIN LIKE '%" . $conn->real_escape_string($vin) . "%'";
 if ($buque !== '') $where_v[] = "v.Buque = '" . $conn->real_escape_string($buque) . "'";
 if ($date_from !== '') {
-    $d = $conn->real_escape_string($date_from);
+    $d = $conn->real_escape_string($date_from) . " 00:00:00";
     $where_rd[] = "rd.FechaRegistro >= '" . $d . "'";
 }
 if ($date_to !== '') {
-    $d = $conn->real_escape_string($date_to);
+    // include entire day for date_to by setting time to 23:59:59
+    $d = $conn->real_escape_string($date_to) . " 23:59:59";
     $where_rd[] = "rd.FechaRegistro <= '" . $d . "'";
 }
 if ($area !== '') $where_rd[] = "rd.CodAreaDano = '" . $conn->real_escape_string($area) . "'";
