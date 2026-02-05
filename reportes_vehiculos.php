@@ -617,7 +617,7 @@ if ($has_filter) {
                         $print_params['print'] = 1;
                         $print_url = 'reportes_vehiculos.php' . (count($print_params) ? ('?' . http_build_query($print_params)) : '');
                     ?>
-                    <form method="get" class="row g-2 align-items-end">
+                    <form id="filterForm" method="get" class="row g-2 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label">VIN</label>
                             <input class="form-control" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
@@ -661,12 +661,12 @@ if ($has_filter) {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-12 mt-2 no-print">
-                            <button type="submit" class="btn btn-primary">Generar reporte</button>
-                            <button type="submit" name="export_xml" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-warning ms-2">Exportar XLS (XML)</button>
-                            <button type="button" id="btnPrint" class="btn btn-secondary ms-2">Imprimir PDF</button>
-                        </div>
                     </form>
+                    <div class="col-12 mt-2 no-print">
+                        <button type="submit" form="filterForm" class="btn btn-primary">Generar reporte</button>
+                        <button type="submit" form="filterForm" name="export_xml" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-warning ms-2">Exportar XLS (XML)</button>
+                        <button type="button" id="btnPrint" class="btn btn-secondary ms-2">Imprimir PDF</button>
+                    </div>
                 </div>
             </div>
 
