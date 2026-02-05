@@ -523,12 +523,12 @@ if ($has_filter) {
             /* Some browsers also accept 'landscape' alone */
             @page { size: landscape; }
 
-            /* Make viewport match landscape page dimensions to encourage correct rendering */
-            html, body { width: 297mm; height: 210mm; }
+            /* Avoid forcing absolute viewport sizes (can break print previews) */
             body { font-size: 10px; color:#222; -webkit-print-color-adjust: exact; }
             .no-print { display:none !important; }
             .container-fluid { padding: 0; }
-            .sidebar, .navbar, .card { display: none !important; }
+            /* Hide the UI chrome and the filters card only (keep result card visible) */
+            .sidebar, .navbar, .filters-card { display: none !important; }
             .main-content { margin: 0; padding: 0; }
             .report-meta { font-size: 10px; margin-bottom: 6px; }
             table.report-table { font-size: 9px; table-layout: fixed; border-collapse: collapse; width:100%; }
@@ -552,7 +552,7 @@ if ($has_filter) {
             <?php include 'sidebar.php'; ?>
         </div>
         <div class="col-md-9 col-lg-10 main-content">
-            <div class="card">
+            <div class="card filters-card no-print">
                 <div class="card-body">
                     <h4>Reportes - Vehículos y Daños</h4>
                     <?php
@@ -699,7 +699,8 @@ if ($has_filter) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <?php if ($print_mode): ?>
 <script>
-    window.onload = function() { setTimeout(function(){ window.print(); }, 300); };
+    // Give the browser more time to layout before opening the print dialog
+    window.onload = function() { setTimeout(function(){ window.print(); }, 800); };
 </script>
 <?php endif; ?>
 </body>
