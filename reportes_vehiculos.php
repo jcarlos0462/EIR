@@ -609,6 +609,16 @@ if ($has_filter) {
             .filters-card + .no-print, .filters-card .no-print { margin-top: .5rem; }
         }
     </style>
+    <style>
+        @media print {
+            /* Force hide filters, forms and action buttons in print view */
+            .filters-card, .filters-card * , .no-print, .no-print * , form#filterForm, form#filterForm * { display: none !important; visibility: hidden !important; }
+            /* Keep the results card visible (assumes results are in .card.mt-3) */
+            .card.mt-3 { display: block !important; visibility: visible !important; }
+            /* Also ensure table prints full width */
+            .card.mt-3 .table-responsive, .card.mt-3 table { width: 100% !important; overflow: visible !important; }
+        }
+    </style>
 </head>
 <body>
 <?php include 'navbar.php'; ?>
