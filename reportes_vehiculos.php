@@ -30,7 +30,8 @@ if ($res) { while ($r = $res->fetch_assoc()) $areas[] = $r; }
 
 // Origen values from RegistroDanio if available
 $origenes = [];
-$res = $conn->query("SELECT DISTINCT IFNULL(Origen,'') AS Origen FROM RegistroDanio WHERE IFNULL(Origen,'')<>'' ORDER BY Origen");
+// table RegistroDanio does not have column 'Origen' on this schema — use TipoOperacion values instead
+$res = $conn->query("SELECT DISTINCT IFNULL(TipoOperacion,'') AS Origen FROM RegistroDanio WHERE IFNULL(TipoOperacion,'')<>'' ORDER BY Origen");
 if ($res) { while ($r = $res->fetch_assoc()) $origenes[] = $r['Origen']; }
 
 // read inputs
@@ -56,14 +57,15 @@ if ($date_to !== '') {
 }
 if ($area !== '') $where[] = "rd.CodAreaDano = '" . $conn->real_escape_string($area) . "'";
 if ($maniobra !== '') $where[] = "rd.TipoOperacion LIKE '%" . $conn->real_escape_string($maniobra) . "%'";
-if ($origen !== '') $where[] = "rd.Origen = '" . $conn->real_escape_string($origen) . "'";
+// 'Origen' filter maps to TipoOperacion in this schema
+if ($origen !== '') $where[] = "rd.TipoOperacion = '" . $conn->real_escape_string($origen) . "'";
 
 $where_sql = '';
 if (count($where) > 0) $where_sql = 'WHERE ' . implode(' AND ', $where);
 
 // main query returning vehicle + damage details
 $sql = "SELECT rd.FechaRegistro, rd.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
-            a.NomAreaDano AS Area, t.NomTipoDano AS Tipo, s.NomSeveridadDano AS Severidad, rd.Origen, rd.TipoOperacion
+            a.NomAreaDano AS Area, t.NomTipoDano AS Tipo, s.NomSeveridadDano AS Severidad, rd.TipoOperacion AS Origen, rd.TipoOperacion
         FROM RegistroDanio rd
         LEFT JOIN vehiculo v ON rd.VIN = v.VIN
         LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
