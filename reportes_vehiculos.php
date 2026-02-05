@@ -406,7 +406,7 @@ $res = null;
 $has_filter = false;
 if (
     $vin !== '' || $buque !== '' || $date_from !== '' || $date_to !== '' ||
-    $area !== '' || $maniobra !== '' || $origen !== '' || isset($_POST['export_csv']) || $print_mode
+    $area !== '' || $maniobra !== '' || $origen !== '' || isset($_POST['export_csv']) || isset($_POST['export_xml']) || $print_mode
 ) {
     $has_filter = true;
 }
@@ -512,6 +512,7 @@ if ($has_filter) {
                         </div>
                         <div class="col-12 mt-2 no-print">
                             <button type="submit" class="btn btn-primary">Generar reporte</button>
+                            <button type="submit" name="export_xml" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-warning ms-2">Exportar XLS (XML)</button>
                             <button type="submit" name="print" value="1" formaction="reportes_vehiculos.php" formmethod="get" formtarget="_blank" class="btn btn-secondary ms-2">Imprimir PDF</button>
                         </div>
                     </form>
