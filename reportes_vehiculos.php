@@ -137,6 +137,51 @@ if (isset($_POST['export_csv'])) {
     exit();
 }
 
+// Export Excel 2003 XML (compatible con Excel sin librerías externas)
+if (isset($_POST['export_xml'])) {
+    $resx = $conn->query($sql);
+    $rows = [];
+    if ($resx) while ($r = $resx->fetch_assoc()) $rows[] = $r;
+
+    $headers_xml = ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
+
+    // send headers for Excel
+    header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="report_vehiculos.xls"');
+    echo '<?xml version="1.0"?>' . "\n";
+    echo '<?mso-application progid="Excel.Sheet"?>' . "\n";
+    echo '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet'
+        . '" xmlns:o="urn:schemas-microsoft-com:office:office"'
+        . ' xmlns:x="urn:schemas-microsoft-com:office:excel"'
+        . ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' . "\n";
+    echo "<Worksheet ss:Name=\"Report\">\n<Table>\n";
+
+    // header row
+    echo "<Row>\n";
+    foreach ($headers_xml as $h) {
+        echo '<Cell><Data ss:Type="String">' . htmlspecialchars($h) . '</Data></Cell>\n';
+    }
+    echo "</Row>\n";
+
+    // data rows
+    foreach ($rows as $r) {
+        echo "<Row>\n";
+        $vals = [
+            $r['FechaRegistro'] ?? '', $r['VIN'] ?? '', $r['Marca'] ?? '', $r['Modelo'] ?? '', $r['Color'] ?? '', $r['Ano'] ?? '',
+            $r['Puerto'] ?? '', $r['Terminal'] ?? '', $r['Buque'] ?? '', $r['Viaje'] ?? '', $r['CodAreaDano'] ?? '', $r['CodTipoDano'] ?? '',
+            $r['CodSeveridadDano'] ?? '', $r['Origen'] ?? '', $r['TipoOperacion'] ?? ''
+        ];
+        foreach ($vals as $val) {
+            $type = is_numeric($val) ? 'Number' : 'String';
+            echo '<Cell><Data ss:Type="' . $type . '">' . htmlspecialchars($val) . '</Data></Cell>\n';
+        }
+        echo "</Row>\n";
+    }
+
+    echo "</Table>\n</Worksheet>\n</Workbook>";
+    exit();
+}
+
 // Export XLSX (PhpSpreadsheet) if requested
 if (isset($_POST['export_xlsx'])) {
     // execute same query (no limit)
@@ -445,6 +490,7 @@ if ($has_filter) {
                         <div class="col-12 mt-2">
                             <button type="submit" class="btn btn-primary">Generar reporte</button>
                             <button type="submit" name="export_csv" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-success ms-2">Exportar CSV (completo)</button>
+                            <button type="submit" name="export_xml" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-warning ms-2">Exportar XLS (XML)</button>
                             <button type="submit" name="export_xlsx" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-outline-success ms-2">Exportar XLSX (formato)</button>
                         </div>
                     </form>
