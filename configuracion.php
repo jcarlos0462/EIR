@@ -123,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_usuario'])) {
     $nombre_u = trim($_POST['nombre_u'] ?? '');
     $usuario_u = trim($_POST['usuario_u'] ?? '');
     $password_u = $_POST['password_u'] ?? '';
+    $role_u = isset($_POST['rol_id']) && $_POST['rol_id'] !== '' ? intval($_POST['rol_id']) : null;
 
     if ($uid <= 0 || $nombre_u === '' || $usuario_u === '') {
         $user_msg_error = 'Todos los campos obligatorios deben completarse.';
@@ -151,6 +152,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_usuario'])) {
                 $user_msg_error = 'Error al actualizar usuario: ' . $st->error;
             }
             $st->close();
+
+            // actualizar asignación de rol (usuario_rol): eliminar existentes y asignar si se seleccionó uno
+            if ($role_u !== null) {
+                $del = $conn->prepare("DELETE FROM usuario_rol WHERE usuario_id = ?");
+                $del->bind_param('i', $uid);
+                $del->execute();
+                $del->close();
+
+                if ($role_u > 0) {
+                    $ins = $conn->prepare("INSERT INTO usuario_rol (usuario_id, rol_id) VALUES (?, ?)");
+                    $ins->bind_param('ii', $uid, $role_u);
+                    $ins->execute();
+                    $ins->close();
+                }
+            }
         }
     }
 }
@@ -495,22 +511,41 @@ $usuarios_count = $totalUsuarios;
                                     <th>ID</th>
                                     <th>Nombre</th>
                                     <th>Usuario</th>
+                                    <th>Rol</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
+                                // obtener lista de roles para los select en los modales
+                                $roles_list = [];
+                                $rr = $conn->query("SELECT id, nombre FROM roles ORDER BY nombre");
+                                if ($rr) {
+                                    while ($rrow = $rr->fetch_assoc()) $roles_list[] = $rrow;
+                                }
+
                                 $result = $conn->query("SELECT * FROM usuario ORDER BY ID ASC LIMIT 100");
                                 if ($result && $result->num_rows > 0) {
                                     while ($row = $result->fetch_assoc()) {
                                         $uid = intval($row['ID']);
                                         $uname = htmlspecialchars($row['Nombre']);
                                         $ulogin = htmlspecialchars($row['Usuario']);
+                                        // obtener rol asignado (si existe)
+                                        $assigned_role_id = null;
+                                        $assigned_role_name = '';
+                                        $sr = $conn->prepare("SELECT r.id, r.nombre FROM usuario_rol ur JOIN roles r ON ur.rol_id = r.id WHERE ur.usuario_id = ? LIMIT 1");
+                                        $sr->bind_param('i', $uid);
+                                        $sr->execute();
+                                        $sr->bind_result($arid, $arname);
+                                        if ($sr->fetch()) { $assigned_role_id = $arid; $assigned_role_name = $arname; }
+                                        $sr->close();
+
                                         ?>
                                         <tr>
                                             <td><?php echo $uid; ?></td>
                                             <td><?php echo $uname; ?></td>
                                             <td><?php echo $ulogin; ?></td>
+                                            <td><?php echo htmlspecialchars($assigned_role_name); ?></td>
                                             <td>
                                                 <button class='btn btn-sm btn-outline-primary' title='Editar' data-bs-toggle='modal' data-bs-target='#modalEditarUsuario<?php echo $uid; ?>'>
                                                     <i class='bi bi-pencil'></i>
@@ -543,6 +578,15 @@ $usuarios_count = $totalUsuarios;
                                                             <div class='mb-3'>
                                                                 <label class='form-label'>Usuario (login)</label>
                                                                 <input type='text' name='usuario_u' class='form-control' value='<?php echo $ulogin; ?>' required>
+                                                            </div>
+                                                            <div class='mb-3'>
+                                                                <label class='form-label'>Rol asignado</label>
+                                                                <select name='rol_id' class='form-select'>
+                                                                    <option value=''>(ninguno)</option>
+                                                                    <?php foreach ($roles_list as $rl): ?>
+                                                                        <option value='<?php echo $rl['id']; ?>' <?php echo ($rl['id']==$assigned_role_id)?'selected':''; ?>><?php echo htmlspecialchars($rl['nombre']); ?></option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
                                                             </div>
                                                             <div class='mb-3'>
                                                                 <label class='form-label'>Contraseña (dejar vacío para no cambiar)</label>
