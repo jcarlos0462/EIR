@@ -59,7 +59,7 @@ if ($vin) {
     if ($stmt->fetch()) {
         // Buscar daños registrados con descripciones
         $stmt->close();
-        $sql = "SELECT r.ID, r.Origen, a.CodAreaDano, a.NomAreaDano, t.CodTipoDano, t.NomTipoDano, s.CodSeveridadDano, s.NomSeveridadDano, r.TipoOperacion FROM RegistroDanio r
+        $sql = "SELECT r.ID, r.TipoOperacion AS Origen, a.CodAreaDano, a.NomAreaDano, t.CodTipoDano, t.NomTipoDano, s.CodSeveridadDano, s.NomSeveridadDano FROM RegistroDanio r
                 JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
                 JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
                 JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
