@@ -246,7 +246,11 @@ body {
     }
 
     .user-info a {
-        display: none !important;
+        display: inline-flex !important;
+        align-items: center;
+        padding: 0.25rem 0.6rem !important;
+        font-size: 12px;
+        margin-left: 0 !important;
     }
 
     .navbar-with-toggler {
