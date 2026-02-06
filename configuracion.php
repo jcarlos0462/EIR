@@ -113,6 +113,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['crear_usuario'])) {
     }
 }
 
+// Mensajes generales para usuarios (editar/eliminar)
+$user_msg_error = '';
+$user_msg_success = '';
+
+// Editar usuario
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_usuario'])) {
+    $uid = intval($_POST['usuario_id'] ?? 0);
+    $nombre_u = trim($_POST['nombre_u'] ?? '');
+    $usuario_u = trim($_POST['usuario_u'] ?? '');
+    $password_u = $_POST['password_u'] ?? '';
+
+    if ($uid <= 0 || $nombre_u === '' || $usuario_u === '') {
+        $user_msg_error = 'Todos los campos obligatorios deben completarse.';
+    } else {
+        // verificar usuario único (excepto este id)
+        $stmtc = $conn->prepare("SELECT ID FROM usuario WHERE Usuario = ? AND ID <> ? LIMIT 1");
+        $stmtc->bind_param('si', $usuario_u, $uid);
+        $stmtc->execute();
+        $stmtc->store_result();
+        if ($stmtc->num_rows > 0) {
+            $user_msg_error = 'El nombre de usuario ya está en uso por otro usuario.';
+            $stmtc->close();
+        } else {
+            $stmtc->close();
+            if ($password_u !== '') {
+                $ph = password_hash($password_u, PASSWORD_DEFAULT);
+                $st = $conn->prepare("UPDATE usuario SET Nombre = ?, Usuario = ?, Contraseña = ? WHERE ID = ?");
+                $st->bind_param('sssi', $nombre_u, $usuario_u, $ph, $uid);
+            } else {
+                $st = $conn->prepare("UPDATE usuario SET Nombre = ?, Usuario = ? WHERE ID = ?");
+                $st->bind_param('ssi', $nombre_u, $usuario_u, $uid);
+            }
+            if ($st->execute()) {
+                $user_msg_success = 'Usuario actualizado correctamente.';
+            } else {
+                $user_msg_error = 'Error al actualizar usuario: ' . $st->error;
+            }
+            $st->close();
+        }
+    }
+}
+
+// Eliminar usuario
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_usuario'])) {
+    $uid = intval($_POST['usuario_id'] ?? 0);
+    if ($uid <= 0) {
+        $user_msg_error = 'Usuario inválido.';
+    } else {
+        $st = $conn->prepare("DELETE FROM usuario WHERE ID = ?");
+        $st->bind_param('i', $uid);
+        if ($st->execute()) {
+            $user_msg_success = 'Usuario eliminado correctamente.';
+        } else {
+            $user_msg_error = 'Error al eliminar usuario: ' . $st->error;
+        }
+        $st->close();
+    }
+}
+
 // Obtener estadísticas
 $totalUsuarios = $conn->query("SELECT COUNT(*) as count FROM usuario")->fetch_assoc()['count'];
 $usuariosConectados = $conn->query("SELECT COUNT(*) as count FROM usuario WHERE ultima_actividad > DATE_SUB(NOW(), INTERVAL 5 MINUTE)")->fetch_assoc()['count'];
@@ -424,38 +483,84 @@ $usuarios_count = $totalUsuarios;
 
                     <div class="table-responsive">
                         <h4>Usuarios del Sistema</h4>
+                        <?php if ($user_msg_error): ?>
+                            <div class="alert alert-danger py-2 mb-3"><?php echo htmlspecialchars($user_msg_error); ?></div>
+                        <?php endif; ?>
+                        <?php if ($user_msg_success): ?>
+                            <div class="alert alert-success py-2 mb-3"><?php echo htmlspecialchars($user_msg_success); ?></div>
+                        <?php endif; ?>
                         <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>ID</th>
                                     <th>Nombre</th>
                                     <th>Usuario</th>
-                                    <th>Rol</th>
-                                    <th>Correo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
-                                $result = $conn->query("SELECT * FROM usuario LIMIT 10");
+                                $result = $conn->query("SELECT * FROM usuario ORDER BY ID ASC LIMIT 100");
                                 if ($result && $result->num_rows > 0) {
                                     while ($row = $result->fetch_assoc()) {
-                                        echo "<tr>
-                                            <td>{$row['ID']}</td>
-                                            <td>{$row['Nombre']}</td>
-                                            <td>{$row['Usuario']}</td>
-                                            <td><span class='badge bg-info'>Usuario</span></td>
-                                            <td>-</td>
+                                        $uid = intval($row['ID']);
+                                        $uname = htmlspecialchars($row['Nombre']);
+                                        $ulogin = htmlspecialchars($row['Usuario']);
+                                        ?>
+                                        <tr>
+                                            <td><?php echo $uid; ?></td>
+                                            <td><?php echo $uname; ?></td>
+                                            <td><?php echo $ulogin; ?></td>
                                             <td>
-                                                <button class='btn btn-sm btn-outline-primary' title='Editar'>
+                                                <button class='btn btn-sm btn-outline-primary' title='Editar' data-bs-toggle='modal' data-bs-target='#modalEditarUsuario<?php echo $uid; ?>'>
                                                     <i class='bi bi-pencil'></i>
                                                 </button>
-                                                <button class='btn btn-sm btn-outline-danger' title='Eliminar'>
-                                                    <i class='bi bi-trash'></i>
-                                                </button>
+                                                <form method='post' style='display:inline;' onsubmit="return confirm('¿Eliminar usuario <?php echo addslashes($uname); ?>?');">
+                                                    <input type='hidden' name='usuario_id' value='<?php echo $uid; ?>'>
+                                                    <button type='submit' name='eliminar_usuario' value='1' class='btn btn-sm btn-outline-danger' title='Eliminar'>
+                                                        <i class='bi bi-trash'></i>
+                                                    </button>
+                                                </form>
                                             </td>
-                                        </tr>";
+                                        </tr>
+
+                                        <!-- Modal editar usuario -->
+                                        <div class='modal fade' id='modalEditarUsuario<?php echo $uid; ?>' tabindex='-1' aria-labelledby='modalEditarUsuarioLabel<?php echo $uid; ?>' aria-hidden='true'>
+                                            <div class='modal-dialog'>
+                                                <div class='modal-content'>
+                                                    <div class='modal-header'>
+                                                        <h5 class='modal-title' id='modalEditarUsuarioLabel<?php echo $uid; ?>'>Editar Usuario: <?php echo $ulogin; ?></h5>
+                                                        <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Cerrar'></button>
+                                                    </div>
+                                                    <div class='modal-body'>
+                                                        <form method='post' action='configuracion.php#usuarios'>
+                                                            <input type='hidden' name='editar_usuario' value='1'>
+                                                            <input type='hidden' name='usuario_id' value='<?php echo $uid; ?>'>
+                                                            <div class='mb-3'>
+                                                                <label class='form-label'>Nombre</label>
+                                                                <input type='text' name='nombre_u' class='form-control' value='<?php echo $uname; ?>' required>
+                                                            </div>
+                                                            <div class='mb-3'>
+                                                                <label class='form-label'>Usuario (login)</label>
+                                                                <input type='text' name='usuario_u' class='form-control' value='<?php echo $ulogin; ?>' required>
+                                                            </div>
+                                                            <div class='mb-3'>
+                                                                <label class='form-label'>Contraseña (dejar vacío para no cambiar)</label>
+                                                                <input type='password' name='password_u' class='form-control' placeholder='Nueva contraseña'>
+                                                            </div>
+                                                            <div class='d-flex justify-content-end'>
+                                                                <button type='button' class='btn btn-secondary me-2' data-bs-dismiss='modal'>Cancelar</button>
+                                                                <button type='submit' class='btn btn-primary'>Guardar</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <?php
                                     }
+                                } else {
+                                    echo "<tr><td colspan='4' class='text-center text-muted'>No hay usuarios en el sistema</td></tr>";
                                 }
                                 ?>
                             </tbody>
