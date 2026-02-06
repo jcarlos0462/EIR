@@ -264,16 +264,7 @@ $usuarios_count = $totalUsuarios;
                         <div class="header-subtitle">Resumen general de configuración y usuarios</div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 col-lg-3">
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
-                                <div class="stat-label">Daños Registrados</div>
-                                <div class="stat-number"><?php echo $danios_count; ?></div>
-                                <a href="Registro_Daños.php" class="btn btn-ver">Ver</a>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Tarjeta 'Daños Registrados' removida por solicitud del usuario -->
 
                     <div class="row">
                         <div class="col-md-6 col-lg-3">
