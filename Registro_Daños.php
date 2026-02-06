@@ -59,7 +59,7 @@ if ($vin) {
     if ($stmt->fetch()) {
         // Buscar daños registrados con descripciones
         $stmt->close();
-        $sql = "SELECT r.ID, a.CodAreaDano, a.NomAreaDano, t.CodTipoDano, t.NomTipoDano, s.CodSeveridadDano, s.NomSeveridadDano, r.TipoOperacion FROM RegistroDanio r
+        $sql = "SELECT r.ID, r.Origen, a.CodAreaDano, a.NomAreaDano, t.CodTipoDano, t.NomTipoDano, s.CodSeveridadDano, s.NomSeveridadDano, r.TipoOperacion FROM RegistroDanio r
                 JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
                 JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
                 JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
@@ -200,17 +200,15 @@ if (isset($_POST['editar_danio']) && isset($_POST['id_danio'])) {
     }
 }
 
-// Cargar listas para selects
 // Cargar listas para selects con descripciones
-$areas = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY CodAreaDano");
-$tipos = $conn->query("SELECT CodTipoDano, NomTipoDano FROM tipodano ORDER BY CodTipoDano");
-$severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM severidaddano ORDER BY CodSeveridadDano");
+$areasRes = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY CodAreaDano");
+$tiposRes = $conn->query("SELECT CodTipoDano, NomTipoDano FROM tipodano ORDER BY CodTipoDano");
+$severidadesRes = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM severidaddano ORDER BY CodSeveridadDano");
+
+$areasList = $areasRes ? $areasRes->fetch_all(MYSQLI_ASSOC) : [];
+$tiposList = $tiposRes ? $tiposRes->fetch_all(MYSQLI_ASSOC) : [];
+$severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : [];
 ?>
-    <?php
-    $areas = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY CodAreaDano");
-    $tipos = $conn->query("SELECT CodTipoDano, NomTipoDano FROM tipodano ORDER BY CodTipoDano");
-    $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM severidaddano ORDER BY CodSeveridadDano");
-    ?>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -534,31 +532,39 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                 <div class="modern-table-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="mb-0">Daños Registrados</h4>
+                        <button type="button" class="btn btn-sm modern-btn modern-btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgregarDanio">
+                            <i class="bi bi-plus-lg"></i> Agregar Daño
+                        </button>
                     </div>
                     <?php if (!empty($danios)): ?>
                         <div class="table-responsive modern-table">
                             <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Area</th>
+                                        <th>Origen</th>
+                                        <th>Área</th>
                                         <th>Tipo</th>
                                         <th>Severidad</th>
-                                        <th>Operacion</th>
                                         <th class="text-end">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($danios as $danio): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($danio['NomAreaDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($danio['NomTipoDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($danio['NomSeveridadDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($danio['TipoOperacion']); ?></td>
+                                            <td><?php echo htmlspecialchars($danio['Origen'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($danio['CodAreaDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($danio['CodTipoDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($danio['CodSeveridadDano']); ?></td>
                                             <td class="text-end">
+                                                <button type="button" class="btn btn-sm modern-btn modern-btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo intval($danio['ID']); ?>">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
                                                 <form method="post" class="d-inline">
                                                     <input type="hidden" name="id_danio" value="<?php echo intval($danio['ID']); ?>">
                                                     <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                                    <button type="submit" name="eliminar_danio" class="btn btn-sm modern-btn modern-btn-danger">Eliminar</button>
+                                                    <button type="submit" name="eliminar_danio" class="btn btn-sm modern-btn modern-btn-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
                                                 </form>
                                             </td>
                                         </tr>
@@ -566,9 +572,110 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                                 </tbody>
                             </table>
                         </div>
+                        <?php foreach ($danios as $danio): ?>
+                            <div class="modal fade" id="modalEditarDanio<?php echo intval($danio['ID']); ?>" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content modern-modal-content">
+                                        <div class="modal-header modern-modal-header-warning">
+                                            <h5 class="modal-title">Editar Daño</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                        </div>
+                                        <form method="post">
+                                            <div class="modal-body">
+                                                <input type="hidden" name="id_danio" value="<?php echo intval($danio['ID']); ?>">
+                                                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                                <div class="mb-3">
+                                                    <label class="form-label modern-label">Área</label>
+                                                    <select name="area" class="form-select modern-input" required>
+                                                        <option value="">Seleccione</option>
+                                                        <?php foreach ($areasList as $area): ?>
+                                                            <option value="<?php echo intval($area['CodAreaDano']); ?>" <?php echo (intval($danio['CodAreaDano']) === intval($area['CodAreaDano'])) ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($area['NomAreaDano']); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label modern-label">Tipo</label>
+                                                    <select name="tipo" class="form-select modern-input" required>
+                                                        <option value="">Seleccione</option>
+                                                        <?php foreach ($tiposList as $tipo): ?>
+                                                            <option value="<?php echo intval($tipo['CodTipoDano']); ?>" <?php echo (intval($danio['CodTipoDano']) === intval($tipo['CodTipoDano'])) ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($tipo['NomTipoDano']); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label modern-label">Severidad</label>
+                                                    <select name="severidad" class="form-select modern-input" required>
+                                                        <option value="">Seleccione</option>
+                                                        <?php foreach ($severidadesList as $severidad): ?>
+                                                            <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>" <?php echo (intval($danio['CodSeveridadDano']) === intval($severidad['CodSeveridadDano'])) ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($severidad['NomSeveridadDano']); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn modern-btn" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" name="editar_danio" class="btn modern-btn modern-btn-warning">Guardar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     <?php else: ?>
                         <div class="alert alert-info mb-0">No hay daños registrados para este VIN.</div>
                     <?php endif; ?>
+                </div>
+                <div class="modal fade" id="modalAgregarDanio" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content modern-modal-content">
+                            <div class="modal-header modern-modal-header-primary">
+                                <h5 class="modal-title">Agregar Daño</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <form method="post">
+                                <div class="modal-body">
+                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                    <div class="mb-3">
+                                        <label class="form-label modern-label">Área</label>
+                                        <select name="area" class="form-select modern-input" required>
+                                            <option value="">Seleccione</option>
+                                            <?php foreach ($areasList as $area): ?>
+                                                <option value="<?php echo intval($area['CodAreaDano']); ?>"><?php echo htmlspecialchars($area['NomAreaDano']); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label modern-label">Tipo</label>
+                                        <select name="tipo" class="form-select modern-input" required>
+                                            <option value="">Seleccione</option>
+                                            <?php foreach ($tiposList as $tipo): ?>
+                                                <option value="<?php echo intval($tipo['CodTipoDano']); ?>"><?php echo htmlspecialchars($tipo['NomTipoDano']); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label modern-label">Severidad</label>
+                                        <select name="severidad" class="form-select modern-input" required>
+                                            <option value="">Seleccione</option>
+                                            <?php foreach ($severidadesList as $severidad): ?>
+                                                <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>"><?php echo htmlspecialchars($severidad['NomSeveridadDano']); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn modern-btn" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" name="guardar_danio" class="btn modern-btn modern-btn-primary">Guardar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
