@@ -191,9 +191,6 @@ body {
         transition: opacity 0.3s ease !important;
     }
 
-    .navbar-with-toggler .navbar-brand {
-        margin-left: 52px;
-    }
 
     /* Sidebar oculto por defecto en móviles */
     .sidebar {
@@ -236,11 +233,7 @@ body {
     }
 
     .navbar-brand {
-        font-size: 1rem;
-    }
-
-    .navbar-brand {
-        display: none;
+        display: none !important;
     }
 
     .user-info {
@@ -248,7 +241,7 @@ body {
     }
 
     .user-info span {
-        display: inline-flex;
+        display: inline-flex !important;
         align-items: center;
     }
 
