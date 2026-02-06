@@ -590,7 +590,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                                         <option value="">Seleccione</option>
                                                         <?php foreach ($areasList as $area): ?>
                                                             <option value="<?php echo intval($area['CodAreaDano']); ?>" <?php echo (intval($danio['CodAreaDano']) === intval($area['CodAreaDano'])) ? 'selected' : ''; ?>>
-                                                                <?php echo htmlspecialchars($area['NomAreaDano']); ?>
+                                                                <?php echo htmlspecialchars($area['CodAreaDano']); ?>
                                                             </option>
                                                         <?php endforeach; ?>
                                                     </select>
@@ -601,7 +601,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                                         <option value="">Seleccione</option>
                                                         <?php foreach ($tiposList as $tipo): ?>
                                                             <option value="<?php echo intval($tipo['CodTipoDano']); ?>" <?php echo (intval($danio['CodTipoDano']) === intval($tipo['CodTipoDano'])) ? 'selected' : ''; ?>>
-                                                                <?php echo htmlspecialchars($tipo['NomTipoDano']); ?>
+                                                                <?php echo htmlspecialchars($tipo['CodTipoDano']); ?>
                                                             </option>
                                                         <?php endforeach; ?>
                                                     </select>
@@ -612,7 +612,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                                         <option value="">Seleccione</option>
                                                         <?php foreach ($severidadesList as $severidad): ?>
                                                             <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>" <?php echo (intval($danio['CodSeveridadDano']) === intval($severidad['CodSeveridadDano'])) ? 'selected' : ''; ?>>
-                                                                <?php echo htmlspecialchars($severidad['NomSeveridadDano']); ?>
+                                                                <?php echo htmlspecialchars($severidad['CodSeveridadDano']); ?>
                                                             </option>
                                                         <?php endforeach; ?>
                                                     </select>
@@ -646,7 +646,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                         <select name="area" class="form-select modern-input" required>
                                             <option value="">Seleccione</option>
                                             <?php foreach ($areasList as $area): ?>
-                                                <option value="<?php echo intval($area['CodAreaDano']); ?>"><?php echo htmlspecialchars($area['NomAreaDano']); ?></option>
+                                                <option value="<?php echo intval($area['CodAreaDano']); ?>"><?php echo htmlspecialchars($area['CodAreaDano']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
@@ -655,7 +655,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                         <select name="tipo" class="form-select modern-input" required>
                                             <option value="">Seleccione</option>
                                             <?php foreach ($tiposList as $tipo): ?>
-                                                <option value="<?php echo intval($tipo['CodTipoDano']); ?>"><?php echo htmlspecialchars($tipo['NomTipoDano']); ?></option>
+                                                <option value="<?php echo intval($tipo['CodTipoDano']); ?>"><?php echo htmlspecialchars($tipo['CodTipoDano']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
@@ -664,7 +664,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                         <select name="severidad" class="form-select modern-input" required>
                                             <option value="">Seleccione</option>
                                             <?php foreach ($severidadesList as $severidad): ?>
-                                                <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>"><?php echo htmlspecialchars($severidad['NomSeveridadDano']); ?></option>
+                                                <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>"><?php echo htmlspecialchars($severidad['CodSeveridadDano']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
