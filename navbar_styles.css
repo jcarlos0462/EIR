@@ -239,18 +239,31 @@ body {
         font-size: 1rem;
     }
 
+    .navbar-brand {
+        display: none;
+    }
+
     .user-info {
         font-size: 12px;
     }
 
     .user-info span {
-        display: none;
+        display: inline-flex;
+        align-items: center;
     }
 
     .user-info a {
-        padding: 0.25rem 0.75rem !important;
-        font-size: 12px;
-        margin-left: 0 !important;
+        display: none !important;
+    }
+
+    .navbar-with-toggler {
+        grid-template-columns: 44px 1fr;
+    }
+
+    .user-info {
+        justify-self: end;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 }
 
