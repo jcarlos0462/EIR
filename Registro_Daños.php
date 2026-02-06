@@ -531,7 +531,45 @@ $severidades = $conn->query("SELECT CodSeveridadDano, NomSeveridadDano FROM seve
                         </div>
                     </div>
                 </div>
-                <!-- Tarjeta 'Daños Registrados' eliminada según solicitud del usuario -->
+                <div class="modern-table-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">Daños Registrados</h4>
+                    </div>
+                    <?php if (!empty($danios)): ?>
+                        <div class="table-responsive modern-table">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Area</th>
+                                        <th>Tipo</th>
+                                        <th>Severidad</th>
+                                        <th>Operacion</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($danios as $danio): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($danio['NomAreaDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($danio['NomTipoDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($danio['NomSeveridadDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($danio['TipoOperacion']); ?></td>
+                                            <td class="text-end">
+                                                <form method="post" class="d-inline">
+                                                    <input type="hidden" name="id_danio" value="<?php echo intval($danio['ID']); ?>">
+                                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                                    <button type="submit" name="eliminar_danio" class="btn btn-sm modern-btn modern-btn-danger">Eliminar</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-info mb-0">No hay daños registrados para este VIN.</div>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
         </div>
     </div>
