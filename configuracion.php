@@ -693,9 +693,52 @@ $usuarios_count = $totalUsuarios;
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">No hay accesos configurados aún</td>
-                                </tr>
+<?php
+// Mostrar accesos configurados por usuario (tabla usuario_acceso)
+// Crear tabla si no existe (no destructivo)
+$conn->query("CREATE TABLE IF NOT EXISTS usuario_acceso (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    usuario_id INT NOT NULL,
+    modulo VARCHAR(100) NOT NULL,
+    lectura TINYINT(1) DEFAULT 0,
+    escritura TINYINT(1) DEFAULT 0,
+    eliminacion TINYINT(1) DEFAULT 0,
+    UNIQUE KEY ux_usuario_modulo (usuario_id, modulo)
+)");
+
+$sql_ac = "SELECT ua.id, ua.usuario_id, u.Nombre AS usuario_nombre, ua.modulo, ua.lectura, ua.escritura, ua.eliminacion
+           FROM usuario_acceso ua
+           LEFT JOIN usuario u ON ua.usuario_id = u.ID
+           ORDER BY usuario_nombre, ua.modulo";
+$res_ac = $conn->query($sql_ac);
+if ($res_ac && $res_ac->num_rows > 0) {
+    while ($row_ac = $res_ac->fetch_assoc()) {
+        $uid = intval($row_ac['usuario_id']);
+        $uname = htmlspecialchars($row_ac['usuario_nombre'] ?: 'Usuario #' . $uid);
+        $mod = htmlspecialchars($row_ac['modulo']);
+        $lec = $row_ac['lectura'] ? 'Sí' : 'No';
+        $esc = $row_ac['escritura'] ? 'Sí' : 'No';
+        $del = $row_ac['eliminacion'] ? 'Sí' : 'No';
+        $aid = intval($row_ac['id']);
+        echo "<tr>";
+        echo "<td>$uname</td>";
+        echo "<td>$mod</td>";
+        echo "<td>$lec</td>";
+        echo "<td>$esc</td>";
+        echo "<td>$del</td>";
+        echo "<td class='text-end'>";
+        echo "<form method='POST' action='asignar_acceso.php' style='display:inline'>";
+        echo "<input type='hidden' name='acceso_id' value='$aid'>";
+        echo "<input type='hidden' name='eliminar_acceso' value='1'>";
+        echo "<button class='btn btn-sm btn-outline-danger' type='submit'>Eliminar</button>";
+        echo "</form>";
+        echo "</td>";
+        echo "</tr>";
+    }
+} else {
+    echo "<tr><td colspan='6' class='text-center text-muted'>No hay accesos configurados aún</td></tr>";
+}
+?>
                             </tbody>
                         </table>
                     </div>
