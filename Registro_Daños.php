@@ -551,10 +551,15 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                 <tbody>
                                     <?php foreach ($danios as $danio): ?>
                                         <tr>
+                                            <?php
+                                                $areaDisplay = (intval($danio['CodAreaDano']) === 100) ? 0 : $danio['CodAreaDano'];
+                                                $tipoDisplay = (intval($danio['CodTipoDano']) === 21) ? 0 : $danio['CodTipoDano'];
+                                                $sevDisplay = (intval($danio['CodSeveridadDano']) === 7) ? 0 : $danio['CodSeveridadDano'];
+                                            ?>
                                             <td><?php echo htmlspecialchars($danio['Origen'] ?? ''); ?></td>
-                                            <td><?php echo htmlspecialchars($danio['CodAreaDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($danio['CodTipoDano']); ?></td>
-                                            <td><?php echo htmlspecialchars($danio['CodSeveridadDano']); ?></td>
+                                            <td><?php echo htmlspecialchars($areaDisplay); ?></td>
+                                            <td><?php echo htmlspecialchars($tipoDisplay); ?></td>
+                                            <td><?php echo htmlspecialchars($sevDisplay); ?></td>
                                             <td class="text-end">
                                                 <button type="button" class="btn btn-sm modern-btn modern-btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo intval($danio['ID']); ?>">
                                                     <i class="bi bi-pencil-square"></i>
