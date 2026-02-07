@@ -192,7 +192,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_usuario'])) 
 $totalUsuarios = $conn->query("SELECT COUNT(*) as count FROM usuario")->fetch_assoc()['count'];
 $usuariosConectados = $conn->query("SELECT COUNT(*) as count FROM usuario WHERE ultima_actividad > DATE_SUB(NOW(), INTERVAL 5 MINUTE)")->fetch_assoc()['count'];
 $totalRoles = $conn->query("SELECT COUNT(*) as count FROM roles")->fetch_assoc()['count'];
-$totalAccesos = $conn->query("SELECT COUNT(*) as count FROM accesos")->fetch_assoc()['count'];
+// Asegurar tabla de accesos por usuario y contar registros
+$conn->query("CREATE TABLE IF NOT EXISTS usuario_acceso (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    usuario_id INT NOT NULL,
+    modulo VARCHAR(100) NOT NULL,
+    lectura TINYINT(1) DEFAULT 0,
+    escritura TINYINT(1) DEFAULT 0,
+    eliminacion TINYINT(1) DEFAULT 0,
+    UNIQUE KEY ux_usuario_modulo (usuario_id, modulo),
+    FOREIGN KEY (usuario_id) REFERENCES usuario(ID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+$totalAccesos = 0;
+$resAccesos = $conn->query("SELECT COUNT(*) as count FROM usuario_acceso");
+if ($resAccesos && ($rowAccesos = $resAccesos->fetch_assoc())) {
+    $totalAccesos = $rowAccesos['count'];
+}
 // Contadores de dashboard
 $vehiculos_count = 0;
 $danios_count = 0;
@@ -618,6 +633,11 @@ $usuarios_count = $totalUsuarios;
                         <h2><i class="bi bi-shield-lock"></i> Administrar Accesos</h2>
                         <div class="header-subtitle">Configurar permisos y accesos del sistema</div>
                     </div>
+                    <?php if (!empty($_GET['msg'])): ?>
+                        <div class="alert alert-info">
+                            <?php echo htmlspecialchars($_GET['msg']); ?>
+                        </div>
+                    <?php endif; ?>
 
                     <div class="form-card">
                         <h4>Asignar Acceso a Usuario</h4>
