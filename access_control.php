@@ -19,26 +19,20 @@ function ensure_usuario_acceso_table($conn) {
 function get_user_access_map($conn, $userId) {
     ensure_usuario_acceso_table($conn);
     $map = [];
-    $stmt = $conn->prepare("SELECT modulo, lectura, escritura, eliminacion FROM usuario_acceso WHERE usuario_id = ?");
+    $stmt = $conn->prepare("SELECT modulo FROM usuario_acceso WHERE usuario_id = ?");
     if (!$stmt) return $map;
     $stmt->bind_param('i', $userId);
     $stmt->execute();
     $res = $stmt->get_result();
     while ($row = $res->fetch_assoc()) {
-        $map[$row['modulo']] = [
-            'lectura' => intval($row['lectura']),
-            'escritura' => intval($row['escritura']),
-            'eliminacion' => intval($row['eliminacion'])
-        ];
+        $map[$row['modulo']] = true;
     }
     $stmt->close();
     return $map;
 }
 
 function user_has_module_access($accessMap, $module) {
-    if (!isset($accessMap[$module])) return false;
-    $perm = $accessMap[$module];
-    return ($perm['lectura'] || $perm['escritura'] || $perm['eliminacion']);
+    return isset($accessMap[$module]);
 }
 
 function require_module_access($conn, $module) {

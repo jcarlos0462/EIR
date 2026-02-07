@@ -45,9 +45,7 @@ if (!isset($_POST['usuario_id']) || !isset($_POST['modulo'])) redirect_back('Par
 
 $usuario_id = intval($_POST['usuario_id']);
 $modulo = trim($_POST['modulo']);
-$lectura = isset($_POST['lectura']) ? 1 : 0;
-$escritura = isset($_POST['escritura']) ? 1 : 0;
-$eliminacion = isset($_POST['eliminacion']) ? 1 : 0;
+$one = 1;
 
 // upsert
 $stmt = $conn->prepare("SELECT id FROM usuario_acceso WHERE usuario_id = ? AND modulo = ? LIMIT 1");
@@ -58,7 +56,7 @@ if ($stmt->num_rows > 0) {
     $stmt->bind_result($existing_id); $stmt->fetch();
     $stmt->close();
     $up = $conn->prepare("UPDATE usuario_acceso SET lectura = ?, escritura = ?, eliminacion = ? WHERE id = ?");
-    $up->bind_param('iiii', $lectura, $escritura, $eliminacion, $existing_id);
+    $up->bind_param('iiii', $one, $one, $one, $existing_id);
     if ($up->execute()) {
         $up->close();
         redirect_back('Acceso actualizado');
@@ -69,7 +67,7 @@ if ($stmt->num_rows > 0) {
 } else {
     $stmt->close();
     $ins = $conn->prepare("INSERT INTO usuario_acceso (usuario_id, modulo, lectura, escritura, eliminacion) VALUES (?, ?, ?, ?, ?)");
-    $ins->bind_param('isiii', $usuario_id, $modulo, $lectura, $escritura, $eliminacion);
+    $ins->bind_param('isiii', $usuario_id, $modulo, $one, $one, $one);
     if ($ins->execute()) {
         $ins->close();
         redirect_back('Acceso asignado');

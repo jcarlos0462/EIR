@@ -669,32 +669,6 @@ $usuarios_count = $totalUsuarios;
                                     </select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="lectura" name="lectura">
-                                        <label class="form-check-label" for="lectura">
-                                            Lectura
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="escritura" name="escritura">
-                                        <label class="form-check-label" for="escritura">
-                                            Escritura
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="eliminacion" name="eliminacion">
-                                        <label class="form-check-label" for="eliminacion">
-                                            Eliminación
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
                             <button type="submit" class="btn btn-primary-custom">
                                 <i class="bi bi-check-circle"></i> Asignar Acceso
                             </button>
@@ -708,9 +682,6 @@ $usuarios_count = $totalUsuarios;
                                 <tr>
                                     <th>Usuario</th>
                                     <th>Módulo</th>
-                                    <th>Lectura</th>
-                                    <th>Escritura</th>
-                                    <th>Eliminación</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -728,7 +699,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS usuario_acceso (
     UNIQUE KEY ux_usuario_modulo (usuario_id, modulo)
 )");
 
-$sql_ac = "SELECT ua.id, ua.usuario_id, u.Nombre AS usuario_nombre, ua.modulo, ua.lectura, ua.escritura, ua.eliminacion
+$sql_ac = "SELECT ua.id, ua.usuario_id, u.Nombre AS usuario_nombre, ua.modulo
            FROM usuario_acceso ua
            LEFT JOIN usuario u ON ua.usuario_id = u.ID
            ORDER BY usuario_nombre, ua.modulo";
@@ -738,16 +709,10 @@ if ($res_ac && $res_ac->num_rows > 0) {
         $uid = intval($row_ac['usuario_id']);
         $uname = htmlspecialchars($row_ac['usuario_nombre'] ?: 'Usuario #' . $uid);
         $mod = htmlspecialchars($row_ac['modulo']);
-        $lec = $row_ac['lectura'] ? 'Sí' : 'No';
-        $esc = $row_ac['escritura'] ? 'Sí' : 'No';
-        $del = $row_ac['eliminacion'] ? 'Sí' : 'No';
         $aid = intval($row_ac['id']);
         echo "<tr>";
         echo "<td>$uname</td>";
         echo "<td>$mod</td>";
-        echo "<td>$lec</td>";
-        echo "<td>$esc</td>";
-        echo "<td>$del</td>";
         echo "<td class='text-end'>";
         echo "<form method='POST' action='asignar_acceso.php' style='display:inline'>";
         echo "<input type='hidden' name='acceso_id' value='$aid'>";
@@ -758,7 +723,7 @@ if ($res_ac && $res_ac->num_rows > 0) {
         echo "</tr>";
     }
 } else {
-    echo "<tr><td colspan='6' class='text-center text-muted'>No hay accesos configurados aún</td></tr>";
+    echo "<tr><td colspan='3' class='text-center text-muted'>No hay accesos configurados aún</td></tr>";
 }
 ?>
                             </tbody>
