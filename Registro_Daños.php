@@ -6,6 +6,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 $debug = true; // poner a false en producción
 include 'database_connection.php';
+require_once 'access_control.php';
+require_module_access($conn, 'danos');
 // Helper: buscar ID existente de 'Revisado' en una tabla de referencia
 function findRevisadoId($conn, $table, $codeCol, $nameCol) {
     $name = 'Revisado';

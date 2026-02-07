@@ -19,6 +19,9 @@ if ($conn->connect_error) {
     die("Conexión fallida: " . $conn->connect_error);
 }
 
+require_once 'access_control.php';
+require_module_access($conn, 'vehiculos');
+
 // Obtener todos los vehículos
 $sql = "SELECT * FROM vehiculo ORDER BY ID DESC";
 $result = $conn->query($sql);

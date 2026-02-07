@@ -1,6 +1,8 @@
 <?php
 session_start();
 include 'database_connection.php';
+require_once 'access_control.php';
+require_module_access($conn, 'configuracion');
 
 function redirect_back($msg = null) {
     $url = 'configuracion.php#accesos';

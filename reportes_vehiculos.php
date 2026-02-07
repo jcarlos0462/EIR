@@ -19,6 +19,9 @@ $dbname = "u174025152_EIR";
 $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) die("Conexión fallida: " . $conn->connect_error);
 
+require_once 'access_control.php';
+require_module_access($conn, 'reportes');
+
 // Fetch filter lists
 $buques = [];
 $res = $conn->query("SELECT DISTINCT Buque FROM vehiculo WHERE IFNULL(Buque,'')<>'' ORDER BY Buque");
