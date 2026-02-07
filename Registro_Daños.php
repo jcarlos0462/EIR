@@ -532,9 +532,17 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 <div class="modern-table-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="mb-0">Daños Registrados</h4>
-                        <button type="button" class="btn btn-sm modern-btn modern-btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgregarDanio">
-                            <i class="bi bi-plus-lg"></i> Agregar Daño
-                        </button>
+                        <div class="d-flex gap-2">
+                            <form method="post" class="d-inline">
+                                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                <button type="submit" name="marcar_revisado" class="btn btn-sm modern-btn modern-btn-success">
+                                    <i class="bi bi-check2-circle"></i> Revisado
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm modern-btn modern-btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgregarDanio">
+                                <i class="bi bi-plus-lg"></i> Agregar Daño
+                            </button>
+                        </div>
                     </div>
                     <?php if (!empty($danios)): ?>
                         <div class="table-responsive modern-table">
