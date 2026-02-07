@@ -421,15 +421,6 @@ $usuarios_count = $totalUsuarios;
                     <div class="row">
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
-                                <div class="stat-icon"><i class="bi bi-people"></i></div>
-                                <div class="stat-label">Usuarios Registrados</div>
-                                <div class="stat-number"><?php echo $totalUsuarios; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('usuarios')">Ver</button>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg-3">
-                            <div class="stat-card">
                                 <div class="stat-icon"><i class="bi bi-person-check"></i></div>
                                 <div class="stat-label">Usuarios Conectados</div>
                                 <div class="stat-number"><?php echo $usuariosConectados; ?></div>
@@ -446,12 +437,26 @@ $usuarios_count = $totalUsuarios;
                             </div>
                         </div>
 
-                        <div class="col-md-6 col-lg-3">
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="bi bi-shield-lock"></i></div>
-                                <div class="stat-label">Accesos Configurados</div>
-                                <div class="stat-number"><?php echo $totalAccesos; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('accesos')">Ver</button>
+                        <div class="col-md-12 col-lg-6">
+                            <div class="stat-card text-start">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="stat-icon"><i class="bi bi-people"></i></div>
+                                    <div>
+                                        <div class="stat-label">Usuarios Registrados</div>
+                                        <div class="stat-number"><?php echo $totalUsuarios; ?></div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mb-3 pt-2 border-top">
+                                    <div class="stat-icon"><i class="bi bi-shield-lock"></i></div>
+                                    <div>
+                                        <div class="stat-label">Accesos Configurados</div>
+                                        <div class="stat-number"><?php echo $totalAccesos; ?></div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-ver" onclick="mostrarSeccion('usuarios')">Ver Usuarios</button>
+                                    <button class="btn btn-ver" onclick="mostrarSeccion('accesos')">Ver Accesos</button>
+                                </div>
                             </div>
                         </div>
                     </div>
