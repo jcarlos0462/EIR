@@ -35,9 +35,6 @@ $allowConfig = !$hasAnyAccess || user_has_module_access($accessMap, 'configuraci
     <?php if ($allowReportes): ?>
         <a href="reportes_vehiculos.php" class="sidebar-link mb-2 <?php echo active_link('reportes_vehiculos.php'); ?>">Reportes</a>
     <?php endif; ?>
-    <?php if ($allowUsuarios): ?>
-        <a href="gestionar_usuarios.php" class="sidebar-link mb-2 <?php echo active_link('gestionar_usuarios.php'); ?>">Gestión de Usuarios</a>
-    <?php endif; ?>
     <?php if ($allowConfig): ?>
         <a href="configuracion.php" class="sidebar-link mb-2 <?php echo active_link('configuracion.php'); ?>">Configuración</a>
     <?php endif; ?>
