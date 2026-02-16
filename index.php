@@ -141,5 +141,29 @@ session_start();
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const tipoOperacionSelect = document.getElementById('tipo_operacion');
+        const recuerdameInput = document.getElementById('recuerdame');
+
+        const storedRecuerdame = localStorage.getItem('eir_recuerdame') === '1';
+        const storedTipoOperacion = localStorage.getItem('eir_tipo_operacion');
+
+        if (storedRecuerdame) {
+            recuerdameInput.checked = true;
+            if (storedTipoOperacion) {
+                tipoOperacionSelect.value = storedTipoOperacion;
+            }
+        }
+
+        document.querySelector('form').addEventListener('submit', function() {
+            if (recuerdameInput.checked) {
+                localStorage.setItem('eir_recuerdame', '1');
+                localStorage.setItem('eir_tipo_operacion', tipoOperacionSelect.value);
+            } else {
+                localStorage.removeItem('eir_recuerdame');
+                localStorage.removeItem('eir_tipo_operacion');
+            }
+        });
+    </script>
 </body>
 </html>

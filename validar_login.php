@@ -18,6 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $usuario = trim($_POST['usuario']);
     $password = trim($_POST['password']);
     $tipo_operacion = trim($_POST['tipo_operacion'] ?? '');
+    $puerto = trim($_POST['puerto'] ?? '');
     
     // Validar que no estén vacíos
     if (empty($usuario) || empty($password)) {
@@ -28,6 +29,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($tipo_operacion === '') {
         $_SESSION['error'] = "Debe seleccionar el tipo de operación";
+        header("Location: index.php");
+        exit();
+    }
+
+    if ($puerto === '') {
+        $_SESSION['error'] = "Debe seleccionar el puerto";
         header("Location: index.php");
         exit();
     }
@@ -61,6 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['usuario'] = $row['Usuario'];
             $_SESSION['logueado'] = true;
             $_SESSION['tipo_operacion'] = $tipo_operacion;
+            $_SESSION['puerto'] = $puerto;
 
             // Asegurar tabla de operaciones por usuario
             $sql_create_operacion = "CREATE TABLE IF NOT EXISTS usuario_operacion (
