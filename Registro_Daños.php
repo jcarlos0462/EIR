@@ -510,7 +510,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
         </div>
 </br>
         <div class="col-md-9 col-lg-10 main-content">
-            <div class="row mb-4 justify-content-center">
+            <div class="row mb-0 justify-content-center">
                 <div class="col-12 d-flex justify-content-center">
                     <div class="modern-card">
                         <form method="post" id="formBuscar" class="d-flex flex-row gap-3 align-items-end" style="width: 100%;">
