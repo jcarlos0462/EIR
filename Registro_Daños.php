@@ -494,8 +494,8 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 gap: 1rem;
             }
             .vehiculo-row {
-                flex-direction: column;
-                gap: 1rem;
+                flex-direction: row;
+                gap: 1.25rem;
             }
         }
     </style>
