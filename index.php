@@ -73,6 +73,38 @@ session_start();
             border: none;
             margin-bottom: 20px;
         }
+        .eye-icon {
+            width: 18px;
+            height: 18px;
+            vertical-align: text-bottom;
+        }
+        .password-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .vis-toggle-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .vis-toggle-label {
+            width: 40px;
+            height: 36px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: #ffffff;
+            transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+        }
+        .vis-toggle-input:checked + .vis-toggle-label {
+            border-color: #667eea;
+            background-color: #eef2ff;
+            color: #4b5bdc;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +134,16 @@ session_start();
                     <div class="mb-3">
                         <label for="password" class="form-label">Contraseña</label>
                         <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese su contraseña" required>
+                    </div>
+
+                    <div class="form-check mb-3 password-toggle">
+                        <input class="form-check-input vis-toggle-input" type="checkbox" id="verPassword">
+                        <label class="form-check-label vis-toggle-label" for="verPassword" aria-label="Ver contraseña">
+                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                            </svg>
+                            <span class="visually-hidden">Ver contraseña</span>
+                        </label>
                     </div>
 
                     <div class="mb-3">
@@ -135,5 +177,13 @@ session_start();
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const passwordInput = document.getElementById('password');
+        const verPasswordInput = document.getElementById('verPassword');
+
+        verPasswordInput.addEventListener('change', function() {
+            passwordInput.type = this.checked ? 'text' : 'password';
+        });
+    </script>
 </body>
 </html>
