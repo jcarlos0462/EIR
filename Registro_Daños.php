@@ -508,7 +508,6 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
         <div class="col-md-3 col-lg-2">
             <?php include 'sidebar.php'; ?>
         </div>
-</br>
         <div class="col-md-9 col-lg-10 main-content">
             <div class="row mb-0 justify-content-center">
                 <div class="col-12 d-flex justify-content-center">
@@ -530,7 +529,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 <div class="alert alert-danger py-2"><?php echo implode('<br>', $errores); ?></div>
             <?php endif; ?>
             <?php if ($marca): ?>
-                <div class="vehiculo-card mb-4">
+                <div class="vehiculo-card">
                     <div class="vehiculo-info">
                         <div class="vehiculo-row">
                             <div>
