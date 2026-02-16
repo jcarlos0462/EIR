@@ -76,12 +76,6 @@ session_start();
         .eye-icon {
             width: 18px;
             height: 18px;
-            vertical-align: text-bottom;
-        }
-        .password-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         .vis-toggle-input {
             position: absolute;
@@ -89,21 +83,22 @@ session_start();
             pointer-events: none;
         }
         .vis-toggle-label {
-            width: 40px;
-            height: 36px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
-            background-color: #ffffff;
-            transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+            color: #6c757d;
         }
         .vis-toggle-input:checked + .vis-toggle-label {
-            border-color: #667eea;
-            background-color: #eef2ff;
             color: #4b5bdc;
+        }
+        .password-addon {
+            background-color: #ffffff;
+            border: 2px solid #e0e0e0;
+            border-left: 0;
+        }
+        .password-input-group .form-control {
+            border-right: 0;
+        }
+        .password-input-group .form-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
         }
     </style>
 </head>
@@ -133,17 +128,18 @@ session_start();
                     
                     <div class="mb-3">
                         <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese su contraseña" required>
-                    </div>
-
-                    <div class="form-check mb-3 password-toggle">
-                        <input class="form-check-input vis-toggle-input" type="checkbox" id="verPassword">
-                        <label class="form-check-label vis-toggle-label" for="verPassword" aria-label="Ver contraseña">
-                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-                            </svg>
-                            <span class="visually-hidden">Ver contraseña</span>
-                        </label>
+                        <div class="input-group password-input-group">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese su contraseña" required>
+                            <span class="input-group-text password-addon">
+                                <input class="form-check-input vis-toggle-input" type="checkbox" id="verPassword">
+                                <label class="vis-toggle-label" for="verPassword" aria-label="Ver contraseña">
+                                    <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                    </svg>
+                                    <span class="visually-hidden">Ver contraseña</span>
+                                </label>
+                            </span>
+                        </div>
                     </div>
 
                     <div class="mb-3">
