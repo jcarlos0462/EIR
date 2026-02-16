@@ -192,7 +192,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_usuario'])) 
 
 // Obtener estadísticas
 $totalUsuarios = $conn->query("SELECT COUNT(*) as count FROM usuario")->fetch_assoc()['count'];
-$usuariosConectados = $conn->query("SELECT COUNT(*) as count FROM usuario WHERE ultima_actividad > DATE_SUB(NOW(), INTERVAL 5 MINUTE)")->fetch_assoc()['count'];
 $totalRoles = $conn->query("SELECT COUNT(*) as count FROM roles")->fetch_assoc()['count'];
 // Asegurar tabla de accesos por usuario y contar registros
 $conn->query("CREATE TABLE IF NOT EXISTS usuario_acceso (
@@ -419,14 +418,6 @@ $usuarios_count = $totalUsuarios;
                     <!-- Tarjeta 'Daños Registrados' removida por solicitud del usuario -->
 
                     <div class="row">
-                        <div class="col-md-6 col-lg-3">
-                            <div class="stat-card">
-                                <div class="stat-icon"><i class="bi bi-person-check"></i></div>
-                                <div class="stat-label">Usuarios Conectados</div>
-                                <div class="stat-number"><?php echo $usuariosConectados; ?></div>
-                                <button class="btn btn-ver" onclick="mostrarSeccion('conectados')">Ver</button>
-                            </div>
-                        </div>
 
                         <div class="col-md-6 col-lg-3">
                             <div class="stat-card">
@@ -736,59 +727,6 @@ if ($res_ac && $res_ac->num_rows > 0) {
                     </div>
                 </div>
 
-                <!-- SECCIÓN: USUARIOS CONECTADOS -->
-                <div id="conectados" class="content-section">
-                    <div class="header">
-                        <h2><i class="bi bi-person-check"></i> Usuarios Conectados</h2>
-                        <div class="header-subtitle">Monitoreo de sesiones activas en el sistema</div>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Usuario</th>
-                                    <th>Nombre</th>
-                                    <th>Estado</th>
-                                    <th>Conectado Desde</th>
-                                    <th>Última Actividad</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                // Obtener usuarios con sesiones activas (últimos 10 minutos)
-                                $conectados = $conn->query("SELECT * FROM usuario ORDER BY ID DESC");
-                                if ($conectados && $conectados->num_rows > 0) {
-                                    while ($user = $conectados->fetch_assoc()) {
-                                        // Verificar si hay sesión activa (simulado con tiempo)
-                                        $esActivo = true; // En producción, usar tabla de sesiones
-                                        $estadoBadge = $esActivo ? '<span class="badge bg-success"><i class="bi bi-circle-fill"></i> Activo</span>' : '<span class="badge bg-secondary"><i class="bi bi-circle"></i> Inactivo</span>';
-                                        
-                                        echo "<tr>
-                                            <td><strong>{$user['Usuario']}</strong></td>
-                                            <td>{$user['Nombre']}</td>
-                                            <td>{$estadoBadge}</td>
-                                            <td>Hace 2 minutos</td>
-                                            <td>Hace 30 segundos</td>
-                                            <td>
-                                                <button class='btn btn-sm btn-outline-info' title='Ver detalles'>
-                                                    <i class='bi bi-eye'></i>
-                                                </button>
-                                                <button class='btn btn-sm btn-outline-warning' title='Forzar logout' onclick='forzarLogout({$user['ID']})'>
-                                                    <i class='bi bi-door-open'></i>
-                                                </button>
-                                            </td>
-                                        </tr>";
-                                    }
-                                } else {
-                                    echo "<tr><td colspan='6' class='text-center text-muted'>No hay usuarios en el sistema</td></tr>";
-                                }
-                                ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
                 <!-- SECCIÓN: ADMINISTRAR ROLES -->
                 <div id="roles" class="content-section">
