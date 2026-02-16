@@ -16,6 +16,7 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
 include 'database_connection.php';
 require_once 'access_control.php';
 require_module_access($conn, 'configuracion');
+require_admin_role($conn);
 
 // Mensajes para operaciones de roles
 $rol_msg_success = '';

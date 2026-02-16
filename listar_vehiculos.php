@@ -21,6 +21,7 @@ if ($conn->connect_error) {
 
 require_once 'access_control.php';
 require_module_access($conn, 'vehiculos');
+require_admin_role($conn);
 
 // Obtener todos los vehículos
 $sql = "SELECT * FROM vehiculo ORDER BY ID DESC";

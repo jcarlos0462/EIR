@@ -58,4 +58,45 @@ function require_module_access($conn, $module) {
         exit();
     }
 }
+
+function require_admin_role($conn) {
+    if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
+        header('Location: index.php');
+        exit();
+    }
+    $userId = intval($_SESSION['id'] ?? 0);
+    if ($userId <= 0) {
+        header('Location: index.php');
+        exit();
+    }
+
+    $stmt = $conn->prepare("SELECT 1 FROM usuario_rol ur JOIN roles r ON ur.rol_id = r.id WHERE ur.usuario_id = ? AND LOWER(r.nombre) = 'administrador' LIMIT 1");
+    if (!$stmt) {
+        http_response_code(403);
+        echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Acceso denegado</title>' .
+             '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">' .
+             '</head><body class="bg-light"><div class="container py-5">' .
+             '<div class="alert alert-danger">No tienes acceso a este modulo.</div>' .
+             '<a href="Registro_Daños.php" class="btn btn-primary">Ir a Danos</a>' .
+             '</div></body></html>';
+        exit();
+    }
+
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $stmt->store_result();
+    $isAdmin = $stmt->num_rows > 0;
+    $stmt->close();
+
+    if (!$isAdmin) {
+        http_response_code(403);
+        echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Acceso denegado</title>' .
+             '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">' .
+             '</head><body class="bg-light"><div class="container py-5">' .
+             '<div class="alert alert-danger">No tienes acceso a este modulo.</div>' .
+             '<a href="Registro_Daños.php" class="btn btn-primary">Ir a Danos</a>' .
+             '</div></body></html>';
+        exit();
+    }
+}
 ?>
