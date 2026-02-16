@@ -43,7 +43,8 @@ $danios = [];
 $show_form = false;
 $usuario_id = $_SESSION['id'] ?? null;
 $tipo_operacion = $_SESSION['tipo_operacion'] ?? '';
-$puerto = $_SESSION['puerto'] ?? '';
+$puerto_sesion = $_SESSION['puerto'] ?? '';
+$puerto_vehiculo = '';
 
 // Buscar VIN (por POST, GET o contexto de acción)
 if (isset($_POST['buscar_vin'])) {
@@ -60,9 +61,7 @@ if ($vin) {
     $stmt->execute();
     $stmt->bind_result($marca, $modelo, $color, $puerto_db);
     if ($stmt->fetch()) {
-        if (!empty($puerto_db)) {
-            $puerto = $puerto_db;
-        }
+        $puerto_vehiculo = $puerto_db;
         // Buscar daños registrados con descripciones
         $stmt->close();
         $sql = "SELECT r.ID, r.TipoOperacion AS Origen, r.Puerto AS Puerto, a.CodAreaDano, a.NomAreaDano, t.CodTipoDano, t.NomTipoDano, s.CodSeveridadDano, s.NomSeveridadDano FROM RegistroDanio r
@@ -119,7 +118,7 @@ if (isset($_POST['marcar_revisado'])) {
             $usuario_val = intval($usuario_id);
             $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion, Puerto) VALUES (?, ?, ?, ?, ?, ?, ?)");
             if ($stmt) {
-                $stmt->bind_param('siiiiss', $vin_revisado, $areaId, $tipoId, $severId, $usuario_val, $tipo_operacion_to_use, $puerto);
+                $stmt->bind_param('siiiiss', $vin_revisado, $areaId, $tipoId, $severId, $usuario_val, $tipo_operacion_to_use, $puerto_sesion);
                 if (!$stmt->execute()) {
                     error_log('Ejecutar INSERT Revisado fallo (con usuario): ' . $stmt->error);
                     if (!empty($debug)) echo '<pre>Ejecutar INSERT Revisado fallo (con usuario): ' . htmlspecialchars($stmt->error) . '</pre>';
@@ -135,7 +134,7 @@ if (isset($_POST['marcar_revisado'])) {
         } else {
             $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion, Puerto) VALUES (?, ?, ?, ?, NULL, ?, ?)");
             if ($stmt) {
-                $stmt->bind_param('siiiss', $vin_revisado, $areaId, $tipoId, $severId, $tipo_operacion_to_use, $puerto);
+                $stmt->bind_param('siiiss', $vin_revisado, $areaId, $tipoId, $severId, $tipo_operacion_to_use, $puerto_sesion);
                 if (!$stmt->execute()) {
                     error_log('Ejecutar INSERT Revisado fallo (sin usuario): ' . $stmt->error);
                     if (!empty($debug)) echo '<pre>Ejecutar INSERT Revisado fallo (sin usuario): ' . htmlspecialchars($stmt->error) . '</pre>';
@@ -168,7 +167,7 @@ if (isset($_POST['guardar_danio'])) {
         $show_form = true;
     } elseif ($vin && $area && $tipo && $severidad) {
         $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion, Puerto) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param('siiiiss', $vin, $area, $tipo, $severidad, $usuario_id, $tipo_operacion, $puerto);
+        $stmt->bind_param('siiiiss', $vin, $area, $tipo, $severidad, $usuario_id, $tipo_operacion, $puerto_sesion);
         if ($stmt->execute()) {
             // Redirigir para evitar duplicado al refrescar (PRG) y mantener contexto VIN
             header("Location: Registro_Daños.php?vin=" . urlencode($vin));
@@ -540,7 +539,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                             </div>
                             <div>
                                 <div class="vehiculo-label">Puerto</div>
-                                <div class="vehiculo-value"><?php echo htmlspecialchars($puerto ?: 'N/A'); ?></div>
+                                <div class="vehiculo-value"><?php echo htmlspecialchars($puerto_vehiculo ?: 'N/A'); ?></div>
                             </div>
                         </div>
                         <div class="vehiculo-row">
