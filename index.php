@@ -117,6 +117,15 @@ session_start();
                             <option value="Almacenaje - Patio">Almacenaje - Patio</option>
                         </select>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="puerto" class="form-label">Puerto</label>
+                        <select class="form-select" id="puerto" name="puerto" required>
+                            <option value="" selected disabled>Seleccione una opción</option>
+                            <option value="COA">COA - Coatzacoalcos</option>
+                            <option value="SCX">SCX - Salina Cruz, Oaxaca</option>
+                        </select>
+                    </div>
                     
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="recuerdame" name="recuerdame">
