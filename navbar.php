@@ -11,6 +11,7 @@
         </span>
         <div class="user-info">
             <span class="operacion-tipo"><?php echo htmlspecialchars($_SESSION['tipo_operacion'] ?? 'N/A'); ?></span>
+            <span class="operacion-tipo"><?php echo htmlspecialchars($_SESSION['puerto'] ?? 'N/A'); ?></span>
             <span>Bienvenido, <?php echo htmlspecialchars($_SESSION['nombre'] ?? 'Usuario'); ?></span>
             <a href="logout.php" class="btn btn-sm btn-light ms-3">Cerrar Sesión</a>
         </div>
