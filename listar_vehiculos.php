@@ -96,11 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
 
         $cols = [];
         $dataRows = [];
+        $header_is_data = false;
+        $header_row = null;
 
         if ($ext === 'xlsx') {
             $rows = parse_xlsx_simple($tmp);
             if ($rows === false || count($rows) === 0) {
                 $import_summary = ['error' => 'No se pudo parsear el archivo XLSX o está vacío.'];
+            } else {
                 $cols = array_map(function($c){ return mb_strtolower(trim($c)); }, $rows[0]);
                 $dataRows = array_slice($rows, 1);
             }
@@ -122,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         fclose($handle);
                     } else {
                         $cols = array_map(function($c){ return mb_strtolower(trim($c)); }, $header);
+                        $header_row = $header;
                         // dejar $handle abierto para lectura secuencial más abajo
                     }
                 }
@@ -130,8 +134,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
 
         // si tenemos columnas, mapear y procesar
         if (!empty($cols)) {
+            $matched = 0;
             foreach ($cols as $i => $name) {
-                if (array_key_exists($name, $expected)) $expected[$name] = $i;
+                if (array_key_exists($name, $expected)) {
+                    $expected[$name] = $i;
+                    $matched++;
+                }
+            }
+
+            if ($matched === 0) {
+                $layout = ['terminal','buque','viaje','puerto','vin','marca','modelo','color'];
+                foreach ($layout as $i => $key) {
+                    if (array_key_exists($key, $expected)) $expected[$key] = $i;
+                }
+                $header_is_data = true;
+                if ($ext === 'xlsx') {
+                    $dataRows = $rows;
+                }
             }
 
             $rowCount = 0; $inserted = 0; $skipped = 0; $errors = []; $duplicates = [];
@@ -160,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $modelo = $get('modelo');
                         $color = $get('color');
                         $ano = $get(['año','ano']);
-                        $puerto = $get('puerto');
+                        $puerto = $get(['puerto','puerto final','puerto_final']);
                         if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; continue; }
                         $stmt_check = $conn->prepare("SELECT ID FROM vehiculo WHERE VIN = ? LIMIT 1");
                         $stmt_check->bind_param('s', $vin);
@@ -173,6 +192,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                     }
                 } else {
                     // CSV - continuar leyendo desde el handle abierto
+                    if ($header_is_data && $header_row) {
+                        $data = $header_row;
+                        $rowCount++;
+                        $allEmpty = true; foreach ($data as $v) if (trim($v) !== '') { $allEmpty = false; break; }
+                        if (!$allEmpty) {
+                            $get = function($keys) use ($data, $expected) {
+                                foreach ((array)$keys as $k) {
+                                    if (isset($expected[$k]) && $expected[$k] !== null && isset($data[$expected[$k]])) return trim($data[$expected[$k]]);
+                                }
+                                return '';
+                            };
+                            $terminal = $get('terminal');
+                            $buque = $get('buque');
+                            $viaje = $get('viaje');
+                            $vin = $get('vin');
+                            $marca = $get('marca');
+                            $modelo = $get('modelo');
+                            $color = $get('color');
+                            $ano = $get(['año','ano']);
+                            $puerto = $get(['puerto','puerto final','puerto_final']);
+                            if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; }
+                            else {
+                                $stmt_check = $conn->prepare("SELECT ID FROM vehiculo WHERE VIN = ? LIMIT 1");
+                                $stmt_check->bind_param('s', $vin);
+                                $stmt_check->execute();
+                                $resc = $stmt_check->get_result();
+                                if ($resc && $resc->num_rows > 0) { $skipped++; $duplicates[] = "Fila {$rowCount}: {$vin}"; $stmt_check->close(); }
+                                else {
+                                    $stmt_check->close();
+                                    $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $ano, $puerto, $terminal);
+                                    if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
+                                }
+                            }
+                        }
+                    }
+
                     while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
                         $rowCount++;
                         $allEmpty = true; foreach ($data as $v) if (trim($v) !== '') { $allEmpty = false; break; }
@@ -191,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $modelo = $get('modelo');
                         $color = $get('color');
                         $ano = $get(['año','ano']);
-                        $puerto = $get('puerto');
+                        $puerto = $get(['puerto','puerto final','puerto_final']);
                         if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; continue; }
                         $stmt_check = $conn->prepare("SELECT ID FROM vehiculo WHERE VIN = ? LIMIT 1");
                         $stmt_check->bind_param('s', $vin);
