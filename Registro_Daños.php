@@ -302,6 +302,10 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     background: #f0f4ff;
                     transition: background 0.2s;
                 }
+        .main-content {
+            padding-top: 0;
+            margin-top: 0;
+        }
         body {
             background: linear-gradient(120deg, #6a82fb 0%, #fc5c7d 100%);
             min-height: 100vh;
