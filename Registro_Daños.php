@@ -55,11 +55,14 @@ if (isset($_POST['buscar_vin'])) {
 }
 
 if ($vin) {
-    $stmt = $conn->prepare("SELECT Marca, Modelo, Color FROM vehiculo WHERE VIN = ?");
+    $stmt = $conn->prepare("SELECT Marca, Modelo, Color, Puerto FROM vehiculo WHERE VIN = ?");
     $stmt->bind_param('s', $vin);
     $stmt->execute();
-    $stmt->bind_result($marca, $modelo, $color);
+    $stmt->bind_result($marca, $modelo, $color, $puerto_db);
     if ($stmt->fetch()) {
+        if (!empty($puerto_db)) {
+            $puerto = $puerto_db;
+        }
         // Buscar daños registrados con descripciones
         $stmt->close();
         $sql = "SELECT r.ID, r.TipoOperacion AS Origen, r.Puerto AS Puerto, a.CodAreaDano, a.NomAreaDano, t.CodTipoDano, t.NomTipoDano, s.CodSeveridadDano, s.NomSeveridadDano FROM RegistroDanio r
