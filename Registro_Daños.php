@@ -235,7 +235,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     border-radius: 18px;
                     box-shadow: 0 4px 24px 0 rgba(60,60,120,0.13);
                     padding: 1.5rem 2rem 1.2rem 2rem;
-                    margin-bottom: 2rem;
+                    margin-bottom: 0;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
@@ -273,7 +273,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     border-radius: 18px;
                     box-shadow: 0 4px 24px 0 rgba(60,60,120,0.13);
                     padding: 2rem 1.5rem 1.5rem 1.5rem;
-                    margin-bottom: 2rem;
+                    margin-bottom: 0;
                 }
                 .modern-table {
                     border-radius: 12px;
@@ -375,7 +375,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             border-radius: 18px;
             box-shadow: 0 4px 24px 0 rgba(60,60,120,0.10);
             padding: 2rem 1.5rem 1.5rem 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 0;
         }
         .modern-table {
             border-radius: 12px;
