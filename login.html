@@ -75,6 +75,11 @@
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5);
         }
+        .eye-icon {
+            width: 18px;
+            height: 18px;
+            vertical-align: text-bottom;
+        }
     </style>
 </head>
 <body>
@@ -98,13 +103,10 @@
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="verPassword">
                             <label class="form-check-label" for="verPassword">
-                                Ver contraseña
-                            </label>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="recuerdame">
-                            <label class="form-check-label" for="recuerdame">
-                                Recuérdame
+                                <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                </svg>
+                                <span class="visually-hidden">Ver contraseña</span>
                             </label>
                         </div>
                         <button type="submit" class="btn btn-login w-100 text-white mb-3">Iniciar Sesión</button>
@@ -144,6 +146,15 @@
                             <label for="passwordConfirm" class="form-label">Confirmar Contraseña</label>
                             <input type="password" class="form-control" id="passwordConfirm" placeholder="Confirme la contraseña" required>
                         </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="verPasswordReg">
+                            <label class="form-check-label" for="verPasswordReg">
+                                <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                </svg>
+                                <span class="visually-hidden">Ver contraseña</span>
+                            </label>
+                        </div>
                         <button type="submit" class="btn btn-login w-100 text-white mb-3">Registrarse</button>
                     </form>
                     <hr>
@@ -159,19 +170,19 @@
     <script>
         const usuarioInput = document.getElementById('usuario');
         const passwordInput = document.getElementById('password');
-        const recuerdameInput = document.getElementById('recuerdame');
         const verPasswordInput = document.getElementById('verPassword');
-
-        const storedRecuerdame = localStorage.getItem('eir_recuerdame') === '1';
-        const storedUsuario = localStorage.getItem('eir_usuario');
-
-        if (storedRecuerdame && storedUsuario) {
-            usuarioInput.value = storedUsuario;
-            recuerdameInput.checked = true;
-        }
+        const passwordRegInput = document.getElementById('passwordReg');
+        const passwordConfirmInput = document.getElementById('passwordConfirm');
+        const verPasswordRegInput = document.getElementById('verPasswordReg');
 
         verPasswordInput.addEventListener('change', function() {
             passwordInput.type = this.checked ? 'text' : 'password';
+        });
+
+        verPasswordRegInput.addEventListener('change', function() {
+            const fieldType = this.checked ? 'text' : 'password';
+            passwordRegInput.type = fieldType;
+            passwordConfirmInput.type = fieldType;
         });
 
         // Manejo del formulario de login
@@ -184,14 +195,6 @@
             console.log('Usuario:', usuario);
             console.log('Contraseña:', password);
             
-            if (recuerdameInput.checked) {
-                localStorage.setItem('eir_recuerdame', '1');
-                localStorage.setItem('eir_usuario', usuario);
-            } else {
-                localStorage.removeItem('eir_recuerdame');
-                localStorage.removeItem('eir_usuario');
-            }
-
             alert('Login enviado\nUsuario: ' + usuario);
             // Después de validar, redirigir a la página principal
             // window.location.href = 'dashboard.php';
