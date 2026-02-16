@@ -241,10 +241,18 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 }
                 .vehiculo-info {
                     display: flex;
-                    flex-direction: row;
+                    flex-direction: column;
+                    gap: 1rem;
+                    width: 100%;
+                }
+                .vehiculo-row {
+                    display: flex;
                     gap: 2.5rem;
                     width: 100%;
                     justify-content: space-between;
+                }
+                .vehiculo-row > div {
+                    flex: 1 1 50%;
                 }
                 .vehiculo-label {
                     color: #6a82fb;
@@ -483,6 +491,10 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 flex-direction: column;
                 gap: 1rem;
             }
+            .vehiculo-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
@@ -518,17 +530,25 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             <?php if ($marca): ?>
                 <div class="vehiculo-card mb-4">
                     <div class="vehiculo-info">
-                        <div>
-                            <div class="vehiculo-label">Marca</div>
-                            <div class="vehiculo-value"><?php echo htmlspecialchars($marca); ?></div>
+                        <div class="vehiculo-row">
+                            <div>
+                                <div class="vehiculo-label">Marca</div>
+                                <div class="vehiculo-value"><?php echo htmlspecialchars($marca); ?></div>
+                            </div>
+                            <div>
+                                <div class="vehiculo-label">Puerto</div>
+                                <div class="vehiculo-value"><?php echo htmlspecialchars($puerto ?: 'N/A'); ?></div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="vehiculo-label">Modelo</div>
-                            <div class="vehiculo-value"><?php echo htmlspecialchars($modelo); ?></div>
-                        </div>
-                        <div>
-                            <div class="vehiculo-label">Color</div>
-                            <div class="vehiculo-value"><?php echo htmlspecialchars($color); ?></div>
+                        <div class="vehiculo-row">
+                            <div>
+                                <div class="vehiculo-label">Modelo</div>
+                                <div class="vehiculo-value"><?php echo htmlspecialchars($modelo); ?></div>
+                            </div>
+                            <div>
+                                <div class="vehiculo-label">Color</div>
+                                <div class="vehiculo-value"><?php echo htmlspecialchars($color); ?></div>
+                            </div>
                         </div>
                     </div>
                 </div>
