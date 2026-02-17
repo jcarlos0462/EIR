@@ -91,7 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
             'color' => null,
             'año' => null,
             'ano' => null,
-            'puerto' => null
+            'puerto' => null,
+            'puerto final' => null,
+            'puerto_final' => null
         ];
 
         $cols = [];
