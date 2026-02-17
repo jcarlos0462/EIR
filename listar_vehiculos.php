@@ -89,8 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
             'marca' => null,
             'modelo' => null,
             'color' => null,
-            'año' => null,
-            'ano' => null,
             'puerto' => null,
             'puerto final' => null,
             'puerto_final' => null
@@ -156,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
             }
 
             $rowCount = 0; $inserted = 0; $skipped = 0; $errors = []; $duplicates = [];
-            $sql_insert = "INSERT INTO vehiculo (Buque, Viaje, VIN, Marca, Modelo, Color, Año, Puerto, Terminal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql_insert = "INSERT INTO vehiculo (Buque, Viaje, VIN, Marca, Modelo, Color, Puerto, Terminal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt_insert = $conn->prepare($sql_insert);
             if (!$stmt_insert) {
                 $import_summary = ['error' => 'Error preparando la inserción: '.$conn->error];
@@ -180,7 +178,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $marca = $get('marca');
                         $modelo = $get('modelo');
                         $color = $get('color');
-                        $ano = $get(['año','ano']);
                         $puerto = $get(['puerto','puerto final','puerto_final']);
                         if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; continue; }
                         $stmt_check = $conn->prepare("SELECT ID FROM vehiculo WHERE VIN = ? LIMIT 1");
@@ -189,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $resc = $stmt_check->get_result();
                         if ($resc && $resc->num_rows > 0) { $skipped++; $duplicates[] = "Fila {$rowCount}: {$vin}"; $stmt_check->close(); continue; }
                         $stmt_check->close();
-                        $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $ano, $puerto, $terminal);
+                        $stmt_insert->bind_param('ssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $puerto, $terminal);
                         if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
                     }
                 } else {
@@ -212,7 +209,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                             $marca = $get('marca');
                             $modelo = $get('modelo');
                             $color = $get('color');
-                            $ano = $get(['año','ano']);
                             $puerto = $get(['puerto','puerto final','puerto_final']);
                             if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; }
                             else {
@@ -223,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                                 if ($resc && $resc->num_rows > 0) { $skipped++; $duplicates[] = "Fila {$rowCount}: {$vin}"; $stmt_check->close(); }
                                 else {
                                     $stmt_check->close();
-                                    $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $ano, $puerto, $terminal);
+                                    $stmt_insert->bind_param('ssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $puerto, $terminal);
                                     if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
                                 }
                             }
@@ -247,7 +243,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $marca = $get('marca');
                         $modelo = $get('modelo');
                         $color = $get('color');
-                        $ano = $get(['año','ano']);
                         $puerto = $get(['puerto','puerto final','puerto_final']);
                         if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; continue; }
                         $stmt_check = $conn->prepare("SELECT ID FROM vehiculo WHERE VIN = ? LIMIT 1");
@@ -256,7 +251,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $resc = $stmt_check->get_result();
                         if ($resc && $resc->num_rows > 0) { $skipped++; $duplicates[] = "Fila {$rowCount}: {$vin}"; $stmt_check->close(); continue; }
                         $stmt_check->close();
-                        $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $ano, $puerto, $terminal);
+                        $stmt_insert->bind_param('ssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $puerto, $terminal);
                         if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
                     }
                 }
@@ -289,13 +284,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
     $marca = trim($_POST['marca']);
     $modelo = trim($_POST['modelo']);
     $color = trim($_POST['color']);
-    $ano = trim($_POST['ano']);
     $puerto = trim($_POST['puerto']);
     $terminal = trim($_POST['terminal']);
     
-    $sql_update = "UPDATE vehiculo SET Buque=?, Viaje=?, Marca=?, Modelo=?, Color=?, Año=?, Puerto=?, Terminal=? WHERE ID=?";
+    $sql_update = "UPDATE vehiculo SET Buque=?, Viaje=?, Marca=?, Modelo=?, Color=?, Puerto=?, Terminal=? WHERE ID=?";
     $stmt = $conn->prepare($sql_update);
-    $stmt->bind_param("ssssssssi", $buque, $viaje, $marca, $modelo, $color, $ano, $puerto, $terminal, $id);
+    $stmt->bind_param("sssssssi", $buque, $viaje, $marca, $modelo, $color, $puerto, $terminal, $id);
     
     if ($stmt->execute()) {
         header("Location: listar_vehiculos.php?exito=1");
@@ -440,7 +434,6 @@ if (isset($_GET['editar'])) {
                                 <th>VIN</th>
                                 <th>Marca</th>
                                 <th>Modelo</th>
-                                <th>Año</th>
                                 <th>Color</th>
                                 <th>Puerto</th>
                                 <th>Terminal</th>
@@ -456,7 +449,6 @@ if (isset($_GET['editar'])) {
                                         <td><?php echo htmlspecialchars($row['VIN']); ?></td>
                                         <td><?php echo htmlspecialchars($row['Marca']); ?></td>
                                         <td><?php echo htmlspecialchars($row['Modelo']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['Año']); ?></td>
                                         <td><?php echo htmlspecialchars($row['Color']); ?></td>
                                         <td><?php echo htmlspecialchars($row['Puerto']); ?></td>
                                         <td><?php echo htmlspecialchars($row['Terminal']); ?></td>
@@ -468,7 +460,7 @@ if (isset($_GET['editar'])) {
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="11" class="text-center text-muted py-4">No hay vehículos registrados</td>
+                                    <td colspan="10" class="text-center text-muted py-4">No hay vehículos registrados</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -510,10 +502,6 @@ if (isset($_GET['editar'])) {
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Modelo</label>
                                     <input type="text" class="form-control" name="modelo" value="<?php echo htmlspecialchars($vehiculo_edit['Modelo']); ?>">
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Año</label>
-                                    <input type="text" class="form-control" name="ano" value="<?php echo htmlspecialchars($vehiculo_edit['Año']); ?>">
                                 </div>
                             </div>
 
