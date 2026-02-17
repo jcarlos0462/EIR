@@ -127,9 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_usuario'])) {
     $usuario_u = trim($_POST['usuario_u'] ?? '');
     $password_u = $_POST['password_u'] ?? '';
     $role_u = isset($_POST['rol_id']) && $_POST['rol_id'] !== '' ? intval($_POST['rol_id']) : null;
+    $user_edit_ok = false;
+    $user_edit_msg = '';
 
     if ($uid <= 0 || $nombre_u === '' || $usuario_u === '') {
-        $user_msg_error = 'Todos los campos obligatorios deben completarse.';
+        $user_edit_msg = 'Todos los campos obligatorios deben completarse.';
+        $user_msg_error = $user_edit_msg;
     } else {
         // verificar usuario único (excepto este id)
         $stmtc = $conn->prepare("SELECT ID FROM usuario WHERE Usuario = ? AND ID <> ? LIMIT 1");
@@ -137,7 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_usuario'])) {
         $stmtc->execute();
         $stmtc->store_result();
         if ($stmtc->num_rows > 0) {
-            $user_msg_error = 'El nombre de usuario ya está en uso por otro usuario.';
+            $user_edit_msg = 'El nombre de usuario ya está en uso por otro usuario.';
+            $user_msg_error = $user_edit_msg;
             $stmtc->close();
         } else {
             $stmtc->close();
@@ -150,9 +154,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_usuario'])) {
                 $st->bind_param('ssi', $nombre_u, $usuario_u, $uid);
             }
             if ($st->execute()) {
-                $user_msg_success = 'Usuario actualizado correctamente.';
+                $user_edit_ok = true;
+                $user_edit_msg = 'Usuario actualizado correctamente.';
+                $user_msg_success = $user_edit_msg;
             } else {
-                $user_msg_error = 'Error al actualizar usuario: ' . $st->error;
+                $user_edit_msg = 'Error al actualizar usuario: ' . $st->error;
+                $user_msg_error = $user_edit_msg;
             }
             $st->close();
 
@@ -171,6 +178,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_usuario'])) {
                 }
             }
         }
+    }
+
+    if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'ok' => $user_edit_ok,
+            'message' => $user_edit_msg,
+            'rows_html' => renderUsuariosTable($conn)
+        ]);
+        exit();
     }
 }
 
@@ -280,7 +297,7 @@ function renderUsuariosTable($conn) {
                             <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Cerrar'></button>
                         </div>
                         <div class='modal-body'>
-                            <form method='post' action='configuracion.php#usuarios'>
+                            <form method='post' action='configuracion.php#usuarios' class='usuario-edit-form'>
                                 <input type='hidden' name='editar_usuario' value='1'>
                                 <input type='hidden' name='usuario_id' value='<?php echo $uid; ?>'>
                                 <div class='mb-3'>
@@ -1007,12 +1024,15 @@ if ($res_ac && $res_ac->num_rows > 0) {
             usuariosTableBody.addEventListener('submit', async function(e) {
                 const target = e.target;
                 if (!(target instanceof HTMLFormElement)) return;
-                if (!target.classList.contains('usuario-delete-form')) return;
+                const isDelete = target.classList.contains('usuario-delete-form');
+                const isEdit = target.classList.contains('usuario-edit-form');
+                if (!isDelete && !isEdit) return;
                 e.preventDefault();
                 setUsuariosAlert('', false);
                 try {
                     const formData = new FormData(target);
-                    if (!formData.has('eliminar_usuario')) formData.append('eliminar_usuario', '1');
+                    if (isDelete && !formData.has('eliminar_usuario')) formData.append('eliminar_usuario', '1');
+                    if (isEdit && !formData.has('editar_usuario')) formData.append('editar_usuario', '1');
                     formData.append('ajax', '1');
                     const response = await fetch('configuracion.php', {
                         method: 'POST',
@@ -1024,8 +1044,15 @@ if ($res_ac && $res_ac->num_rows > 0) {
                         usuariosTableBody.innerHTML = data.rows_html;
                     }
                     setUsuariosAlert(data.message || 'Usuario actualizado', !data.ok);
+                    if (isEdit) {
+                        const modalEl = target.closest('.modal');
+                        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                            const modal = window.bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+                        }
+                    }
                 } catch (err) {
-                    setUsuariosAlert('No se pudo eliminar el usuario.', true);
+                    setUsuariosAlert(isDelete ? 'No se pudo eliminar el usuario.' : 'No se pudo actualizar el usuario.', true);
                 }
             });
         }
