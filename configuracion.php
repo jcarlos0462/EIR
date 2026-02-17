@@ -1049,42 +1049,40 @@ if ($res_ac && $res_ac->num_rows > 0) {
             usuariosAlert.style.display = message ? 'block' : 'none';
         }
 
-        if (usuariosTableBody) {
-            usuariosTableBody.addEventListener('submit', async function(e) {
-                const target = e.target;
-                if (!(target instanceof HTMLFormElement)) return;
-                const isDelete = target.classList.contains('usuario-delete-form');
-                const isEdit = target.classList.contains('usuario-edit-form');
-                if (!isDelete && !isEdit) return;
-                e.preventDefault();
-                setUsuariosAlert('', false);
-                try {
-                    const formData = new FormData(target);
-                    if (isDelete && !formData.has('eliminar_usuario')) formData.append('eliminar_usuario', '1');
-                    if (isEdit && !formData.has('editar_usuario')) formData.append('editar_usuario', '1');
-                    formData.append('ajax', '1');
-                    const response = await fetch('configuracion.php', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    if (!response.ok) throw new Error('Error de red');
-                    const data = await response.json();
-                    if (data && typeof data.rows_html === 'string') {
-                        usuariosTableBody.innerHTML = data.rows_html;
-                    }
-                    setUsuariosAlert(data.message || 'Usuario actualizado', !data.ok);
-                    if (isEdit) {
-                        const modalEl = target.closest('.modal');
-                        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
-                            const modal = window.bootstrap.Modal.getInstance(modalEl);
-                            if (modal) modal.hide();
-                        }
-                    }
-                } catch (err) {
-                    setUsuariosAlert(isDelete ? 'No se pudo eliminar el usuario.' : 'No se pudo actualizar el usuario.', true);
+        document.addEventListener('submit', async function(e) {
+            const target = e.target;
+            if (!(target instanceof HTMLFormElement)) return;
+            const isDelete = target.classList.contains('usuario-delete-form');
+            const isEdit = target.classList.contains('usuario-edit-form');
+            if (!isDelete && !isEdit) return;
+            e.preventDefault();
+            setUsuariosAlert('', false);
+            try {
+                const formData = new FormData(target);
+                if (isDelete && !formData.has('eliminar_usuario')) formData.append('eliminar_usuario', '1');
+                if (isEdit && !formData.has('editar_usuario')) formData.append('editar_usuario', '1');
+                formData.append('ajax', '1');
+                const response = await fetch('configuracion.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) throw new Error('Error de red');
+                const data = await response.json();
+                if (usuariosTableBody && data && typeof data.rows_html === 'string') {
+                    usuariosTableBody.innerHTML = data.rows_html;
                 }
-            });
-        }
+                setUsuariosAlert(data.message || 'Usuario actualizado', !data.ok);
+                if (isEdit) {
+                    const modalEl = target.closest('.modal');
+                    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                        const modal = window.bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+                }
+            } catch (err) {
+                setUsuariosAlert(isDelete ? 'No se pudo eliminar el usuario.' : 'No se pudo actualizar el usuario.', true);
+            }
+        });
 
         if (usuariosCreateForm) {
             usuariosCreateForm.addEventListener('submit', async function(e) {
