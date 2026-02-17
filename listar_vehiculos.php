@@ -28,7 +28,7 @@ $filter_marca = trim($_GET['marca'] ?? '');
 $filter_terminal = trim($_GET['terminal'] ?? '');
 $filter_puerto = trim($_GET['puerto'] ?? '');
 $filters_applied = isset($_GET['filtrar']) || isset($_GET['marca']) || isset($_GET['terminal']) || isset($_GET['puerto']);
-$filters_ready = $filters_applied && ($filter_marca !== '' || $filter_terminal !== '' || $filter_puerto !== '');
+$filters_ready = $filters_applied;
 
 // Opciones de filtros
 $marcas = [];
@@ -52,13 +52,18 @@ if ($filters_ready) {
     if ($filter_terminal !== '') { $where[] = 'Terminal = ?'; $params[] = $filter_terminal; $types .= 's'; }
     if ($filter_puerto !== '') { $where[] = 'Puerto = ?'; $params[] = $filter_puerto; $types .= 's'; }
 
-    $sql = "SELECT * FROM vehiculo WHERE " . implode(' AND ', $where) . " ORDER BY ID DESC";
-    $stmt = $conn->prepare($sql);
-    if ($stmt && !empty($params)) {
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
+    if (empty($where)) {
+        $sql = "SELECT * FROM vehiculo ORDER BY ID DESC";
+        $result = $conn->query($sql);
+    } else {
+        $sql = "SELECT * FROM vehiculo WHERE " . implode(' AND ', $where) . " ORDER BY ID DESC";
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+        }
     }
 }
 
@@ -315,13 +320,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos']) &
     if ($filter_terminal !== '') { $where[] = 'Terminal = ?'; $params[] = $filter_terminal; $types .= 's'; }
     if ($filter_puerto !== '') { $where[] = 'Puerto = ?'; $params[] = $filter_puerto; $types .= 's'; }
 
-    $sql = "SELECT * FROM vehiculo WHERE " . implode(' AND ', $where) . " ORDER BY ID DESC";
-    $stmt = $conn->prepare($sql);
-    if ($stmt && !empty($params)) {
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
+    if (empty($where)) {
+        $sql = "SELECT * FROM vehiculo ORDER BY ID DESC";
+        $result = $conn->query($sql);
+    } else {
+        $sql = "SELECT * FROM vehiculo WHERE " . implode(' AND ', $where) . " ORDER BY ID DESC";
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+        }
     }
 }
 
