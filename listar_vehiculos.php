@@ -23,9 +23,44 @@ require_once 'access_control.php';
 require_module_access($conn, 'vehiculos');
 require_admin_role($conn);
 
-// Obtener todos los vehículos
-$sql = "SELECT * FROM vehiculo ORDER BY ID DESC";
-$result = $conn->query($sql);
+// Filtros
+$filter_marca = trim($_GET['marca'] ?? '');
+$filter_terminal = trim($_GET['terminal'] ?? '');
+$filter_puerto = trim($_GET['puerto'] ?? '');
+$filters_applied = isset($_GET['filtrar']);
+$filters_ready = $filters_applied && ($filter_marca !== '' || $filter_terminal !== '' || $filter_puerto !== '');
+
+// Opciones de filtros
+$marcas = [];
+$terminales = [];
+$puertos = [];
+$res = $conn->query("SELECT DISTINCT Marca FROM vehiculo WHERE Marca IS NOT NULL AND Marca <> '' ORDER BY Marca");
+if ($res) { while ($row = $res->fetch_assoc()) { $marcas[] = $row['Marca']; } }
+$res = $conn->query("SELECT DISTINCT Terminal FROM vehiculo WHERE Terminal IS NOT NULL AND Terminal <> '' ORDER BY Terminal");
+if ($res) { while ($row = $res->fetch_assoc()) { $terminales[] = $row['Terminal']; } }
+$res = $conn->query("SELECT DISTINCT Puerto FROM vehiculo WHERE Puerto IS NOT NULL AND Puerto <> '' ORDER BY Puerto");
+if ($res) { while ($row = $res->fetch_assoc()) { $puertos[] = $row['Puerto']; } }
+
+// Buscar vehículos por filtros
+$result = null;
+if ($filters_ready) {
+    $where = [];
+    $params = [];
+    $types = '';
+
+    if ($filter_marca !== '') { $where[] = 'Marca = ?'; $params[] = $filter_marca; $types .= 's'; }
+    if ($filter_terminal !== '') { $where[] = 'Terminal = ?'; $params[] = $filter_terminal; $types .= 's'; }
+    if ($filter_puerto !== '') { $where[] = 'Puerto = ?'; $params[] = $filter_puerto; $types .= 's'; }
+
+    $sql = "SELECT * FROM vehiculo WHERE " . implode(' AND ', $where) . " ORDER BY ID DESC";
+    $stmt = $conn->prepare($sql);
+    if ($stmt && !empty($params)) {
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+    }
+}
 
 // Helper: parse simple XLSX (sheet1) into array of rows (supports sharedStrings)
 function parse_xlsx_simple($file) {
@@ -270,10 +305,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
     }
 }
 
-// Si se realizó una importación, volver a consultar los vehículos para mostrar los nuevos registros
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) {
-    $sql = "SELECT * FROM vehiculo ORDER BY ID DESC";
-    $result = $conn->query($sql);
+// Si se realizó una importación, mantener el resultado filtrado si aplica
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos']) && $filters_ready) {
+    $where = [];
+    $params = [];
+    $types = '';
+
+    if ($filter_marca !== '') { $where[] = 'Marca = ?'; $params[] = $filter_marca; $types .= 's'; }
+    if ($filter_terminal !== '') { $where[] = 'Terminal = ?'; $params[] = $filter_terminal; $types .= 's'; }
+    if ($filter_puerto !== '') { $where[] = 'Puerto = ?'; $params[] = $filter_puerto; $types .= 's'; }
+
+    $sql = "SELECT * FROM vehiculo WHERE " . implode(' AND ', $where) . " ORDER BY ID DESC";
+    $stmt = $conn->prepare($sql);
+    if ($stmt && !empty($params)) {
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+    }
 }
 
 // Procesar actualización si se envía
@@ -451,6 +500,45 @@ if (isset($_GET['editar'])) {
                     </div>
                 <?php endif; ?>
 
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <form method="get" class="row g-3 align-items-end">
+                            <input type="hidden" name="filtrar" value="1">
+                            <div class="col-md-4">
+                                <label for="filtro_marca" class="form-label">Marca</label>
+                                <select id="filtro_marca" name="marca" class="form-select">
+                                    <option value="">Todas</option>
+                                    <?php foreach ($marcas as $m): ?>
+                                        <option value="<?php echo htmlspecialchars($m); ?>" <?php echo ($filter_marca === $m) ? 'selected' : ''; ?>><?php echo htmlspecialchars($m); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="filtro_terminal" class="form-label">Terminal</label>
+                                <select id="filtro_terminal" name="terminal" class="form-select">
+                                    <option value="">Todas</option>
+                                    <?php foreach ($terminales as $t): ?>
+                                        <option value="<?php echo htmlspecialchars($t); ?>" <?php echo ($filter_terminal === $t) ? 'selected' : ''; ?>><?php echo htmlspecialchars($t); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="filtro_puerto" class="form-label">Puerto</label>
+                                <select id="filtro_puerto" name="puerto" class="form-select">
+                                    <option value="">Todos</option>
+                                    <?php foreach ($puertos as $p): ?>
+                                        <option value="<?php echo htmlspecialchars($p); ?>" <?php echo ($filter_puerto === $p) ? 'selected' : ''; ?>><?php echo htmlspecialchars($p); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-12 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Buscar</button>
+                                <a href="listar_vehiculos.php" class="btn btn-outline-secondary">Limpiar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -469,7 +557,7 @@ if (isset($_GET['editar'])) {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if ($result->num_rows > 0): ?>
+                            <?php if ($filters_ready && $result && $result->num_rows > 0): ?>
                                 <?php while ($row = $result->fetch_assoc()): ?>
                                     <tr >                                      
                                         <td><?php echo htmlspecialchars($row['Buque']); ?></td>
@@ -486,9 +574,13 @@ if (isset($_GET['editar'])) {
                                         </td>
                                     </tr>
                                 <?php endwhile; ?>
+                            <?php elseif ($filters_ready): ?>
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted py-4">No hay vehículos con los filtros seleccionados</td>
+                                </tr>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="10" class="text-center text-muted py-4">No hay vehículos registrados</td>
+                                    <td colspan="10" class="text-center text-muted py-4">Seleccione filtros y presione Buscar</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
