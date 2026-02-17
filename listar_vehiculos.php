@@ -300,16 +300,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
 
 // Procesar eliminación si se solicita
 if (isset($_GET['eliminar'])) {
-    $id = $_GET['eliminar'];
-    $sql_delete = "DELETE FROM vehiculo WHERE ID = ?";
-    $stmt = $conn->prepare($sql_delete);
-    $stmt->bind_param("i", $id);
-    
-    if ($stmt->execute()) {
+    $id = intval($_GET['eliminar']);
+    $conn->begin_transaction();
+    try {
+        $stmt = $conn->prepare("SELECT VIN FROM vehiculo WHERE ID = ? LIMIT 1");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $stmt->bind_result($vin);
+        $has_row = $stmt->fetch();
+        $stmt->close();
+
+        if (!$has_row || !$vin) {
+            throw new RuntimeException('Vehiculo no encontrado.');
+        }
+
+        $stmt = $conn->prepare("DELETE FROM RegistroDanio WHERE VIN = ?");
+        $stmt->bind_param('s', $vin);
+        $stmt->execute();
+        $stmt->close();
+
+        $stmt = $conn->prepare("DELETE FROM vehiculo WHERE ID = ?");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $stmt->close();
+
+        $conn->commit();
         header("Location: listar_vehiculos.php?exito=2");
         exit();
+    } catch (Throwable $e) {
+        $conn->rollback();
+        header("Location: listar_vehiculos.php?error=1");
+        exit();
     }
-    $stmt->close();
 }
 
 // Modo edición
@@ -419,6 +441,12 @@ if (isset($_GET['editar'])) {
                 <?php if (isset($_GET['exito'])): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <?php echo $_GET['exito'] == 2 ? 'Vehículo eliminado exitosamente' : 'Vehículo actualizado exitosamente'; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+                <?php if (isset($_GET['error'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        No se pudo eliminar el vehículo. Verifique si tiene daños asociados.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
