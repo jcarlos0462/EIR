@@ -632,6 +632,7 @@ $usuarios_count = $totalUsuarios;
                         <h2><i class="bi bi-shield-lock"></i> Administrar Accesos</h2>
                         <div class="header-subtitle">Configurar permisos y accesos del sistema</div>
                     </div>
+                    <div id="accesos-alert" class="alert alert-info" style="display: none;"></div>
                     <?php if (!empty($_GET['msg'])): ?>
                         <div class="alert alert-info">
                             <?php echo htmlspecialchars($_GET['msg']); ?>
@@ -640,7 +641,7 @@ $usuarios_count = $totalUsuarios;
 
                     <div class="form-card">
                         <h4>Asignar Acceso a Usuario</h4>
-                        <form action="asignar_acceso.php" method="POST">
+                        <form action="asignar_acceso.php" method="POST" id="accesos-form">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="usuario_id" class="form-label">Usuario</label>
@@ -682,7 +683,7 @@ $usuarios_count = $totalUsuarios;
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="accesos-table-body">
 <?php
 // Mostrar accesos configurados por usuario (tabla usuario_acceso)
 // Crear tabla si no existe (no destructivo)
@@ -711,7 +712,7 @@ if ($res_ac && $res_ac->num_rows > 0) {
         echo "<td>$uname</td>";
         echo "<td>$mod</td>";
         echo "<td class='text-end'>";
-        echo "<form method='POST' action='asignar_acceso.php' style='display:inline'>";
+        echo "<form method='POST' action='asignar_acceso.php' class='acceso-delete-form d-inline'>";
         echo "<input type='hidden' name='acceso_id' value='$aid'>";
         echo "<input type='hidden' name='eliminar_acceso' value='1'>";
         echo "<button class='btn btn-sm btn-outline-danger' type='submit'>Eliminar</button>";
@@ -891,6 +892,63 @@ if ($res_ac && $res_ac->num_rows > 0) {
                 })
                 .catch(error => console.error('Error:', error));
             }
+        }
+    </script>
+    <script>
+        const accesosForm = document.getElementById('accesos-form');
+        const accesosTableBody = document.getElementById('accesos-table-body');
+        const accesosAlert = document.getElementById('accesos-alert');
+
+        function setAccesosAlert(message, isError) {
+            if (!accesosAlert) return;
+            accesosAlert.textContent = message || '';
+            accesosAlert.className = 'alert ' + (isError ? 'alert-danger' : 'alert-info');
+            accesosAlert.style.display = message ? 'block' : 'none';
+        }
+
+        async function postAccesos(formData) {
+            formData.append('ajax', '1');
+            const response = await fetch('asignar_acceso.php', {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) throw new Error('Error de red');
+            return response.json();
+        }
+
+        if (accesosForm) {
+            accesosForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                setAccesosAlert('', false);
+                try {
+                    const data = await postAccesos(new FormData(accesosForm));
+                    if (data && typeof data.rows_html === 'string') {
+                        accesosTableBody.innerHTML = data.rows_html;
+                    }
+                    setAccesosAlert(data.message || 'Acceso actualizado', !data.ok);
+                } catch (err) {
+                    setAccesosAlert('No se pudo actualizar accesos.', true);
+                }
+            });
+        }
+
+        if (accesosTableBody) {
+            accesosTableBody.addEventListener('submit', async function(e) {
+                const target = e.target;
+                if (!(target instanceof HTMLFormElement)) return;
+                if (!target.classList.contains('acceso-delete-form')) return;
+                e.preventDefault();
+                setAccesosAlert('', false);
+                try {
+                    const data = await postAccesos(new FormData(target));
+                    if (data && typeof data.rows_html === 'string') {
+                        accesosTableBody.innerHTML = data.rows_html;
+                    }
+                    setAccesosAlert(data.message || 'Acceso eliminado', !data.ok);
+                } catch (err) {
+                    setAccesosAlert('No se pudo eliminar el acceso.', true);
+                }
+            });
         }
     </script>
 </body>
