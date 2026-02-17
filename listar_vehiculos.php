@@ -27,7 +27,7 @@ require_admin_role($conn);
 $filter_marca = trim($_GET['marca'] ?? '');
 $filter_terminal = trim($_GET['terminal'] ?? '');
 $filter_puerto = trim($_GET['puerto'] ?? '');
-$filters_applied = isset($_GET['filtrar']);
+$filters_applied = isset($_GET['filtrar']) || isset($_GET['marca']) || isset($_GET['terminal']) || isset($_GET['puerto']);
 $filters_ready = $filters_applied && ($filter_marca !== '' || $filter_terminal !== '' || $filter_puerto !== '');
 
 // Opciones de filtros
@@ -502,7 +502,7 @@ if (isset($_GET['editar'])) {
 
                 <div class="card mb-3">
                     <div class="card-body">
-                        <form method="get" class="row g-3 align-items-end">
+                        <form method="get" action="listar_vehiculos.php" class="row g-3 align-items-end">
                             <input type="hidden" name="filtrar" value="1">
                             <div class="col-md-4">
                                 <label for="filtro_marca" class="form-label">Marca</label>
