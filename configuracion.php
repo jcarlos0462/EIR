@@ -177,8 +177,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_usuario'])) {
 // Eliminar usuario
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_usuario'])) {
     $uid = intval($_POST['usuario_id'] ?? 0);
+    $user_delete_ok = false;
+    $user_delete_msg = '';
     if ($uid <= 0) {
-        $user_msg_error = 'Usuario inválido.';
+        $user_delete_msg = 'Usuario inválido.';
+        $user_msg_error = $user_delete_msg;
     } else {
         $conn->begin_transaction();
         try {
@@ -203,12 +206,119 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_usuario'])) 
             $st->close();
 
             $conn->commit();
-            $user_msg_success = 'Usuario eliminado correctamente.';
+            $user_delete_ok = true;
+            $user_delete_msg = 'Usuario eliminado correctamente.';
+            $user_msg_success = $user_delete_msg;
         } catch (Throwable $e) {
             $conn->rollback();
-            $user_msg_error = 'Error al eliminar usuario: ' . $e->getMessage();
+            $user_delete_msg = 'Error al eliminar usuario: ' . $e->getMessage();
+            $user_msg_error = $user_delete_msg;
         }
     }
+
+    if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'ok' => $user_delete_ok,
+            'message' => $user_delete_msg,
+            'rows_html' => renderUsuariosTable($conn)
+        ]);
+        exit();
+    }
+}
+
+function renderUsuariosTable($conn) {
+    // obtener lista de roles para los select en los modales
+    $roles_list = [];
+    $rr = $conn->query("SELECT id, nombre FROM roles ORDER BY nombre");
+    if ($rr) {
+        while ($rrow = $rr->fetch_assoc()) $roles_list[] = $rrow;
+    }
+
+    ob_start();
+    $result = $conn->query("SELECT * FROM usuario ORDER BY ID ASC LIMIT 100");
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $uid = intval($row['ID']);
+            $uname = htmlspecialchars($row['Nombre']);
+            $ulogin = htmlspecialchars($row['Usuario']);
+            // obtener rol asignado (si existe)
+            $assigned_role_id = null;
+            $assigned_role_name = '';
+            $sr = $conn->prepare("SELECT r.id, r.nombre FROM usuario_rol ur JOIN roles r ON ur.rol_id = r.id WHERE ur.usuario_id = ? LIMIT 1");
+            $sr->bind_param('i', $uid);
+            $sr->execute();
+            $sr->bind_result($arid, $arname);
+            if ($sr->fetch()) { $assigned_role_id = $arid; $assigned_role_name = $arname; }
+            $sr->close();
+
+            ?>
+            <tr>
+                <td><?php echo $uid; ?></td>
+                <td><?php echo $uname; ?></td>
+                <td><?php echo $ulogin; ?></td>
+                <td><?php echo htmlspecialchars($assigned_role_name); ?></td>
+                <td>
+                    <button class='btn btn-sm btn-outline-primary' title='Editar' data-bs-toggle='modal' data-bs-target='#modalEditarUsuario<?php echo $uid; ?>'>
+                        <i class='bi bi-pencil'></i>
+                    </button>
+                    <form method='post' style='display:inline;' class='usuario-delete-form' onsubmit="return confirm('¿Eliminar usuario <?php echo addslashes($uname); ?>?');">
+                        <input type='hidden' name='usuario_id' value='<?php echo $uid; ?>'>
+                        <button type='submit' name='eliminar_usuario' value='1' class='btn btn-sm btn-outline-danger' title='Eliminar'>
+                            <i class='bi bi-trash'></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+
+            <!-- Modal editar usuario -->
+            <div class='modal fade' id='modalEditarUsuario<?php echo $uid; ?>' tabindex='-1' aria-labelledby='modalEditarUsuarioLabel<?php echo $uid; ?>' aria-hidden='true'>
+                <div class='modal-dialog'>
+                    <div class='modal-content'>
+                        <div class='modal-header'>
+                            <h5 class='modal-title' id='modalEditarUsuarioLabel<?php echo $uid; ?>'>Editar Usuario: <?php echo $ulogin; ?></h5>
+                            <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Cerrar'></button>
+                        </div>
+                        <div class='modal-body'>
+                            <form method='post' action='configuracion.php#usuarios'>
+                                <input type='hidden' name='editar_usuario' value='1'>
+                                <input type='hidden' name='usuario_id' value='<?php echo $uid; ?>'>
+                                <div class='mb-3'>
+                                    <label class='form-label'>Nombre</label>
+                                    <input type='text' name='nombre_u' class='form-control' value='<?php echo $uname; ?>' required>
+                                </div>
+                                <div class='mb-3'>
+                                    <label class='form-label'>Usuario (login)</label>
+                                    <input type='text' name='usuario_u' class='form-control' value='<?php echo $ulogin; ?>' required>
+                                </div>
+                                <div class='mb-3'>
+                                    <label class='form-label'>Rol asignado</label>
+                                    <select name='rol_id' class='form-select'>
+                                        <option value=''>(ninguno)</option>
+                                        <?php foreach ($roles_list as $rl): ?>
+                                            <option value='<?php echo $rl['id']; ?>' <?php echo ($rl['id']==$assigned_role_id)?'selected':''; ?>><?php echo htmlspecialchars($rl['nombre']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class='mb-3'>
+                                    <label class='form-label'>Contraseña (dejar vacío para no cambiar)</label>
+                                    <input type='password' name='password_u' class='form-control' placeholder='Nueva contraseña'>
+                                </div>
+                                <div class='d-flex justify-content-end'>
+                                    <button type='button' class='btn btn-secondary me-2' data-bs-dismiss='modal'>Cancelar</button>
+                                    <button type='submit' class='btn btn-primary'>Guardar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php
+        }
+    } else {
+        echo "<tr><td colspan='5' class='text-center text-muted'>No hay usuarios en el sistema</td></tr>";
+    }
+    return ob_get_clean();
 }
 
 // Obtener estadísticas
@@ -533,11 +643,12 @@ $usuarios_count = $totalUsuarios;
 
                     <div class="table-responsive">
                         <h4>Usuarios del Sistema</h4>
+                        <div id="usuarios-alert" class="alert alert-info" style="display: none;"></div>
                         <?php if ($user_msg_error): ?>
-                            <div class="alert alert-danger py-2 mb-3"><?php echo htmlspecialchars($user_msg_error); ?></div>
+                            <div class="alert alert-danger py-2 mb-3" id="usuarios-alert-error"><?php echo htmlspecialchars($user_msg_error); ?></div>
                         <?php endif; ?>
                         <?php if ($user_msg_success): ?>
-                            <div class="alert alert-success py-2 mb-3"><?php echo htmlspecialchars($user_msg_success); ?></div>
+                            <div class="alert alert-success py-2 mb-3" id="usuarios-alert-success"><?php echo htmlspecialchars($user_msg_success); ?></div>
                         <?php endif; ?>
                         <table class="table table-hover">
                             <thead>
@@ -549,98 +660,8 @@ $usuarios_count = $totalUsuarios;
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <?php
-                                // obtener lista de roles para los select en los modales
-                                $roles_list = [];
-                                $rr = $conn->query("SELECT id, nombre FROM roles ORDER BY nombre");
-                                if ($rr) {
-                                    while ($rrow = $rr->fetch_assoc()) $roles_list[] = $rrow;
-                                }
-
-                                $result = $conn->query("SELECT * FROM usuario ORDER BY ID ASC LIMIT 100");
-                                if ($result && $result->num_rows > 0) {
-                                    while ($row = $result->fetch_assoc()) {
-                                        $uid = intval($row['ID']);
-                                        $uname = htmlspecialchars($row['Nombre']);
-                                        $ulogin = htmlspecialchars($row['Usuario']);
-                                        // obtener rol asignado (si existe)
-                                        $assigned_role_id = null;
-                                        $assigned_role_name = '';
-                                        $sr = $conn->prepare("SELECT r.id, r.nombre FROM usuario_rol ur JOIN roles r ON ur.rol_id = r.id WHERE ur.usuario_id = ? LIMIT 1");
-                                        $sr->bind_param('i', $uid);
-                                        $sr->execute();
-                                        $sr->bind_result($arid, $arname);
-                                        if ($sr->fetch()) { $assigned_role_id = $arid; $assigned_role_name = $arname; }
-                                        $sr->close();
-
-                                        ?>
-                                        <tr>
-                                            <td><?php echo $uid; ?></td>
-                                            <td><?php echo $uname; ?></td>
-                                            <td><?php echo $ulogin; ?></td>
-                                            <td><?php echo htmlspecialchars($assigned_role_name); ?></td>
-                                            <td>
-                                                <button class='btn btn-sm btn-outline-primary' title='Editar' data-bs-toggle='modal' data-bs-target='#modalEditarUsuario<?php echo $uid; ?>'>
-                                                    <i class='bi bi-pencil'></i>
-                                                </button>
-                                                <form method='post' style='display:inline;' onsubmit="return confirm('¿Eliminar usuario <?php echo addslashes($uname); ?>?');">
-                                                    <input type='hidden' name='usuario_id' value='<?php echo $uid; ?>'>
-                                                    <button type='submit' name='eliminar_usuario' value='1' class='btn btn-sm btn-outline-danger' title='Eliminar'>
-                                                        <i class='bi bi-trash'></i>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Modal editar usuario -->
-                                        <div class='modal fade' id='modalEditarUsuario<?php echo $uid; ?>' tabindex='-1' aria-labelledby='modalEditarUsuarioLabel<?php echo $uid; ?>' aria-hidden='true'>
-                                            <div class='modal-dialog'>
-                                                <div class='modal-content'>
-                                                    <div class='modal-header'>
-                                                        <h5 class='modal-title' id='modalEditarUsuarioLabel<?php echo $uid; ?>'>Editar Usuario: <?php echo $ulogin; ?></h5>
-                                                        <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Cerrar'></button>
-                                                    </div>
-                                                    <div class='modal-body'>
-                                                        <form method='post' action='configuracion.php#usuarios'>
-                                                            <input type='hidden' name='editar_usuario' value='1'>
-                                                            <input type='hidden' name='usuario_id' value='<?php echo $uid; ?>'>
-                                                            <div class='mb-3'>
-                                                                <label class='form-label'>Nombre</label>
-                                                                <input type='text' name='nombre_u' class='form-control' value='<?php echo $uname; ?>' required>
-                                                            </div>
-                                                            <div class='mb-3'>
-                                                                <label class='form-label'>Usuario (login)</label>
-                                                                <input type='text' name='usuario_u' class='form-control' value='<?php echo $ulogin; ?>' required>
-                                                            </div>
-                                                            <div class='mb-3'>
-                                                                <label class='form-label'>Rol asignado</label>
-                                                                <select name='rol_id' class='form-select'>
-                                                                    <option value=''>(ninguno)</option>
-                                                                    <?php foreach ($roles_list as $rl): ?>
-                                                                        <option value='<?php echo $rl['id']; ?>' <?php echo ($rl['id']==$assigned_role_id)?'selected':''; ?>><?php echo htmlspecialchars($rl['nombre']); ?></option>
-                                                                    <?php endforeach; ?>
-                                                                </select>
-                                                            </div>
-                                                            <div class='mb-3'>
-                                                                <label class='form-label'>Contraseña (dejar vacío para no cambiar)</label>
-                                                                <input type='password' name='password_u' class='form-control' placeholder='Nueva contraseña'>
-                                                            </div>
-                                                            <div class='d-flex justify-content-end'>
-                                                                <button type='button' class='btn btn-secondary me-2' data-bs-dismiss='modal'>Cancelar</button>
-                                                                <button type='submit' class='btn btn-primary'>Guardar</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <?php
-                                    }
-                                } else {
-                                    echo "<tr><td colspan='4' class='text-center text-muted'>No hay usuarios en el sistema</td></tr>";
-                                }
-                                ?>
+                            <tbody id="usuarios-table-body">
+                                <?php echo renderUsuariosTable($conn); ?>
                             </tbody>
                         </table>
                     </div>
@@ -967,6 +988,44 @@ if ($res_ac && $res_ac->num_rows > 0) {
                     setAccesosAlert(data.message || 'Acceso eliminado', !data.ok);
                 } catch (err) {
                     setAccesosAlert('No se pudo eliminar el acceso.', true);
+                }
+            });
+        }
+    </script>
+    <script>
+        const usuariosTableBody = document.getElementById('usuarios-table-body');
+        const usuariosAlert = document.getElementById('usuarios-alert');
+
+        function setUsuariosAlert(message, isError) {
+            if (!usuariosAlert) return;
+            usuariosAlert.textContent = message || '';
+            usuariosAlert.className = 'alert ' + (isError ? 'alert-danger' : 'alert-success');
+            usuariosAlert.style.display = message ? 'block' : 'none';
+        }
+
+        if (usuariosTableBody) {
+            usuariosTableBody.addEventListener('submit', async function(e) {
+                const target = e.target;
+                if (!(target instanceof HTMLFormElement)) return;
+                if (!target.classList.contains('usuario-delete-form')) return;
+                e.preventDefault();
+                setUsuariosAlert('', false);
+                try {
+                    const formData = new FormData(target);
+                    if (!formData.has('eliminar_usuario')) formData.append('eliminar_usuario', '1');
+                    formData.append('ajax', '1');
+                    const response = await fetch('configuracion.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!response.ok) throw new Error('Error de red');
+                    const data = await response.json();
+                    if (data && typeof data.rows_html === 'string') {
+                        usuariosTableBody.innerHTML = data.rows_html;
+                    }
+                    setUsuariosAlert(data.message || 'Usuario actualizado', !data.ok);
+                } catch (err) {
+                    setUsuariosAlert('No se pudo eliminar el usuario.', true);
                 }
             });
         }
