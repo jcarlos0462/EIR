@@ -180,14 +180,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_usuario'])) 
     if ($uid <= 0) {
         $user_msg_error = 'Usuario inválido.';
     } else {
-        $st = $conn->prepare("DELETE FROM usuario WHERE ID = ?");
-        $st->bind_param('i', $uid);
-        if ($st->execute()) {
+        $conn->begin_transaction();
+        try {
+            $st = $conn->prepare("DELETE FROM usuario_operacion WHERE UsuarioID = ?");
+            $st->bind_param('i', $uid);
+            $st->execute();
+            $st->close();
+
+            $st = $conn->prepare("DELETE FROM usuario_acceso WHERE usuario_id = ?");
+            $st->bind_param('i', $uid);
+            $st->execute();
+            $st->close();
+
+            $st = $conn->prepare("DELETE FROM usuario_rol WHERE usuario_id = ?");
+            $st->bind_param('i', $uid);
+            $st->execute();
+            $st->close();
+
+            $st = $conn->prepare("DELETE FROM usuario WHERE ID = ?");
+            $st->bind_param('i', $uid);
+            $st->execute();
+            $st->close();
+
+            $conn->commit();
             $user_msg_success = 'Usuario eliminado correctamente.';
-        } else {
-            $user_msg_error = 'Error al eliminar usuario: ' . $st->error;
+        } catch (Throwable $e) {
+            $conn->rollback();
+            $user_msg_error = 'Error al eliminar usuario: ' . $e->getMessage();
         }
-        $st->close();
     }
 }
 
