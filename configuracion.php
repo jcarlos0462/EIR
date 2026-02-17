@@ -85,11 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['crear_usuario'])) {
     $nombre = trim($_POST['nombre'] ?? '');
     $usuario = trim($_POST['usuario'] ?? '');
     $password = $_POST['password'] ?? '';
+    $rol_id = isset($_POST['rol_id']) && $_POST['rol_id'] !== '' ? intval($_POST['rol_id']) : null;
+    $user_create_ok = false;
+    $user_create_msg = '';
 
     if ($nombre === '' || $usuario === '' || $password === '') {
-        $user_create_error = 'Todos los campos obligatorios deben completarse.';
+        $user_create_msg = 'Todos los campos obligatorios deben completarse.';
+        $user_create_error = $user_create_msg;
     } elseif (strlen($password) < 8) {
-        $user_create_error = 'La contraseña debe tener al menos 8 caracteres.';
+        $user_create_msg = 'La contraseña debe tener al menos 8 caracteres.';
+        $user_create_error = $user_create_msg;
     } else {
         $stmt_check = $conn->prepare("SELECT ID FROM usuario WHERE Usuario = ? LIMIT 1");
         $stmt_check->bind_param('s', $usuario);
@@ -97,22 +102,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['crear_usuario'])) {
         $stmt_check->store_result();
 
         if ($stmt_check->num_rows > 0) {
-            $user_create_error = 'El usuario ya existe.';
+            $user_create_msg = 'El usuario ya existe.';
+            $user_create_error = $user_create_msg;
         } else {
             $password_hash = password_hash($password, PASSWORD_DEFAULT);
             $stmt_insert = $conn->prepare("INSERT INTO usuario (Nombre, Usuario, Contraseña) VALUES (?, ?, ?)");
             $stmt_insert->bind_param('sss', $nombre, $usuario, $password_hash);
 
             if ($stmt_insert->execute()) {
-                $user_create_success = 'Usuario creado exitosamente.';
+                $new_user_id = $stmt_insert->insert_id ?: $conn->insert_id;
+                if ($rol_id !== null && $rol_id > 0) {
+                    $stmt_role = $conn->prepare("INSERT INTO usuario_rol (usuario_id, rol_id) VALUES (?, ?)");
+                    $stmt_role->bind_param('ii', $new_user_id, $rol_id);
+                    $stmt_role->execute();
+                    $stmt_role->close();
+                }
+                $user_create_ok = true;
+                $user_create_msg = 'Usuario creado exitosamente.';
+                $user_create_success = $user_create_msg;
             } else {
-                $user_create_error = 'Error al crear el usuario: ' . $stmt_insert->error;
+                $user_create_msg = 'Error al crear el usuario: ' . $stmt_insert->error;
+                $user_create_error = $user_create_msg;
             }
 
             $stmt_insert->close();
         }
 
         $stmt_check->close();
+    }
+
+    if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'ok' => $user_create_ok,
+            'message' => $user_create_msg,
+            'rows_html' => renderUsuariosTable($conn)
+        ]);
+        exit();
     }
 }
 
@@ -616,7 +642,7 @@ $usuarios_count = $totalUsuarios;
                         <?php if ($user_create_success): ?>
                             <div class="alert alert-success py-2 mb-3"><?php echo htmlspecialchars($user_create_success); ?></div>
                         <?php endif; ?>
-                        <form action="configuracion.php#usuarios" method="POST">
+                        <form action="configuracion.php#usuarios" method="POST" id="usuarios-create-form" class="usuario-create-form">
                             <input type="hidden" name="crear_usuario" value="1">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -638,19 +664,21 @@ $usuarios_count = $totalUsuarios;
                                     </small>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="rol" class="form-label">Rol</label>
-                                    <select class="form-select" id="rol" name="rol" required>
+                                    <label for="rol_id" class="form-label">Rol</label>
+                                    <select class="form-select" id="rol_id" name="rol_id" required>
                                         <option value="">Seleccionar rol...</option>
-                                        <option value="administrador">Administrador</option>
-                                        <option value="inspector">Inspector</option>
-                                        <option value="operador">Operador</option>
-                                        <option value="lector">Lector</option>
+                                        <?php
+                                        $roles_create = $conn->query("SELECT id, nombre FROM roles ORDER BY nombre");
+                                        if ($roles_create) {
+                                            while ($rc = $roles_create->fetch_assoc()) {
+                                                $rid = intval($rc['id']);
+                                                $rname = htmlspecialchars($rc['nombre']);
+                                                echo "<option value='{$rid}'>{$rname}</option>";
+                                            }
+                                        }
+                                        ?>
                                     </select>
                                 </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Correo Electrónico</label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="Ej: juan@example.com">
                             </div>
                             <button type="submit" class="btn btn-primary-custom">
                                 <i class="bi bi-plus-circle"></i> Crear Usuario
@@ -1012,6 +1040,7 @@ if ($res_ac && $res_ac->num_rows > 0) {
     <script>
         const usuariosTableBody = document.getElementById('usuarios-table-body');
         const usuariosAlert = document.getElementById('usuarios-alert');
+        const usuariosCreateForm = document.getElementById('usuarios-create-form');
 
         function setUsuariosAlert(message, isError) {
             if (!usuariosAlert) return;
@@ -1053,6 +1082,33 @@ if ($res_ac && $res_ac->num_rows > 0) {
                     }
                 } catch (err) {
                     setUsuariosAlert(isDelete ? 'No se pudo eliminar el usuario.' : 'No se pudo actualizar el usuario.', true);
+                }
+            });
+        }
+
+        if (usuariosCreateForm) {
+            usuariosCreateForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                setUsuariosAlert('', false);
+                try {
+                    const formData = new FormData(usuariosCreateForm);
+                    if (!formData.has('crear_usuario')) formData.append('crear_usuario', '1');
+                    formData.append('ajax', '1');
+                    const response = await fetch('configuracion.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!response.ok) throw new Error('Error de red');
+                    const data = await response.json();
+                    if (data && typeof data.rows_html === 'string') {
+                        usuariosTableBody.innerHTML = data.rows_html;
+                    }
+                    setUsuariosAlert(data.message || 'Usuario creado', !data.ok);
+                    if (data.ok) {
+                        usuariosCreateForm.reset();
+                    }
+                } catch (err) {
+                    setUsuariosAlert('No se pudo crear el usuario.', true);
                 }
             });
         }
