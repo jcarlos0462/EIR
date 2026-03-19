@@ -768,6 +768,9 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             const SCAN_MAX_DURATION = 1200; // ms totales para considerar secuencia de escaneo
 
             const scanStatus = document.getElementById('scanStatus');
+            const MIN_VIN_LENGTH = 17;
+            const MAX_SCAN_GAP = 100;
+            const MAX_SCAN_WINDOW = 2000;
 
             function resetScanState() {
                 startTime = 0;
@@ -779,18 +782,19 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
 
             function maybeSubmitScan() {
                 const vinValue = vinInput.value.trim();
-                if (!vinValue || vinValue === lastVinSubmitted) return;
-                if (scanMode) {
-                    if (scanStatus) {
-                        scanStatus.textContent = 'Escaneo detectado: buscando...';
-                        scanStatus.style.display = 'block';
-                    }
-                    lastVinSubmitted = vinValue;
-                    formBuscar.submit();
+                if (!vinValue || vinValue.length < MIN_VIN_LENGTH) return;
+                if (!scanMode) return;
+
+                if (scanStatus) {
+                    scanStatus.textContent = 'Escaneo detectado: buscando...';
+                    scanStatus.style.display = 'block';
                 }
+                formBuscar.submit();
             }
 
             vinInput.addEventListener('keydown', function(event) {
+                const now = Date.now();
+
                 if (event.key === 'Enter') {
                     if (scanMode) {
                         event.preventDefault();
@@ -799,17 +803,24 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     return;
                 }
 
-                const now = Date.now();
-                if (!startTime) startTime = now;
+                if (event.key.length !== 1) {
+                    return;
+                }
+
+                if (!startTime) {
+                    startTime = now;
+                    charCount = 0;
+                }
 
                 const gap = lastTime ? (now - lastTime) : 0;
                 lastTime = now;
                 charCount += 1;
 
-                if (gap <= SCAN_CHAR_DELAY) {
+                if (gap <= MAX_SCAN_GAP) {
                     const duration = now - startTime;
-                    if (charCount >= SCAN_MIN_CHARS && duration <= SCAN_MAX_DURATION) {
+                    if (charCount >= MIN_VIN_LENGTH && duration <= MAX_SCAN_WINDOW) {
                         scanMode = true;
+                        maybeSubmitScan();
                     }
                 } else {
                     startTime = now;
