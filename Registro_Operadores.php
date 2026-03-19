@@ -36,7 +36,7 @@ function addColumnIfNotExists($conn, $table, $column, $definition) {
         }
     }
 }
-addColumnIfNotExists($conn, 'operador', 'ID', 'INT(10) PRIMARY KEY AUTO_INCREMENT');
+// No forzamos ID si la tabla ya existe, puede causar conflicto con auto_increment si ya hay PK diferente.
 addColumnIfNotExists($conn, 'operador', 'VIN', 'VARCHAR(50) NOT NULL');
 addColumnIfNotExists($conn, 'operador', 'Nombre', 'VARCHAR(100) NOT NULL');
 addColumnIfNotExists($conn, 'operador', 'Fecha', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
