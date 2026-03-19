@@ -769,8 +769,10 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
 
             const scanStatus = document.getElementById('scanStatus');
             const MIN_VIN_LENGTH = 17;
-            const MAX_SCAN_GAP = 100;
-            const MAX_SCAN_WINDOW = 2000;
+            const SCAN_MIN_CHARS = 6;
+            const MAX_SCAN_GAP = 120;
+            const MAX_SCAN_WINDOW = 2500;
+            let scanTimeout = null;
 
             function resetScanState() {
                 startTime = 0;
@@ -778,17 +780,23 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 charCount = 0;
                 scanMode = false;
                 if (scanStatus) scanStatus.style.display = 'none';
+                if (scanTimeout) {
+                    clearTimeout(scanTimeout);
+                    scanTimeout = null;
+                }
             }
 
             function maybeSubmitScan() {
                 const vinValue = vinInput.value.trim();
-                if (!vinValue || vinValue.length < MIN_VIN_LENGTH) return;
-                if (!scanMode) return;
+                console.debug('maybeSubmitScan', {vinValue, scanMode, lastVinSubmitted});
+                if (!vinValue) return;
+                if (!scanMode && vinValue.length < MIN_VIN_LENGTH) return;
 
                 if (scanStatus) {
                     scanStatus.textContent = 'Escaneo detectado: buscando...';
                     scanStatus.style.display = 'block';
                 }
+                lastVinSubmitted = vinValue;
                 formBuscar.submit();
             }
 
@@ -818,9 +826,8 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
 
                 if (gap <= MAX_SCAN_GAP) {
                     const duration = now - startTime;
-                    if (charCount >= MIN_VIN_LENGTH && duration <= MAX_SCAN_WINDOW) {
+                    if (charCount >= SCAN_MIN_CHARS && duration <= MAX_SCAN_WINDOW) {
                         scanMode = true;
-                        maybeSubmitScan();
                     }
                 } else {
                     startTime = now;
@@ -831,12 +838,24 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
 
             vinInput.addEventListener('paste', function() {
                 scanMode = true;
-                setTimeout(maybeSubmitScan, 50);
+                if (scanTimeout) clearTimeout(scanTimeout);
+                scanTimeout = setTimeout(maybeSubmitScan, 60);
             });
 
             vinInput.addEventListener('input', function() {
+                const vinValue = vinInput.value.trim();
+
+                // si el escáner llenó el campo con el VIN completo (17), auto-submit
+                if (vinValue.length >= MIN_VIN_LENGTH && vinValue !== lastVinSubmitted) {
+                    scanMode = true;
+                }
+
                 if (scanMode) {
-                    maybeSubmitScan();
+                    if (scanTimeout) clearTimeout(scanTimeout);
+                    scanTimeout = setTimeout(() => {
+                        maybeSubmitScan();
+                        scanMode = false;
+                    }, 70);
                 }
             });
 
