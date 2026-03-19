@@ -545,7 +545,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                             </div>
                             <div class="d-flex align-items-end gap-2 vin-actions"></div>
                             <div class="vin-submit">
-                                <button type="submit" name="buscar_vin" class="modern-btn modern-btn-primary">Buscar</button>
+                                <button type="button" id="finalizarRegistr" class="modern-btn modern-btn-warning">Finalizar y nuevo VIN</button>
                             </div>
                         </form>
                     </div>
@@ -796,6 +796,18 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 if (submitTimeout) clearTimeout(submitTimeout);
                 submitTimeout = setTimeout(autoSubmit, 80);
             });
+
+            const finalizarBtn = document.getElementById('finalizarRegistr');
+            if (finalizarBtn) {
+                finalizarBtn.addEventListener('click', function() {
+                    if (submitTimeout) clearTimeout(submitTimeout);
+                    vinInput.value = '';
+                    clearStatus();
+                    lastVinSubmitted = '';
+                    // Retornar a pantalla inicial para buscar otro VIN
+                    window.location.href = 'Registro_Daños.php';
+                });
+            }
 
             vinInput.addEventListener('focus', clearStatus);
             vinInput.addEventListener('blur', clearStatus);
