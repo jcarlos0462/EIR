@@ -752,5 +752,71 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
     </div>
 </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function(){
+            const vinInput = document.getElementById('qrInput');
+            const formBuscar = document.getElementById('formBuscar');
+            let lastKeyTime = 0;
+            let fastChars = 0;
+            let isScanMode = false;
+            let lastVinSubmitted = vinInput.value.trim();
+            const charIntervalThreshold = 60; // ms
+            const fastCharsTrigger = 4; // after 4 caracteres rápidos consideramos escaneo
+
+            function resetScanDetection() {
+                fastChars = 0;
+                isScanMode = false;
+            }
+
+            function checkAutoSubmit() {
+                const vinValue = vinInput.value.trim();
+                if (!vinValue || vinValue === lastVinSubmitted) return;
+                if (isScanMode && vinValue.length >= 4) {
+                    lastVinSubmitted = vinValue;
+                    formBuscar.submit();
+                }
+            }
+
+            vinInput.addEventListener('keydown', function(event){
+                const now = Date.now();
+                const delta = now - lastKeyTime;
+                lastKeyTime = now;
+
+                if (event.key === 'Enter') {
+                    if (isScanMode) {
+                        event.preventDefault();
+                        checkAutoSubmit();
+                        return;
+                    }
+                    // Cuando es ingreso manual con Enter, no submit automático.
+                    return;
+                }
+
+                if (delta > charIntervalThreshold) {
+                    // Pausa grande: probablemente manual
+                    resetScanDetection();
+                } else {
+                    fastChars += 1;
+                    if (fastChars >= fastCharsTrigger) {
+                        isScanMode = true;
+                    }
+                }
+            });
+
+            vinInput.addEventListener('input', function(){
+                if (isScanMode) {
+                    checkAutoSubmit();
+                }
+            });
+
+            // Si el usuario empieza a escribir manualmente o limpia el campo, reiniciar detección
+            vinInput.addEventListener('focus', function(){
+                resetScanDetection();
+            });
+            vinInput.addEventListener('blur', function(){
+                resetScanDetection();
+            });
+        })();
+    </script>
 </body>
 </html>
