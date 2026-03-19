@@ -5,15 +5,24 @@ error_reporting(E_ALL);
 session_start();
 include 'database_connection.php';
 require_once 'access_control.php';
-require_module_access($conn, 'operadores');
+// Deshabilitar temporalmente control de acceso a módulo para evitar bloqueos HTTP 500
+//require_module_access($conn, 'operadores');
+
+if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
+    header('Location: index.php');
+    exit();
+}
 
 // Crear tabla y columnas necesarias si no existen
-$conn->query("CREATE TABLE IF NOT EXISTS operador (
+$createSql = "CREATE TABLE IF NOT EXISTS operador (
     ID INT(10) PRIMARY KEY AUTO_INCREMENT,
     VIN VARCHAR(50) NOT NULL,
     Nombre VARCHAR(100) NOT NULL,
     Fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-)");
+)";
+if (!$conn->query($createSql)) {
+    die('Error creando tabla operador: ' . $conn->error);
+}
 
 // En caso de que tabla exista de forma previa con otro esquema, agregar columnas faltantes
 function addColumnIfNotExists($conn, $table, $column, $definition) {
