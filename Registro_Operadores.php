@@ -69,14 +69,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
     }
 }
 
-// Mostrar los operadores registrados
-$registros = [];
-$result = $conn->query("SELECT * FROM operador ORDER BY Fecha DESC LIMIT 100");
-if (!$result) {
-    die('Error al cargar registros de operador: ' . $conn->error);
+// Filtros desde GET
+$filter_vin = trim($_GET['filtrar_vin'] ?? '');
+$filter_nombre = trim($_GET['filtrar_nombre'] ?? '');
+$filter_fecha_desde = trim($_GET['filtrar_fecha_desde'] ?? '');
+$filter_fecha_hasta = trim($_GET['filtrar_fecha_hasta'] ?? '');
+
+$where = [];
+$params = [];
+$types = '';
+if ($filter_vin !== '') {
+    $where[] = 'VIN LIKE ?';
+    $params[] = '%' . $filter_vin . '%';
+    $types .= 's';
 }
-while ($row = $result->fetch_assoc()) {
-    $registros[] = $row;
+if ($filter_nombre !== '') {
+    $where[] = 'Nombre LIKE ?';
+    $params[] = '%' . $filter_nombre . '%';
+    $types .= 's';
+}
+if ($filter_fecha_desde !== '') {
+    $where[] = 'Fecha >= ?';
+    $params[] = $filter_fecha_desde . ' 00:00:00';
+    $types .= 's';
+}
+if ($filter_fecha_hasta !== '') {
+    $where[] = 'Fecha <= ?';
+    $params[] = $filter_fecha_hasta . ' 23:59:59';
+    $types .= 's';
+}
+
+$sql = 'SELECT * FROM operador';
+if (!empty($where)) {
+    $sql .= ' WHERE ' . implode(' AND ', $where);
+}
+$sql .= ' ORDER BY Fecha DESC LIMIT 500';
+
+$registros = [];
+if ($stmt = $conn->prepare($sql)) {
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $registros[] = $row;
+    }
+    $stmt->close();
+} else {
+    die('Error al cargar registros de operador: ' . $conn->error);
 }
 ?>
 <html lang="es">
@@ -120,6 +161,34 @@ while ($row = $result->fetch_assoc()) {
                             <div class="mt-3 d-flex gap-2">
                                 <button type="submit" name="guardar_operador" class="btn btn-primary">Guardar Registro</button>
                                 <button type="button" id="btnLimpiar" class="btn btn-secondary">Limpiar y nuevo</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Filtros de búsqueda</h5>
+                        <form method="get" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">VIN</label>
+                                <input type="text" class="form-control" name="filtrar_vin" value="<?php echo htmlspecialchars($filter_vin); ?>" placeholder="Filtro por VIN">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Operador</label>
+                                <input type="text" class="form-control" name="filtrar_nombre" value="<?php echo htmlspecialchars($filter_nombre); ?>" placeholder="Filtro por operador">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Fecha desde</label>
+                                <input type="date" class="form-control" name="filtrar_fecha_desde" value="<?php echo htmlspecialchars($filter_fecha_desde); ?>">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Fecha hasta</label>
+                                <input type="date" class="form-control" name="filtrar_fecha_hasta" value="<?php echo htmlspecialchars($filter_fecha_hasta); ?>">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                                <a href="Registro_Operadores.php" class="btn btn-outline-secondary">Limpiar filtros</a>
                             </div>
                         </form>
                     </div>
