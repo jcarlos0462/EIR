@@ -756,66 +756,68 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
         (function(){
             const vinInput = document.getElementById('qrInput');
             const formBuscar = document.getElementById('formBuscar');
-            let lastKeyTime = 0;
-            let fastChars = 0;
+            let lastInputTime = 0;
+            let fastInputs = 0;
             let isScanMode = false;
             let lastVinSubmitted = vinInput.value.trim();
-            const charIntervalThreshold = 60; // ms
-            const fastCharsTrigger = 4; // after 4 caracteres rápidos consideramos escaneo
+            const charIntervalThreshold = 120; // ms
+            const fastInputsTrigger = 3;
 
             function resetScanDetection() {
-                fastChars = 0;
+                fastInputs = 0;
                 isScanMode = false;
             }
 
-            function checkAutoSubmit() {
+            function tryAutoSubmit() {
                 const vinValue = vinInput.value.trim();
                 if (!vinValue || vinValue === lastVinSubmitted) return;
-                if (isScanMode && vinValue.length >= 4) {
+
+                if (isScanMode || vinValue.length >= 17 || vinInput.dataset.pasteScan === '1') {
                     lastVinSubmitted = vinValue;
+                    vinInput.dataset.pasteScan = '0';
                     formBuscar.submit();
                 }
             }
 
             vinInput.addEventListener('keydown', function(event){
-                const now = Date.now();
-                const delta = now - lastKeyTime;
-                lastKeyTime = now;
-
                 if (event.key === 'Enter') {
                     if (isScanMode) {
                         event.preventDefault();
-                        checkAutoSubmit();
-                        return;
+                        tryAutoSubmit();
                     }
-                    // Cuando es ingreso manual con Enter, no submit automático.
                     return;
                 }
 
-                if (delta > charIntervalThreshold) {
-                    // Pausa grande: probablemente manual
-                    resetScanDetection();
+                const now = Date.now();
+                const delta = now - lastInputTime;
+                lastInputTime = now;
+
+                if (delta <= charIntervalThreshold) {
+                    fastInputs += 1;
                 } else {
-                    fastChars += 1;
-                    if (fastChars >= fastCharsTrigger) {
-                        isScanMode = true;
-                    }
+                    fastInputs = 1;
+                    isScanMode = false;
                 }
+
+                if (fastInputs >= fastInputsTrigger) {
+                    isScanMode = true;
+                }
+            });
+
+            vinInput.addEventListener('paste', function() {
+                vinInput.dataset.pasteScan = '1';
+                isScanMode = true;
+                setTimeout(tryAutoSubmit, 30);
             });
 
             vinInput.addEventListener('input', function(){
                 if (isScanMode) {
-                    checkAutoSubmit();
+                    tryAutoSubmit();
                 }
             });
 
-            // Si el usuario empieza a escribir manualmente o limpia el campo, reiniciar detección
-            vinInput.addEventListener('focus', function(){
-                resetScanDetection();
-            });
-            vinInput.addEventListener('blur', function(){
-                resetScanDetection();
-            });
+            vinInput.addEventListener('focus', resetScanDetection);
+            vinInput.addEventListener('blur', resetScanDetection);
         })();
     </script>
 </body>
