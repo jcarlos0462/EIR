@@ -33,7 +33,7 @@ $allowDanos = !$hasAnyAccess || user_has_module_access($accessMap, 'danos');
 $allowVehiculos = !$hasAnyAccess || user_has_module_access($accessMap, 'vehiculos');
 $allowReportes = !$hasAnyAccess || user_has_module_access($accessMap, 'reportes');
 $allowUsuarios = !$hasAnyAccess || user_has_module_access($accessMap, 'usuarios');
-$allowOperadores = !$hasAnyAccess || user_has_module_access($accessMap, 'operadores');
+$allowOperadores = true; // Mostrar siempre el enlace a Registro de Operadores
 $allowConfig = !$hasAnyAccess || user_has_module_access($accessMap, 'configuracion');
 
 if (!$is_admin) {
