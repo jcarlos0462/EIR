@@ -756,78 +756,73 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
         (function(){
             const vinInput = document.getElementById('qrInput');
             const formBuscar = document.getElementById('formBuscar');
-            let firstCharTime = 0;
-            let lastCharTime = 0;
+            let startTime = 0;
+            let lastTime = 0;
             let charCount = 0;
-            let scanDetected = false;
+            let scanMode = false;
             let lastVinSubmitted = vinInput.value.trim();
-            const maxScanDuration = 1100; // ms para completar la secuencia
-            const maxCharGap = 120; // ms entre caracteres
-            const minScanChars = 6; // mínimo número de caracteres para considerar escaneo
 
-            function resetScan() {
-                firstCharTime = 0;
-                lastCharTime = 0;
+            const SCAN_CHAR_DELAY = 90; // ms entre teclas previstas por escáner
+            const SCAN_MIN_CHARS = 6; // mínimos caracteres rápidos para activar escaneo
+            const SCAN_MAX_DURATION = 1200; // ms totales para considerar secuencia de escaneo
+
+            function resetScanState() {
+                startTime = 0;
+                lastTime = 0;
                 charCount = 0;
-                scanDetected = false;
+                scanMode = false;
             }
 
-            function submitScan(vinValue) {
+            function maybeSubmitScan() {
+                const vinValue = vinInput.value.trim();
                 if (!vinValue || vinValue === lastVinSubmitted) return;
-
-                if (scanDetected) {
+                if (scanMode) {
                     lastVinSubmitted = vinValue;
                     formBuscar.submit();
                 }
             }
 
-            vinInput.addEventListener('keydown', function(event){
+            vinInput.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
-                    if (scanDetected) {
+                    if (scanMode) {
                         event.preventDefault();
-                        submitScan(vinInput.value.trim());
+                        maybeSubmitScan();
                     }
                     return;
                 }
 
                 const now = Date.now();
+                if (!startTime) startTime = now;
 
-                if (!firstCharTime) {
-                    firstCharTime = now;
-                    charCount = 0;
-                }
-
-                const gap = lastCharTime ? (now - lastCharTime) : 0;
-                lastCharTime = now;
+                const gap = lastTime ? (now - lastTime) : 0;
+                lastTime = now;
                 charCount += 1;
 
-                if (gap <= maxCharGap && charCount >= minScanChars) {
-                    const duration = now - firstCharTime;
-                    if (duration <= maxScanDuration) {
-                        scanDetected = true;
+                if (gap <= SCAN_CHAR_DELAY) {
+                    const duration = now - startTime;
+                    if (charCount >= SCAN_MIN_CHARS && duration <= SCAN_MAX_DURATION) {
+                        scanMode = true;
                     }
-                } else if (gap > maxCharGap) {
-                    firstCharTime = now;
+                } else {
+                    startTime = now;
                     charCount = 1;
-                    scanDetected = false;
+                    scanMode = false;
                 }
             });
 
             vinInput.addEventListener('paste', function() {
-                scanDetected = true;
-                setTimeout(function() {
-                    submitScan(vinInput.value.trim());
-                }, 30);
+                scanMode = true;
+                setTimeout(maybeSubmitScan, 50);
             });
 
-            vinInput.addEventListener('input', function(){
-                if (scanDetected) {
-                    submitScan(vinInput.value.trim());
+            vinInput.addEventListener('input', function() {
+                if (scanMode) {
+                    maybeSubmitScan();
                 }
             });
 
-            vinInput.addEventListener('focus', resetScan);
-            vinInput.addEventListener('blur', resetScan);
+            vinInput.addEventListener('focus', resetScanState);
+            vinInput.addEventListener('blur', resetScanState);
         })();
     </script>
 </body>
