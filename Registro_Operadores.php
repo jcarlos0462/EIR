@@ -153,9 +153,12 @@ if ($stmt = $conn->prepare($sql)) {
 
                 <div class="row row-cols-1 row-cols-xl-2 g-4 mb-4">
                     <div class="col">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Registro de Operador</h5>
+                        <div class="card h-100 border-primary">
+                            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                                <span>Registro de Operador</span>
+                                <button type="button" class="btn btn-light btn-sm" id="toggleRegistro">Ver</button>
+                            </div>
+                            <div class="card-body" id="registroCardBody">
                                 <p class="text-muted">Agrega un nuevo registro de operador con VIN y nombre.</p>
                                 <form method="post" id="formOperador">
                                     <div class="row g-3">
@@ -177,9 +180,12 @@ if ($stmt = $conn->prepare($sql)) {
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Reporte de Operadores</h5>
+                        <div class="card h-100 border-success">
+                            <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
+                                <span>Reporte de Operadores</span>
+                                <button type="button" class="btn btn-light btn-sm" id="toggleReporte">Ver</button>
+                            </div>
+                            <div class="card-body" id="reporteCardBody">
                                 <p class="text-muted">Filtra y ordena los registros existentes.</p>
                                 <form method="get" class="row g-3">
                                     <div class="col-md-6">
@@ -246,6 +252,23 @@ if ($stmt = $conn->prepare($sql)) {
         document.getElementById('nombre').value = '';
         document.getElementById('vin').focus();
     });
+
+    function toggleSection(buttonId, sectionId) {
+        const button = document.getElementById(buttonId);
+        const section = document.getElementById(sectionId);
+        button.addEventListener('click', function() {
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                button.textContent = 'Ocultar';
+            } else {
+                section.style.display = 'none';
+                button.textContent = 'Ver';
+            }
+        });
+    }
+
+    toggleSection('toggleRegistro', 'registroCardBody');
+    toggleSection('toggleReporte', 'reporteCardBody');
 </script>
 </body>
 </html>
