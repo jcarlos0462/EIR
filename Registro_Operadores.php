@@ -2,6 +2,7 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+date_default_timezone_set('America/Lima'); // Ajusta según zona horaria local
 session_start();
 include 'database_connection.php';
 require_once 'access_control.php';
@@ -50,9 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
     if ($vin === '' || $nombre === '') {
         $error = 'Debe completar ambos campos: VIN y Operador.';
     } else {
-        $stmt = $conn->prepare("INSERT INTO operador (VIN, Nombre, Fecha) VALUES (?, ?, NOW())");
+        $fecha = date('Y-m-d H:i:s');
+        $stmt = $conn->prepare("INSERT INTO operador (VIN, Nombre, Fecha) VALUES (?, ?, ?)");
         if ($stmt) {
-            $stmt->bind_param('ss', $vin, $nombre);
+            $stmt->bind_param('sss', $vin, $nombre, $fecha);
             if ($stmt->execute()) {
                 $mensaje = 'Registro guardado correctamente.';
                 $vin = '';
