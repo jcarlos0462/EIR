@@ -752,36 +752,5 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
     </div>
 </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        (function(){
-            const vinInput = document.getElementById('qrInput');
-            const formBuscar = document.getElementById('formBuscar');
-            let autoSearchTimer = null;
-            let lastSubmittedVin = vinInput.value.trim();
-
-            function tryAutoSearch() {
-                const vinValue = vinInput.value.trim();
-                if (!vinValue || vinValue === lastSubmittedVin) return;
-                // Ajusta esta condición a la longitud esperada del VIN (17) si quieres strict
-                if (vinValue.length >= 4) {
-                    lastSubmittedVin = vinValue;
-                    formBuscar.submit();
-                }
-            }
-
-            vinInput.addEventListener('input', function() {
-                clearTimeout(autoSearchTimer);
-                autoSearchTimer = setTimeout(tryAutoSearch, 700);
-            });
-
-            vinInput.addEventListener('keydown', function(event){
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    clearTimeout(autoSearchTimer);
-                    tryAutoSearch();
-                }
-            });
-        })();
-    </script>
 </body>
 </html>
