@@ -151,53 +151,60 @@ if ($stmt = $conn->prepare($sql)) {
                     <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
                 <?php endif; ?>
 
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Registrar Operador</h5>
-                        <form method="post" id="formOperador">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="vin" class="form-label">VIN</label>
-                                    <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="nombre" class="form-label">Operador</label>
-                                    <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" required>
-                                </div>
+                <div class="row row-cols-1 row-cols-xl-2 g-4 mb-4">
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Registro de Operador</h5>
+                                <p class="text-muted">Agrega un nuevo registro de operador con VIN y nombre.</p>
+                                <form method="post" id="formOperador">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="vin" class="form-label">VIN</label>
+                                            <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="nombre" class="form-label">Operador</label>
+                                            <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" required>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 d-flex gap-2">
+                                        <button type="submit" name="guardar_operador" class="btn btn-primary">Guardar Registro</button>
+                                        <button type="button" id="btnLimpiar" class="btn btn-secondary">Limpiar y nuevo</button>
+                                    </div>
+                                </form>
                             </div>
-                            <div class="mt-3 d-flex gap-2">
-                                <button type="submit" name="guardar_operador" class="btn btn-primary">Guardar Registro</button>
-                                <button type="button" id="btnLimpiar" class="btn btn-secondary">Limpiar y nuevo</button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
-
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Filtros de búsqueda</h5>
-                        <form method="get" class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label">VIN</label>
-                                <input type="text" class="form-control" name="filtrar_vin" value="<?php echo htmlspecialchars($filter_vin); ?>" placeholder="Filtro por VIN">
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Reporte de Operadores</h5>
+                                <p class="text-muted">Filtra y ordena los registros existentes.</p>
+                                <form method="get" class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">VIN</label>
+                                        <input type="text" class="form-control" name="filtrar_vin" value="<?php echo htmlspecialchars($filter_vin); ?>" placeholder="Filtro por VIN">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Operador</label>
+                                        <input type="text" class="form-control" name="filtrar_nombre" value="<?php echo htmlspecialchars($filter_nombre); ?>" placeholder="Filtro por operador">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fecha desde</label>
+                                        <input type="date" class="form-control" name="filtrar_fecha_desde" value="<?php echo htmlspecialchars($filter_fecha_desde); ?>">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fecha hasta</label>
+                                        <input type="date" class="form-control" name="filtrar_fecha_hasta" value="<?php echo htmlspecialchars($filter_fecha_hasta); ?>">
+                                    </div>
+                                    <div class="col-12 d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                                        <a href="Registro_Operadores.php" class="btn btn-outline-secondary">Limpiar filtros</a>
+                                    </div>
+                                </form>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Operador</label>
-                                <input type="text" class="form-control" name="filtrar_nombre" value="<?php echo htmlspecialchars($filter_nombre); ?>" placeholder="Filtro por operador">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Fecha desde</label>
-                                <input type="date" class="form-control" name="filtrar_fecha_desde" value="<?php echo htmlspecialchars($filter_fecha_desde); ?>">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Fecha hasta</label>
-                                <input type="date" class="form-control" name="filtrar_fecha_hasta" value="<?php echo htmlspecialchars($filter_fecha_hasta); ?>">
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end gap-2">
-                                <button type="submit" class="btn btn-primary">Aplicar filtros</button>
-                                <a href="Registro_Operadores.php" class="btn btn-outline-secondary">Limpiar filtros</a>
-                            </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
 
