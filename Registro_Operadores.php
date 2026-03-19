@@ -2,7 +2,7 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-date_default_timezone_set('America/Lima'); // Ajusta según zona horaria local
+date_default_timezone_set('America/Mexico_City'); // Hora central México
 session_start();
 include 'database_connection.php';
 require_once 'access_control.php';
@@ -117,8 +117,9 @@ while ($row = $result->fetch_assoc()) {
                                     <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" required>
                                 </div>
                             </div>
-                            <div class="mt-3">
+                            <div class="mt-3 d-flex gap-2">
                                 <button type="submit" name="guardar_operador" class="btn btn-primary">Guardar Registro</button>
+                                <button type="button" id="btnLimpiar" class="btn btn-secondary">Limpiar y nuevo</button>
                             </div>
                         </form>
                     </div>
@@ -156,6 +157,13 @@ while ($row = $result->fetch_assoc()) {
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('btnLimpiar').addEventListener('click', function() {
+        document.getElementById('vin').value = '';
+        document.getElementById('nombre').value = '';
+        document.getElementById('vin').focus();
+    });
+</script>
 </body>
 </html>
 
