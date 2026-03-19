@@ -33,6 +33,7 @@ $allowDanos = !$hasAnyAccess || user_has_module_access($accessMap, 'danos');
 $allowVehiculos = !$hasAnyAccess || user_has_module_access($accessMap, 'vehiculos');
 $allowReportes = !$hasAnyAccess || user_has_module_access($accessMap, 'reportes');
 $allowUsuarios = !$hasAnyAccess || user_has_module_access($accessMap, 'usuarios');
+$allowOperadores = !$hasAnyAccess || user_has_module_access($accessMap, 'operadores');
 $allowConfig = !$hasAnyAccess || user_has_module_access($accessMap, 'configuracion');
 
 if (!$is_admin) {
@@ -54,6 +55,9 @@ if (!$is_admin) {
     <?php endif; ?>
     <?php if ($allowReportes): ?>
         <a href="reportes_vehiculos.php" class="sidebar-link mb-2 <?php echo active_link('reportes_vehiculos.php'); ?>">Reportes</a>
+    <?php endif; ?>
+    <?php if ($allowOperadores): ?>
+        <a href="Registro_Operadores.php" class="sidebar-link mb-2 <?php echo active_link('Registro_Operadores.php'); ?>">Registro de Operadores</a>
     <?php endif; ?>
     <?php if ($allowConfig): ?>
         <a href="configuracion.php" class="sidebar-link mb-2 <?php echo active_link('configuracion.php'); ?>">Configuración</a>
