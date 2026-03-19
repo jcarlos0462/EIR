@@ -27,10 +27,16 @@ if (!$conn->query($createSql)) {
 // En caso de que tabla exista de forma previa con otro esquema, agregar columnas faltantes
 function addColumnIfNotExists($conn, $table, $column, $definition) {
     $res = $conn->query("SHOW COLUMNS FROM `$table` LIKE '$column'");
-    if (!$res || $res->num_rows === 0) {
-        $conn->query("ALTER TABLE `$table` ADD COLUMN `$column` $definition");
+    if (!$res) {
+        die('Error obteniendo columnas de ' . $table . ': ' . $conn->error);
+    }
+    if ($res->num_rows === 0) {
+        if (!$conn->query("ALTER TABLE `$table` ADD COLUMN `$column` $definition")) {
+            die('Error agregando columna ' . $column . ': ' . $conn->error);
+        }
     }
 }
+addColumnIfNotExists($conn, 'operador', 'ID', 'INT(10) PRIMARY KEY AUTO_INCREMENT');
 addColumnIfNotExists($conn, 'operador', 'VIN', 'VARCHAR(50) NOT NULL');
 addColumnIfNotExists($conn, 'operador', 'Nombre', 'VARCHAR(100) NOT NULL');
 addColumnIfNotExists($conn, 'operador', 'Fecha', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
@@ -63,11 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
 
 // Mostrar los operadores registrados
 $registros = [];
-$result = $conn->query("SELECT ID, VIN, Nombre, Fecha FROM operador ORDER BY Fecha DESC LIMIT 100");
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $registros[] = $row;
-    }
+$result = $conn->query("SELECT * FROM operador ORDER BY Fecha DESC LIMIT 100");
+if (!$result) {
+    die('Error al cargar registros de operador: ' . $conn->error);
+}
+while ($row = $result->fetch_assoc()) {
+    $registros[] = $row;
 }
 ?>
 <html lang="es">
