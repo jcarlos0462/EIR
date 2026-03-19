@@ -757,22 +757,27 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             const vinInput = document.getElementById('qrInput');
             const formBuscar = document.getElementById('formBuscar');
             let lastInputTime = 0;
-            let fastInputs = 0;
-            let isScanMode = false;
+            let fastChars = 0;
+            let scanStartTime = 0;
+            let scanCandidate = false;
             let lastVinSubmitted = vinInput.value.trim();
-            const charIntervalThreshold = 120; // ms
-            const fastInputsTrigger = 3;
+            const charIntervalThreshold = 80; // ms entre teclas rápidas
+            const fastCharsTrigger = 6; // 6 teclas rápidas para reconocer escaneo
+            const scanGlobalTimeout = 1300; // ms para completar el VIN en escaneo
 
             function resetScanDetection() {
-                fastInputs = 0;
-                isScanMode = false;
+                fastChars = 0;
+                scanStartTime = 0;
+                scanCandidate = false;
             }
 
-            function tryAutoSubmit() {
-                const vinValue = vinInput.value.trim();
+            function submitIfScan(vinValue) {
                 if (!vinValue || vinValue === lastVinSubmitted) return;
 
-                if (isScanMode || vinValue.length >= 17 || vinInput.dataset.pasteScan === '1') {
+                const now = Date.now();
+                const duration = scanStartTime ? now - scanStartTime : Infinity;
+
+                if ((scanCandidate && duration <= scanGlobalTimeout) || vinInput.dataset.pasteScan === '1') {
                     lastVinSubmitted = vinValue;
                     vinInput.dataset.pasteScan = '0';
                     formBuscar.submit();
@@ -780,39 +785,43 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             }
 
             vinInput.addEventListener('keydown', function(event){
+                const now = Date.now();
+
                 if (event.key === 'Enter') {
-                    if (isScanMode) {
+                    if (scanCandidate) {
                         event.preventDefault();
-                        tryAutoSubmit();
+                        submitIfScan(vinInput.value.trim());
                     }
                     return;
                 }
 
-                const now = Date.now();
                 const delta = now - lastInputTime;
                 lastInputTime = now;
 
                 if (delta <= charIntervalThreshold) {
-                    fastInputs += 1;
+                    fastChars += 1;
+                    if (!scanStartTime) scanStartTime = now;
                 } else {
-                    fastInputs = 1;
-                    isScanMode = false;
+                    fastChars = 1;
+                    scanStartTime = now;
+                    scanCandidate = false;
                 }
 
-                if (fastInputs >= fastInputsTrigger) {
-                    isScanMode = true;
+                if (fastChars >= fastCharsTrigger) {
+                    scanCandidate = true;
                 }
             });
 
             vinInput.addEventListener('paste', function() {
                 vinInput.dataset.pasteScan = '1';
-                isScanMode = true;
-                setTimeout(tryAutoSubmit, 30);
+                scanCandidate = true;
+                scanStartTime = Date.now();
+                setTimeout(function(){ submitIfScan(vinInput.value.trim()); }, 30);
             });
 
             vinInput.addEventListener('input', function(){
-                if (isScanMode) {
-                    tryAutoSubmit();
+                if (scanCandidate) {
+                    submitIfScan(vinInput.value.trim());
                 }
             });
 
