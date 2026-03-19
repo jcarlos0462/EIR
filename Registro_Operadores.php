@@ -99,11 +99,18 @@ if ($filter_fecha_hasta !== '') {
     $types .= 's';
 }
 
+$sortBy = $_GET['ordenar'] ?? 'Fecha';
+$sortDir = (isset($_GET['orden_dir']) && strtoupper($_GET['orden_dir']) === 'ASC') ? 'ASC' : 'DESC';
+$allowedSorts = ['ID', 'VIN', 'Nombre', 'Fecha'];
+if (!in_array($sortBy, $allowedSorts)) {
+    $sortBy = 'Fecha';
+}
+
 $sql = 'SELECT * FROM operador';
 if (!empty($where)) {
     $sql .= ' WHERE ' . implode(' AND ', $where);
 }
-$sql .= ' ORDER BY Fecha DESC LIMIT 500';
+$sql .= " ORDER BY $sortBy $sortDir LIMIT 500";
 
 $registros = [];
 if ($stmt = $conn->prepare($sql)) {
