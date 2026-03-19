@@ -541,6 +541,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                             <div class="flex-grow-1">
                                 <label class="modern-label">VIN</label>
                                 <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required autofocus placeholder="Escanea o ingresa el VIN">
+                                <div id="scanStatus" style="margin-top:0.4rem; color:#236fa1; font-weight:600; font-size:0.94rem; display:none;">Escaneo detectado: buscando...</div>
                             </div>
                             <div class="d-flex align-items-end gap-2 vin-actions"></div>
                             <div class="vin-submit">
@@ -766,17 +767,24 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             const SCAN_MIN_CHARS = 6; // mínimos caracteres rápidos para activar escaneo
             const SCAN_MAX_DURATION = 1200; // ms totales para considerar secuencia de escaneo
 
+            const scanStatus = document.getElementById('scanStatus');
+
             function resetScanState() {
                 startTime = 0;
                 lastTime = 0;
                 charCount = 0;
                 scanMode = false;
+                if (scanStatus) scanStatus.style.display = 'none';
             }
 
             function maybeSubmitScan() {
                 const vinValue = vinInput.value.trim();
                 if (!vinValue || vinValue === lastVinSubmitted) return;
                 if (scanMode) {
+                    if (scanStatus) {
+                        scanStatus.textContent = 'Escaneo detectado: buscando...';
+                        scanStatus.style.display = 'block';
+                    }
                     lastVinSubmitted = vinValue;
                     formBuscar.submit();
                 }
