@@ -82,6 +82,13 @@ if ($report_section) {
     $startSection = 'reporte';
 }
 
+$searchExecuted = $report_section && (
+    $filter_vin !== '' ||
+    $filter_nombre !== '' ||
+    $filter_fecha_desde !== '' ||
+    $filter_fecha_hasta !== ''
+);
+
 $where = [];
 $params = [];
 $types = '';
@@ -114,18 +121,21 @@ if (!in_array($sortBy, $allowedSorts)) {
     $sortBy = 'Fecha';
 }
 
-$sql = 'SELECT * FROM operador';
-if (!empty($where)) {
-    $sql .= ' WHERE ' . implode(' AND ', $where);
-}
-$sql .= " ORDER BY $sortBy $sortDir LIMIT 500";
-
 $registros = [];
-if ($stmt = $conn->prepare($sql)) {
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
+
+if ($searchExecuted) {
+    $sql = 'SELECT * FROM operador';
+    if (!empty($where)) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
     }
-    $stmt->execute();
+    $sql .= " ORDER BY $sortBy $sortDir LIMIT 500";
+
+    if ($stmt = $conn->prepare($sql)) {
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
         $registros[] = $row;
@@ -134,6 +144,8 @@ if ($stmt = $conn->prepare($sql)) {
 } else {
     die('Error al cargar registros de operador: ' . $conn->error);
 }
+} // end if searchExecuted
+
 ?>
 <html lang="es">
 <head>
