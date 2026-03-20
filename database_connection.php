@@ -1,7 +1,16 @@
 <?php
 
-// Incluir configuración segura
-require_once __DIR__ . '/config.php';
+// Incluir configuración segura.
+// Soporta config.php en el mismo directorio o en el padre.
+if (file_exists(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
+} elseif (file_exists(__DIR__ . '/../config.php')) {
+    require_once __DIR__ . '/../config.php';
+} elseif (file_exists(__DIR__ . '/public_html/config.php')) {
+    require_once __DIR__ . '/public_html/config.php';
+} else {
+    die('Error de configuración: no se encuentra config.php');
+}
 
 // Conexión a base de datos MySQL usando constantes seguras
 $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
