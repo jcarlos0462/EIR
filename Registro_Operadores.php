@@ -151,65 +151,77 @@ if ($stmt = $conn->prepare($sql)) {
                     <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
                 <?php endif; ?>
 
-                <div class="row row-cols-1 row-cols-xl-2 g-4 mb-4">
+                <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
                     <div class="col">
-                        <div class="card h-100 border-primary">
-                            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
-                                <span>Registro de Operador</span>
-                                <button type="button" class="btn btn-light btn-sm" id="toggleRegistro">Ver</button>
-                            </div>
-                            <div class="card-body" id="registroCardBody">
-                                <p class="text-muted">Agrega un nuevo registro de operador con VIN y nombre.</p>
-                                <form method="post" id="formOperador">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label for="vin" class="form-label">VIN</label>
-                                            <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="nombre" class="form-label">Operador</label>
-                                            <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" required>
-                                        </div>
-                                    </div>
-                                    <div class="mt-3 d-flex gap-2">
-                                        <button type="submit" name="guardar_operador" class="btn btn-primary">Guardar Registro</button>
-                                        <button type="button" id="btnLimpiar" class="btn btn-secondary">Limpiar y nuevo</button>
-                                    </div>
-                                </form>
+                        <div class="card text-center shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">REGISTRO</h5>
+                                <button type="button" class="btn btn-primary" id="btnShowRegistro">Ver</button>
                             </div>
                         </div>
                     </div>
                     <div class="col">
-                        <div class="card h-100 border-success">
-                            <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
-                                <span>Reporte de Operadores</span>
-                                <button type="button" class="btn btn-light btn-sm" id="toggleReporte">Ver</button>
+                        <div class="card text-center shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">REPORTES</h5>
+                                <button type="button" class="btn btn-success" id="btnShowReportes">Ver</button>
                             </div>
-                            <div class="card-body" id="reporteCardBody">
-                                <p class="text-muted">Filtra y ordena los registros existentes.</p>
-                                <form method="get" class="row g-3">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="registroSection" style="display:none;">
+                    <div class="card h-100 border-primary mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Registro de Operador</h5>
+                            <p class="text-muted">Agrega un nuevo registro de operador con VIN y nombre.</p>
+                            <form method="post" id="formOperador">
+                                <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">VIN</label>
-                                        <input type="text" class="form-control" name="filtrar_vin" value="<?php echo htmlspecialchars($filter_vin); ?>" placeholder="Filtro por VIN">
+                                        <label for="vin" class="form-label">VIN</label>
+                                        <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Operador</label>
-                                        <input type="text" class="form-control" name="filtrar_nombre" value="<?php echo htmlspecialchars($filter_nombre); ?>" placeholder="Filtro por operador">
+                                        <label for="nombre" class="form-label">Operador</label>
+                                        <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" required>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Fecha desde</label>
-                                        <input type="date" class="form-control" name="filtrar_fecha_desde" value="<?php echo htmlspecialchars($filter_fecha_desde); ?>">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Fecha hasta</label>
-                                        <input type="date" class="form-control" name="filtrar_fecha_hasta" value="<?php echo htmlspecialchars($filter_fecha_hasta); ?>">
-                                    </div>
-                                    <div class="col-12 d-flex gap-2">
-                                        <button type="submit" class="btn btn-primary">Aplicar filtros</button>
-                                        <a href="Registro_Operadores.php" class="btn btn-outline-secondary">Limpiar filtros</a>
-                                    </div>
-                                </form>
-                            </div>
+                                </div>
+                                <div class="mt-3 d-flex gap-2">
+                                    <button type="submit" name="guardar_operador" class="btn btn-primary">Guardar Registro</button>
+                                    <button type="button" id="btnLimpiar" class="btn btn-secondary">Limpiar y nuevo</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="reporteSection" style="display:none;">
+                    <div class="card h-100 border-success mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Reporte de Operadores</h5>
+                            <p class="text-muted">Filtra y ordena los registros existentes.</p>
+                            <form method="get" class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">VIN</label>
+                                    <input type="text" class="form-control" name="filtrar_vin" value="<?php echo htmlspecialchars($filter_vin); ?>" placeholder="Filtro por VIN">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Operador</label>
+                                    <input type="text" class="form-control" name="filtrar_nombre" value="<?php echo htmlspecialchars($filter_nombre); ?>" placeholder="Filtro por operador">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha desde</label>
+                                    <input type="date" class="form-control" name="filtrar_fecha_desde" value="<?php echo htmlspecialchars($filter_fecha_desde); ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha hasta</label>
+                                    <input type="date" class="form-control" name="filtrar_fecha_hasta" value="<?php echo htmlspecialchars($filter_fecha_hasta); ?>">
+                                </div>
+                                <div class="col-12 d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                                    <a href="Registro_Operadores.php" class="btn btn-outline-secondary">Limpiar filtros</a>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -253,22 +265,18 @@ if ($stmt = $conn->prepare($sql)) {
         document.getElementById('vin').focus();
     });
 
-    function toggleSection(buttonId, sectionId) {
-        const button = document.getElementById(buttonId);
-        const section = document.getElementById(sectionId);
-        button.addEventListener('click', function() {
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-                button.textContent = 'Ocultar';
-            } else {
-                section.style.display = 'none';
-                button.textContent = 'Ver';
-            }
-        });
-    }
+    const registroSection = document.getElementById('registroSection');
+    const reporteSection = document.getElementById('reporteSection');
 
-    toggleSection('toggleRegistro', 'registroCardBody');
-    toggleSection('toggleReporte', 'reporteCardBody');
+    document.getElementById('btnShowRegistro').addEventListener('click', function() {
+        registroSection.style.display = 'block';
+        reporteSection.style.display = 'none';
+    });
+
+    document.getElementById('btnShowReportes').addEventListener('click', function() {
+        reporteSection.style.display = 'block';
+        registroSection.style.display = 'none';
+    });
 </script>
 </body>
 </html>
