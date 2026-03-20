@@ -45,7 +45,9 @@ addColumnIfNotExists($conn, 'operador', 'Fecha', 'DATETIME NOT NULL DEFAULT CURR
 $mensaje = '';
 $error = '';
 $startSection = 'menu';
+$ajaxRequest = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) {
+    $ajaxRequest = isset($_POST['ajax']) && $_POST['ajax'] == '1';
     $startSection = 'registro';
     $vin = trim($_POST['vin'] ?? '');
     $nombre = trim($_POST['nombre'] ?? '');
@@ -68,6 +70,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
         } else {
             $error = 'Error de base de datos: ' . $conn->error;
         }
+    }
+
+    if ($ajaxRequest) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => empty($error),
+            'message' => empty($error) ? $mensaje : $error,
+            'section' => 'registro'
+        ]);
+        exit();
     }
 }
 
@@ -186,6 +198,7 @@ if ($searchExecuted) {
         <div class="col-md-9 col-lg-10 main-content">
             <div class="p-4">
                 <h1>Registro de Operadores</h1>
+                <div id="ajaxFeedback" style="display:none;" class="alert"></div>
                 <?php if ($mensaje): ?>
                     <div class="alert alert-success"><?php echo htmlspecialchars($mensaje); ?></div>
                 <?php endif; ?>
@@ -328,9 +341,48 @@ if ($searchExecuted) {
         document.querySelector('form[method="get"]').querySelector('input').focus();
     }
 
+    const feedback = document.getElementById('ajaxFeedback');
+
+    function showFeedback(success, message) {
+        if (!feedback) return;
+        feedback.style.display = 'block';
+        feedback.textContent = message;
+        if (success) {
+            feedback.className = 'alert alert-success';
+        } else {
+            feedback.className = 'alert alert-danger';
+        }
+        setTimeout(() => { feedback.style.display = 'none'; }, 4000);
+    }
+
+    async function submitFormAsync() {
+        if (vinInput.value.trim() === '' || operadorInput.value.trim() === '') {
+            return;
+        }
+
+        const formData = new FormData(formOperador);
+        formData.append('ajax', '1');
+
+        try {
+            const response = await fetch('Registro_Operadores.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+                vinInput.value = '';
+                operadorInput.value = '';
+                openRegistro();
+            }
+            showFeedback(data.success, data.message);
+        } catch (err) {
+            showFeedback(false, 'Error de red al guardar el registro');
+        }
+    }
+
     function submitIfReady() {
         if (vinInput.value.trim() !== '' && operadorInput.value.trim() !== '') {
-            formOperador.submit();
+            submitFormAsync();
         }
     }
 
@@ -342,7 +394,7 @@ if ($searchExecuted) {
             const now = Date.now();
             const currentValue = element.value;
             const isPaste = currentValue !== lastValue && currentValue.length > lastValue.length;
-            const isQuickInput = now - lastTime < 100; // Más tiempo para móviles
+            const isQuickInput = now - lastTime < 200; // Más tiempo para móviles
 
             if (isPaste || isQuickInput) {
                 // Posible escaneo detectado
@@ -392,6 +444,11 @@ if ($searchExecuted) {
         form.querySelector('input[name="filtrar_fecha_desde"]').value = '';
         form.querySelector('input[name="filtrar_fecha_hasta"]').value = '';
         form.submit();
+    });
+
+    formOperador.addEventListener('submit', function(event) {
+        event.preventDefault();
+        submitFormAsync();
     });
 
     handleScanOnInput(vinInput, operadorInput, null);
