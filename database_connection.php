@@ -32,9 +32,16 @@ if ($conn->connect_error) {
 $conn->set_charset("utf8mb4");
 
 // Fijar zona horaria de la sesion MySQL para CURRENT_TIMESTAMP y funciones NOW().
-if (!$conn->query("SET time_zone = 'America/Mexico_City'")) {
-    // Fallback para servidores sin tablas de zona horaria cargadas.
-    $conn->query("SET time_zone = '-06:00'");
+// En algunos hostings no estan cargadas las tablas de zona horaria por nombre.
+try {
+    $conn->query("SET time_zone = 'America/Mexico_City'");
+} catch (Throwable $e) {
+    // Fallback numerico estable para Mexico Centro (sin ajuste DST automatico).
+    try {
+        $conn->query("SET time_zone = '-06:00'");
+    } catch (Throwable $e2) {
+        // Si tampoco se puede establecer, continuamos con la zona por defecto del servidor.
+    }
 }
 
 ?>
