@@ -354,6 +354,16 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             letter-spacing: 2px;
             box-shadow: 0 2px 8px 0 rgba(60,60,120,0.04);
         }
+        .modern-input.scan-locked {
+            background: #f8fbff;
+            cursor: pointer;
+        }
+        .vin-hint {
+            margin-top: 0.45rem;
+            color: #5b6b8a;
+            font-size: 0.92rem;
+            font-weight: 500;
+        }
         .modern-btn {
             border-radius: 12px;
             font-size: 1.1rem;
@@ -540,8 +550,9 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                         <form method="post" id="formBuscar" class="d-flex flex-row gap-3 align-items-end" style="width: 100%;">
                             <div class="flex-grow-1">
                                 <label class="modern-label">VIN</label>
-                                <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required placeholder="Escanea o ingresa el VIN">
+                                <input type="text" id="qrInput" name="vin" class="modern-input scan-locked" value="<?php echo htmlspecialchars($vin); ?>" required placeholder="Escanea o ingresa el VIN" readonly>
                                 <div id="scanStatus" style="margin-top:0.4rem; color:#236fa1; font-weight:600; font-size:0.94rem; display:none;">Escaneo detectado: buscando...</div>
+                                <div id="vinHint" class="vin-hint">Escanea directamente o toca dos veces para escribir manualmente.</div>
                             </div>
                             <div class="d-flex align-items-end gap-2 vin-actions"></div>
                             <div class="vin-submit">
@@ -758,13 +769,38 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             const vinInput = document.getElementById('qrInput');
             const formBuscar = document.getElementById('formBuscar');
             const scanStatus = document.getElementById('scanStatus');
+            const vinHint = document.getElementById('vinHint');
             const MIN_VIN_LENGTH = 17;
             const isMobileViewport = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
             let submitTimeout = null;
             let lastVinSubmitted = vinInput.value.trim();
+            let scannerBuffer = '';
+            let scannerTimer = null;
+            let manualTapArmed = false;
 
             if (vinInput && !isMobileViewport) {
                 vinInput.focus();
+            }
+
+            function lockManualEntry() {
+                manualTapArmed = false;
+                vinInput.setAttribute('readonly', 'readonly');
+                vinInput.classList.add('scan-locked');
+                if (vinHint) {
+                    vinHint.textContent = 'Escanea directamente o toca dos veces para escribir manualmente.';
+                }
+            }
+
+            function enableManualEntry() {
+                vinInput.removeAttribute('readonly');
+                vinInput.classList.remove('scan-locked');
+                if (vinHint) {
+                    vinHint.textContent = 'Modo manual activo. Escribe el VIN o escanéalo.';
+                }
+                setTimeout(function() {
+                    vinInput.focus();
+                    vinInput.setSelectionRange(vinInput.value.length, vinInput.value.length);
+                }, 0);
             }
 
             function clearStatus() {
@@ -786,6 +822,14 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 formBuscar.submit();
             }
 
+            function submitBufferedScan() {
+                const vinValue = scannerBuffer.trim();
+                scannerBuffer = '';
+                if (!vinValue) return;
+                vinInput.value = vinValue;
+                autoSubmit();
+            }
+
             vinInput.addEventListener('input', function() {
                 const vinValue = vinInput.value.trim();
                 if (submitTimeout) clearTimeout(submitTimeout);
@@ -802,11 +846,62 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 submitTimeout = setTimeout(autoSubmit, 80);
             });
 
+            vinInput.addEventListener('pointerdown', function(event) {
+                if (!isMobileViewport) return;
+
+                if (!manualTapArmed) {
+                    event.preventDefault();
+                    manualTapArmed = true;
+                    if (vinHint) {
+                        vinHint.textContent = 'Toca de nuevo para abrir el teclado manual.';
+                    }
+                    setTimeout(function() {
+                        if (manualTapArmed && vinInput.hasAttribute('readonly')) {
+                            lockManualEntry();
+                        }
+                    }, 2500);
+                    return;
+                }
+
+                enableManualEntry();
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (!isMobileViewport) return;
+                if (document.activeElement === vinInput && !vinInput.hasAttribute('readonly')) return;
+                if (event.ctrlKey || event.altKey || event.metaKey) return;
+
+                if (event.key === 'Enter') {
+                    if (scannerTimer) clearTimeout(scannerTimer);
+                    if (scannerBuffer.length >= MIN_VIN_LENGTH) {
+                        submitBufferedScan();
+                    } else {
+                        scannerBuffer = '';
+                    }
+                    return;
+                }
+
+                if (event.key.length !== 1) return;
+
+                scannerBuffer += event.key;
+                if (scannerTimer) clearTimeout(scannerTimer);
+                scannerTimer = setTimeout(function() {
+                    if (scannerBuffer.length >= MIN_VIN_LENGTH) {
+                        submitBufferedScan();
+                    } else {
+                        scannerBuffer = '';
+                    }
+                }, 120);
+            });
+
             const finalizarBtn = document.getElementById('finalizarRegistr');
             if (finalizarBtn) {
                 finalizarBtn.addEventListener('click', function() {
                     if (submitTimeout) clearTimeout(submitTimeout);
+                    if (scannerTimer) clearTimeout(scannerTimer);
+                    scannerBuffer = '';
                     vinInput.value = '';
+                    lockManualEntry();
                     clearStatus();
                     lastVinSubmitted = '';
                     // Retornar a pantalla inicial para buscar otro VIN
@@ -815,7 +910,16 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             }
 
             vinInput.addEventListener('focus', clearStatus);
-            vinInput.addEventListener('blur', clearStatus);
+            vinInput.addEventListener('blur', function() {
+                clearStatus();
+                if (isMobileViewport && !vinInput.value.trim()) {
+                    lockManualEntry();
+                }
+            });
+
+            if (isMobileViewport) {
+                lockManualEntry();
+            }
         })();
     </script>
 </body>
