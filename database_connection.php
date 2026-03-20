@@ -1,12 +1,10 @@
 <?php
-// Conexión a base de datos MySQL
-$servername = "localhost"; // Generalmente localhost en Hostinger
-$username = "u174025152_Administrador"; // Usuario de Hostinger
-$password = "0066jv_A2"; // Contraseña de Hostinger
-$dbname = "u174025152_EIR"; // Nombre de la base de datos
 
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
+// Incluir configuración segura
+include 'config.php';
+
+// Conexión a base de datos MySQL usando constantes seguras
+$conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
 // Verificar conexión
 if ($conn->connect_error) {

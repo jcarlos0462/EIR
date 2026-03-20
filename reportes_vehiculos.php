@@ -11,13 +11,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // DB connection (same credentials used elsewhere)
-$servername = "localhost";
-$username = "u174025152_Administrador";
-$password = "0066jv_A2";
-$dbname = "u174025152_EIR";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) die("Conexión fallida: " . $conn->connect_error);
+include 'database_connection.php';
 
 require_once 'access_control.php';
 require_module_access($conn, 'reportes');

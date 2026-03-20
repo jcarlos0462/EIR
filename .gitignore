@@ -1,0 +1,6 @@
+# Archivos sensibles
+config.php
+
+# Otros comunes
+*.log
+.env

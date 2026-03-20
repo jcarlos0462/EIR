@@ -2,16 +2,7 @@
 session_start();
 
 // Conexión a la base de datos
-$servername = "localhost";
-$username = "u174025152_Administrador";
-$password = "0066jv_A2";
-$dbname = "u174025152_EIR";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
+include 'database_connection.php';
 
 // Verificar si se envió el formulario
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

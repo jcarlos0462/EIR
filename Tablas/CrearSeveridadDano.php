@@ -1,17 +1,6 @@
 <?php
 // Conexión a la base de datos en Hostinger
-$servername = "localhost";
-$username = "u174025152_Administrador";
-$password = "0066jv_A2";
-$dbname = "u174025152_EIR";
-
-// Crear conexión
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Verificar conexión
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
+include '../database_connection.php';
 
 // Crear tabla severidad de daño
 $sql = "CREATE TABLE IF NOT EXISTS severidaddano (
