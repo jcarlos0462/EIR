@@ -317,30 +317,29 @@ if ($stmt = $conn->prepare($sql)) {
     }
 
     function handleScanOnInput(element, nextElement, onComplete) {
-        let buffer = '';
+        let lastValue = element.value;
         let lastTime = 0;
-        element.addEventListener('keydown', function(e) {
+
+        function checkForScan() {
             const now = Date.now();
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                element.value = element.value.replace(/\r?\n$/, '');
+            const currentValue = element.value;
+            const isPaste = currentValue !== lastValue && currentValue.length > lastValue.length;
+            const isQuickInput = now - lastTime < 100; // Más tiempo para móviles
+
+            if (isPaste || isQuickInput) {
+                // Posible escaneo detectado
                 if (nextElement) {
-                    nextElement.focus();
+                    setTimeout(() => nextElement.focus(), 50);
                 }
                 if (onComplete) {
-                    onComplete();
+                    setTimeout(onComplete, 100);
                 }
-                return;
             }
-
-            if (now - lastTime < 60) {
-                buffer += e.key;
-            } else {
-                buffer = e.key;
-            }
+            lastValue = currentValue;
             lastTime = now;
-        });
+        }
 
+        element.addEventListener('input', checkForScan);
         element.addEventListener('paste', function() {
             setTimeout(function() {
                 if (nextElement) {
@@ -351,10 +350,15 @@ if ($stmt = $conn->prepare($sql)) {
                 }
             }, 50);
         });
-
-        element.addEventListener('blur', function() {
-            if (!nextElement && onComplete) {
-                onComplete();
+        element.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (nextElement) {
+                    nextElement.focus();
+                }
+                if (onComplete) {
+                    onComplete();
+                }
             }
         });
     }
