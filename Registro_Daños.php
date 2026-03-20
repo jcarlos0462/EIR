@@ -540,7 +540,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                         <form method="post" id="formBuscar" class="d-flex flex-row gap-3 align-items-end" style="width: 100%;">
                             <div class="flex-grow-1">
                                 <label class="modern-label">VIN</label>
-                                <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required autofocus placeholder="Escanea o ingresa el VIN">
+                                <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required placeholder="Escanea o ingresa el VIN">
                                 <div id="scanStatus" style="margin-top:0.4rem; color:#236fa1; font-weight:600; font-size:0.94rem; display:none;">Escaneo detectado: buscando...</div>
                             </div>
                             <div class="d-flex align-items-end gap-2 vin-actions"></div>
@@ -759,8 +759,13 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             const formBuscar = document.getElementById('formBuscar');
             const scanStatus = document.getElementById('scanStatus');
             const MIN_VIN_LENGTH = 17;
+            const isMobileViewport = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
             let submitTimeout = null;
             let lastVinSubmitted = vinInput.value.trim();
+
+            if (vinInput && !isMobileViewport) {
+                vinInput.focus();
+            }
 
             function clearStatus() {
                 if (scanStatus) {
