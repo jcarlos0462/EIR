@@ -144,6 +144,7 @@ $allowedSorts = ['ID', 'VIN', 'Nombre', 'Fecha'];
 if (!in_array($sortBy, $allowedSorts)) {
     $sortBy = 'Fecha';
 }
+$exportExcel = isset($_GET['export_excel']) && $_GET['export_excel'] === '1';
 
 $registros = [];
 
@@ -169,6 +170,118 @@ if ($searchExecuted) {
     die('Error al cargar registros de operador: ' . $conn->error);
 }
 } // end if searchExecuted
+
+if ($exportExcel) {
+    ob_clean();
+    $baseName = 'reporte_operadores_' . date('Ymd_His');
+
+    if (!class_exists('ZipArchive')) {
+        // Fallback si el servidor no soporta crear XLSX.
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $baseName . '.csv"');
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF");
+        fputcsv($output, ['ID', 'VIN', 'Operador', 'Fecha']);
+        foreach ($registros as $row) {
+            fputcsv($output, [
+                $row['ID'] ?? '',
+                $row['VIN'] ?? '',
+                $row['Nombre'] ?? '',
+                $row['Fecha'] ?? ''
+            ]);
+        }
+        fclose($output);
+        exit();
+    }
+
+    $rows = [];
+    $rows[] = ['ID', 'VIN', 'Operador', 'Fecha'];
+    foreach ($registros as $row) {
+        $rows[] = [
+            (string)($row['ID'] ?? ''),
+            (string)($row['VIN'] ?? ''),
+            (string)($row['Nombre'] ?? ''),
+            (string)($row['Fecha'] ?? '')
+        ];
+    }
+
+    $cellRef = function($colIndex, $rowIndex) {
+        $col = '';
+        $n = $colIndex;
+        while ($n > 0) {
+            $mod = ($n - 1) % 26;
+            $col = chr(65 + $mod) . $col;
+            $n = intval(($n - $mod) / 26);
+        }
+        return $col . $rowIndex;
+    };
+
+    $sheetRowsXml = '';
+    $rIndex = 1;
+    foreach ($rows as $rowData) {
+        $sheetRowsXml .= '<row r="' . $rIndex . '">';
+        $cIndex = 1;
+        foreach ($rowData as $cellValue) {
+            $ref = $cellRef($cIndex, $rIndex);
+            $escaped = htmlspecialchars($cellValue, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+            $sheetRowsXml .= '<c r="' . $ref . '" t="inlineStr"><is><t>' . $escaped . '</t></is></c>';
+            $cIndex++;
+        }
+        $sheetRowsXml .= '</row>';
+        $rIndex++;
+    }
+
+    $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        . '<sheetData>' . $sheetRowsXml . '</sheetData>'
+        . '</worksheet>';
+
+    $workbookXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+        . 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        . '<sheets><sheet name="Reporte" sheetId="1" r:id="rId1"/></sheets>'
+        . '</workbook>';
+
+    $relsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+        . '</Relationships>';
+
+    $workbookRelsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+        . '</Relationships>';
+
+    $contentTypesXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        . '<Default Extension="xml" ContentType="application/xml"/>'
+        . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+        . '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+        . '</Types>';
+
+    $tmpFile = tempnam(sys_get_temp_dir(), 'xlsx_');
+    $zip = new ZipArchive();
+    if ($zip->open($tmpFile, ZipArchive::OVERWRITE) !== true) {
+        http_response_code(500);
+        echo 'No se pudo generar el archivo XLSX.';
+        exit();
+    }
+
+    $zip->addFromString('[Content_Types].xml', $contentTypesXml);
+    $zip->addFromString('_rels/.rels', $relsXml);
+    $zip->addFromString('xl/workbook.xml', $workbookXml);
+    $zip->addFromString('xl/_rels/workbook.xml.rels', $workbookRelsXml);
+    $zip->addFromString('xl/worksheets/sheet1.xml', $sheetXml);
+    $zip->close();
+
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="' . $baseName . '.xlsx"');
+    header('Content-Length: ' . filesize($tmpFile));
+    readfile($tmpFile);
+    @unlink($tmpFile);
+    exit();
+}
 
 ?>
 <html lang="es">
@@ -295,6 +408,7 @@ if ($searchExecuted) {
                                 <div class="col-12 d-flex gap-2">
                                     <button type="submit" class="btn btn-primary">Aplicar filtros</button>
                                     <button type="button" class="btn btn-outline-secondary" id="btnLimpiarFiltros">Limpiar filtros</button>
+                                    <button type="submit" class="btn btn-success" name="export_excel" value="1">Exportar Excel</button>
                                 </div>
                             </form>
                             <hr>
