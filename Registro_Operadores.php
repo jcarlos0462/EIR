@@ -151,7 +151,7 @@ if ($stmt = $conn->prepare($sql)) {
                     <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
                 <?php endif; ?>
 
-                <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+                <div id="mainMenu" class="row row-cols-1 row-cols-md-2 g-4 mb-4">
                     <div class="col">
                         <div class="card text-center shadow-sm">
                             <div class="card-body">
@@ -173,7 +173,10 @@ if ($stmt = $conn->prepare($sql)) {
                 <div id="registroSection" style="display:none;">
                     <div class="card h-100 border-primary mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">Registro de Operador</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title">Registro de Operador</h5>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnBackFromRegistro">Atrás</button>
+                            </div>
                             <p class="text-muted">Agrega un nuevo registro de operador con VIN y nombre.</p>
                             <form method="post" id="formOperador">
                                 <div class="row g-3">
@@ -198,7 +201,10 @@ if ($stmt = $conn->prepare($sql)) {
                 <div id="reporteSection" style="display:none;">
                     <div class="card h-100 border-success mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">Reporte de Operadores</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title">Reporte de Operadores</h5>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnBackFromReporte">Atrás</button>
+                            </div>
                             <p class="text-muted">Filtra y ordena los registros existentes.</p>
                             <form method="get" class="row g-3">
                                 <div class="col-md-6">
@@ -222,25 +228,19 @@ if ($stmt = $conn->prepare($sql)) {
                                     <a href="Registro_Operadores.php" class="btn btn-outline-secondary">Limpiar filtros</a>
                                 </div>
                             </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Operadores registrados</h5>
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>VIN</th>
-                                        <th>Operador</th>
-                                        <th>Fecha</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($registros as $row): ?>
+                            <hr>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>VIN</th>
+                                            <th>Operador</th>
+                                            <th>Fecha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($registros as $row): ?>
                                         <tr>
                                             <td><?php echo intval($row['ID']); ?></td>
                                             <td><?php echo htmlspecialchars($row['VIN']); ?></td>
@@ -267,16 +267,30 @@ if ($stmt = $conn->prepare($sql)) {
 
     const registroSection = document.getElementById('registroSection');
     const reporteSection = document.getElementById('reporteSection');
+    const mainMenu = document.getElementById('mainMenu');
+
+    function showMenu() {
+        mainMenu.style.display = 'flex';
+        registroSection.style.display = 'none';
+        reporteSection.style.display = 'none';
+    }
 
     document.getElementById('btnShowRegistro').addEventListener('click', function() {
+        mainMenu.style.display = 'none';
         registroSection.style.display = 'block';
         reporteSection.style.display = 'none';
     });
 
     document.getElementById('btnShowReportes').addEventListener('click', function() {
+        mainMenu.style.display = 'none';
         reporteSection.style.display = 'block';
         registroSection.style.display = 'none';
     });
+
+    document.getElementById('btnBackFromRegistro').addEventListener('click', showMenu);
+    document.getElementById('btnBackFromReporte').addEventListener('click', showMenu);
+
+    showMenu();
 </script>
 </body>
 </html>
