@@ -187,7 +187,6 @@ if ($searchExecuted) {
         button#btnShowRegistro, button#btnShowReportes { min-width: 110px; }
 
         @media (max-width: 767px) {
-            body { padding-top: 80px; }
             .main-content { padding: 1rem; }
             .col-md-9, .col-lg-10 { width: 100% !important; max-width: 100% !important; }
             #mainMenu .card { min-height: auto; }
