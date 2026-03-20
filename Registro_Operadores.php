@@ -147,6 +147,7 @@ if (!in_array($sortBy, $allowedSorts)) {
 $exportExcel = isset($_GET['export_excel']) && $_GET['export_excel'] === '1';
 
 $registros = [];
+$conteoOperadores = [];
 
 if ($searchExecuted) {
     $sql = 'SELECT * FROM operador';
@@ -169,6 +170,26 @@ if ($searchExecuted) {
 } else {
     die('Error al cargar registros de operador: ' . $conn->error);
 }
+
+    $sqlConteo = 'SELECT Nombre, COUNT(*) AS total_movimientos FROM operador';
+    if (!empty($where)) {
+        $sqlConteo .= ' WHERE ' . implode(' AND ', $where);
+    }
+    $sqlConteo .= ' GROUP BY Nombre ORDER BY total_movimientos DESC, Nombre ASC';
+
+    if ($stmtConteo = $conn->prepare($sqlConteo)) {
+        if (!empty($params)) {
+            $stmtConteo->bind_param($types, ...$params);
+        }
+        $stmtConteo->execute();
+        $resultConteo = $stmtConteo->get_result();
+        while ($rowConteo = $resultConteo->fetch_assoc()) {
+            $conteoOperadores[] = $rowConteo;
+        }
+        $stmtConteo->close();
+    } else {
+        die('Error al cargar conteo por operador: ' . $conn->error);
+    }
 } // end if searchExecuted
 
 if ($exportExcel) {
@@ -412,6 +433,35 @@ if ($exportExcel) {
                                 </div>
                             </form>
                             <hr>
+                            <?php if ($searchExecuted): ?>
+                                <div class="mb-4">
+                                    <h6 class="mb-3">Conteo de movimientos por operador</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered align-middle mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Operador</th>
+                                                    <th>Total movimientos</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php if (!empty($conteoOperadores)): ?>
+                                                    <?php foreach ($conteoOperadores as $item): ?>
+                                                        <tr>
+                                                            <td><?php echo htmlspecialchars($item['Nombre']); ?></td>
+                                                            <td><?php echo intval($item['total_movimientos']); ?></td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <tr>
+                                                        <td colspan="2" class="text-center text-muted">Sin datos para mostrar</td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <thead>
