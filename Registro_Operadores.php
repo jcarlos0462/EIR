@@ -1,11 +1,21 @@
 <?php
+ob_start(); // Inicia output buffering para limpiar cualquier salida accidental
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-date_default_timezone_set('America/Mexico_City'); // Hora central México
+date_default_timezone_set('America/Mexico_City');
 session_start();
-include 'database_connection.php';
-require_once 'access_control.php';
+
+try {
+    include 'database_connection.php';
+    require_once 'access_control.php';
+} catch (Exception $e) {
+    ob_clean();
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Error al conectar base de datos: ' . $e->getMessage()]);
+    exit();
+}
 // Deshabilitar temporalmente control de acceso a módulo para evitar bloqueos HTTP 500
 //require_module_access($conn, 'operadores');
 
@@ -57,7 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
     } else {
         $fecha = date('Y-m-d H:i:s');
         $stmt = $conn->prepare("INSERT INTO operador (VIN, Nombre, Fecha) VALUES (?, ?, ?)");
-        if ($stmt) {
+        if (!$stmt) {
+            $error = 'Error al preparar consulta: ' . $conn->error;
+        } else {
             $stmt->bind_param('sss', $vin, $nombre, $fecha);
             if ($stmt->execute()) {
                 $mensaje = 'Registro guardado correctamente.';
@@ -67,13 +79,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
                 $error = 'Error al guardar el registro: ' . $stmt->error;
             }
             $stmt->close();
-        } else {
-            $error = 'Error de base de datos: ' . $conn->error;
         }
     }
 
     if ($ajaxRequest) {
+        ob_clean(); // Limpia cualquier salida accidental
         header('Content-Type: application/json');
+        http_response_code(200);
         echo json_encode([
             'success' => empty($error),
             'message' => empty($error) ? $mensaje : $error,
@@ -167,7 +179,6 @@ if ($searchExecuted) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="navbar_styles.css">
     <style>
-        @import url('navbar_styles.css');
 
         body { min-height: 100vh; }
         .main-content { background: #f8f9fa; min-height: 100vh; }
@@ -362,13 +373,31 @@ if ($searchExecuted) {
 
         const formData = new FormData(formOperador);
         formData.append('ajax', '1');
+        formData.append('guardar_operador', '1');
 
         try {
             const response = await fetch('Registro_Operadores.php', {
                 method: 'POST',
                 body: formData
             });
-            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+            }
+
+            const text = await response.text();
+            console.log('Respuesta del servidor:', text.substring(0, 500));
+            
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (jsonError) {
+                console.error('Error al parsear JSON:', jsonError);
+                console.error('Respuesta recibida:', text);
+                showFeedback(false, 'Error del servidor: respuesta no válida');
+                return;
+            }
+
             if (data.success) {
                 vinInput.value = '';
                 operadorInput.value = '';
@@ -376,7 +405,9 @@ if ($searchExecuted) {
             }
             showFeedback(data.success, data.message);
         } catch (err) {
-            showFeedback(false, 'Error de red al guardar el registro');
+            console.error('submitFormAsync error completo:', err);
+            console.error('Stack:', err.stack);
+            showFeedback(false, 'Error de red: ' + err.message);
         }
     }
 
