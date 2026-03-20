@@ -1,5 +1,8 @@
 <?php
 
+// Estandariza la zona horaria de la app en Mexico Centro.
+date_default_timezone_set('America/Mexico_City');
+
 // Incluir configuración segura.
 // Soporta config.php en el mismo directorio o en el padre.
 if (file_exists(__DIR__ . '/config.php')) {
@@ -27,5 +30,11 @@ if ($conn->connect_error) {
 
 // Configurar charset UTF-8
 $conn->set_charset("utf8mb4");
+
+// Fijar zona horaria de la sesion MySQL para CURRENT_TIMESTAMP y funciones NOW().
+if (!$conn->query("SET time_zone = 'America/Mexico_City'")) {
+    // Fallback para servidores sin tablas de zona horaria cargadas.
+    $conn->query("SET time_zone = '-06:00'");
+}
 
 ?>

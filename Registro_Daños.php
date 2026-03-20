@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('America/Mexico_City');
 // Habilitar reporte de errores para depuración temporal
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
