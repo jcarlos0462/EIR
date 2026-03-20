@@ -430,17 +430,20 @@ if ($searchExecuted) {
         }
     }
 
-    function handleScanOnInput(element, nextElement, onComplete) {
+    function handleScanOnInput(element, nextElement, onComplete, minLength) {
         let lastValue = element.value;
         let lastTime = 0;
+        const threshold = typeof minLength === 'number' ? minLength : 1;
 
         function checkForScan() {
             const now = Date.now();
             const currentValue = element.value;
             const isPaste = currentValue !== lastValue && currentValue.length > lastValue.length;
             const isQuickInput = now - lastTime < 200; // Más tiempo para móviles
+            const hasEnoughLength = currentValue.trim().length >= threshold;
+            const valueChanged = currentValue !== lastValue;
 
-            if (isPaste || isQuickInput) {
+            if (valueChanged && (isPaste || isQuickInput || hasEnoughLength)) {
                 // Posible escaneo detectado
                 if (nextElement) {
                     setTimeout(() => focusField(nextElement), 50);
@@ -501,8 +504,8 @@ if ($searchExecuted) {
         submitFormAsync();
     });
 
-    handleScanOnInput(vinInput, operadorInput, null);
-    handleScanOnInput(operadorInput, null, submitIfReady);
+    handleScanOnInput(vinInput, operadorInput, null, 17);
+    handleScanOnInput(operadorInput, null, submitIfReady, 2);
 
     var initialSection = '<?php echo $startSection; ?>';
     if (initialSection === 'registro') {
