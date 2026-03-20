@@ -135,13 +135,22 @@ if ($stmt = $conn->prepare($sql)) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="navbar_styles.css">
     <style>
+        @import url('navbar_styles.css');
+
         body { min-height: 100vh; }
-        .page-content { max-width: 100%; }
-        #mainMenu .card { min-height: 180px; }
+        .main-content { background: #f8f9fa; min-height: 100vh; }
+        #mainMenu .card { min-height: 180px; border: 1px solid #e9ecef; border-radius: 12px; }
+        #mainMenu .card .card-body { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        button#btnShowRegistro, button#btnShowReportes { min-width: 110px; }
+
         @media (max-width: 767px) {
+            body { padding-top: 80px; }
+            .main-content { padding: 1rem; }
+            .col-md-9, .col-lg-10 { width: 100% !important; max-width: 100% !important; }
             #mainMenu .card { min-height: auto; }
             .card-body { padding: 1rem; }
         }
+
         @media (max-width: 1199px) {
             .container-fluid > .row > .col-md-9 { padding-left: 1rem; padding-right: 1rem; }
         }
@@ -154,7 +163,7 @@ if ($stmt = $conn->prepare($sql)) {
         <div class="col-md-3 col-lg-2">
             <?php include 'sidebar.php'; ?>
         </div>
-        <div class="col-md-9 col-lg-10">
+        <div class="col-md-9 col-lg-10 main-content">
             <div class="p-4">
                 <h1>Registro de Operadores</h1>
                 <?php if ($mensaje): ?>
