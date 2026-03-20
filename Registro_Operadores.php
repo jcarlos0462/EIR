@@ -44,7 +44,9 @@ addColumnIfNotExists($conn, 'operador', 'Fecha', 'DATETIME NOT NULL DEFAULT CURR
 
 $mensaje = '';
 $error = '';
+$startSection = 'menu';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) {
+    $startSection = 'registro';
     $vin = trim($_POST['vin'] ?? '');
     $nombre = trim($_POST['nombre'] ?? '');
 
@@ -79,6 +81,7 @@ $where = [];
 $params = [];
 $types = '';
 if ($filter_vin !== '') {
+    $startSection = 'reporte';
     $where[] = 'VIN LIKE ?';
     $params[] = '%' . $filter_vin . '%';
     $types .= 's';
@@ -297,22 +300,31 @@ if ($stmt = $conn->prepare($sql)) {
         reporteSection.style.display = 'none';
     }
 
-    document.getElementById('btnShowRegistro').addEventListener('click', function() {
+    function openRegistro() {
         mainMenu.style.display = 'none';
         registroSection.style.display = 'block';
         reporteSection.style.display = 'none';
-    });
+    }
 
-    document.getElementById('btnShowReportes').addEventListener('click', function() {
+    function openReporte() {
         mainMenu.style.display = 'none';
         reporteSection.style.display = 'block';
         registroSection.style.display = 'none';
-    });
+    }
 
+    document.getElementById('btnShowRegistro').addEventListener('click', openRegistro);
+    document.getElementById('btnShowReportes').addEventListener('click', openReporte);
     document.getElementById('btnBackFromRegistro').addEventListener('click', showMenu);
     document.getElementById('btnBackFromReporte').addEventListener('click', showMenu);
 
-    showMenu();
+    var initialSection = '<?php echo $startSection; ?>';
+    if (initialSection === 'registro') {
+        openRegistro();
+    } else if (initialSection === 'reporte') {
+        openReporte();
+    } else {
+        showMenu();
+    }
 </script>
 </body>
 </html>
