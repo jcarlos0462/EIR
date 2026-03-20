@@ -76,6 +76,11 @@ $filter_vin = trim($_GET['filtrar_vin'] ?? '');
 $filter_nombre = trim($_GET['filtrar_nombre'] ?? '');
 $filter_fecha_desde = trim($_GET['filtrar_fecha_desde'] ?? '');
 $filter_fecha_hasta = trim($_GET['filtrar_fecha_hasta'] ?? '');
+$report_section = isset($_GET['report_section']) && $_GET['report_section'] === '1';
+
+if ($report_section) {
+    $startSection = 'reporte';
+}
 
 $where = [];
 $params = [];
@@ -230,7 +235,8 @@ if ($stmt = $conn->prepare($sql)) {
                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="btnBackFromReporte">Atrás</button>
                             </div>
                             <p class="text-muted">Filtra y ordena los registros existentes.</p>
-                            <form method="get" class="row g-3">
+                            <form method="get" id="formReporte" class="row g-3">
+                                <input type="hidden" name="report_section" value="1">
                                 <div class="col-md-6">
                                     <label class="form-label">VIN</label>
                                     <input type="text" class="form-control" name="filtrar_vin" value="<?php echo htmlspecialchars($filter_vin); ?>" placeholder="Filtro por VIN">
@@ -249,7 +255,7 @@ if ($stmt = $conn->prepare($sql)) {
                                 </div>
                                 <div class="col-12 d-flex gap-2">
                                     <button type="submit" class="btn btn-primary">Aplicar filtros</button>
-                                    <a href="Registro_Operadores.php" class="btn btn-outline-secondary">Limpiar filtros</a>
+                                    <button type="button" class="btn btn-outline-secondary" id="btnLimpiarFiltros">Limpiar filtros</button>
                                 </div>
                             </form>
                             <hr>
@@ -367,6 +373,14 @@ if ($stmt = $conn->prepare($sql)) {
     document.getElementById('btnShowReportes').addEventListener('click', openReporte);
     document.getElementById('btnBackFromRegistro').addEventListener('click', showMenu);
     document.getElementById('btnBackFromReporte').addEventListener('click', showMenu);
+    document.getElementById('btnLimpiarFiltros').addEventListener('click', function() {
+        var form = document.getElementById('formReporte');
+        form.querySelector('input[name="filtrar_vin"]').value = '';
+        form.querySelector('input[name="filtrar_nombre"]').value = '';
+        form.querySelector('input[name="filtrar_fecha_desde"]').value = '';
+        form.querySelector('input[name="filtrar_fecha_hasta"]').value = '';
+        form.submit();
+    });
 
     handleScanOnInput(vinInput, operadorInput, null);
     handleScanOnInput(operadorInput, null, submitIfReady);
