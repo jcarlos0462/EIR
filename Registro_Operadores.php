@@ -299,6 +299,7 @@ if ($exportExcel) {
         #mainMenu .card .card-body { display: flex; flex-direction: column; justify-content: center; align-items: center; }
         button#btnShowRegistro, button#btnShowReportes { min-width: 110px; }
         .scan-hint { color: #5b6b8a; font-size: 0.92rem; font-weight: 500; }
+        .btn-export-xlsx { min-width: 170px; font-weight: 600; }
 
         @media (max-width: 767px) {
             .main-content { padding: 1rem; }
@@ -405,10 +406,14 @@ if ($exportExcel) {
                                     <label class="form-label">Fecha hasta</label>
                                     <input type="date" class="form-control" name="filtrar_fecha_hasta" value="<?php echo htmlspecialchars($filter_fecha_hasta); ?>">
                                 </div>
-                                <div class="col-12 d-flex gap-2">
+                                <div class="col-12 d-flex gap-2 flex-wrap">
                                     <button type="submit" class="btn btn-primary">Aplicar filtros</button>
                                     <button type="button" class="btn btn-outline-secondary" id="btnLimpiarFiltros">Limpiar filtros</button>
-                                    <button type="submit" class="btn btn-success" name="export_excel" value="1">Exportar Excel</button>
+                                </div>
+                                <div class="col-12 d-flex justify-content-start">
+                                    <button type="submit" class="btn btn-success btn-export-xlsx" name="export_excel" value="1" id="btnExportarExcel">
+                                        Exportar Excel (.xlsx)
+                                    </button>
                                 </div>
                             </form>
                             <hr>
