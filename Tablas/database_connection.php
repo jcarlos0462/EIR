@@ -1,7 +1,7 @@
 <?php
 
 // Incluir configuración segura
-include '../config.php';
+require_once __DIR__ . '/../config.php';
 
 // Conexión a base de datos MySQL usando constantes seguras
 $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
