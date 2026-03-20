@@ -133,6 +133,18 @@ if ($stmt = $conn->prepare($sql)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Operadores</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { min-height: 100vh; }
+        .page-content { max-width: 100%; }
+        #mainMenu .card { min-height: 180px; }
+        @media (max-width: 767px) {
+            #mainMenu .card { min-height: auto; }
+            .card-body { padding: 1rem; }
+        }
+        @media (max-width: 1199px) {
+            .container-fluid > .row > .col-md-9 { padding-left: 1rem; padding-right: 1rem; }
+        }
+    </style>
 </head>
 <body>
 <?php include 'navbar.php'; ?>
