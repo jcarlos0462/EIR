@@ -214,9 +214,8 @@ if ($stmt = $conn->prepare($sql)) {
                                         <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" required>
                                     </div>
                                 </div>
-                                <div class="mt-3 d-flex gap-2">
+                                <div class="mt-3">
                                     <button type="submit" name="guardar_operador" class="btn btn-primary">Guardar Registro</button>
-                                    <button type="button" id="btnLimpiar" class="btn btn-secondary">Limpiar y nuevo</button>
                                 </div>
                             </form>
                         </div>
