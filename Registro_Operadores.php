@@ -283,15 +283,12 @@ if ($stmt = $conn->prepare($sql)) {
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.getElementById('btnLimpiar').addEventListener('click', function() {
-        document.getElementById('vin').value = '';
-        document.getElementById('nombre').value = '';
-        document.getElementById('vin').focus();
-    });
-
     const registroSection = document.getElementById('registroSection');
     const reporteSection = document.getElementById('reporteSection');
     const mainMenu = document.getElementById('mainMenu');
+    const formOperador = document.getElementById('formOperador');
+    const vinInput = document.getElementById('vin');
+    const operadorInput = document.getElementById('nombre');
 
     function showMenu() {
         mainMenu.style.display = 'flex';
@@ -303,18 +300,72 @@ if ($stmt = $conn->prepare($sql)) {
         mainMenu.style.display = 'none';
         registroSection.style.display = 'block';
         reporteSection.style.display = 'none';
+        vinInput.focus();
     }
 
     function openReporte() {
         mainMenu.style.display = 'none';
         reporteSection.style.display = 'block';
         registroSection.style.display = 'none';
+        document.querySelector('form[method="get"]').querySelector('input').focus();
+    }
+
+    function submitIfReady() {
+        if (vinInput.value.trim() !== '' && operadorInput.value.trim() !== '') {
+            formOperador.submit();
+        }
+    }
+
+    function handleScanOnInput(element, nextElement, onComplete) {
+        let buffer = '';
+        let lastTime = 0;
+        element.addEventListener('keydown', function(e) {
+            const now = Date.now();
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                element.value = element.value.replace(/\r?\n$/, '');
+                if (nextElement) {
+                    nextElement.focus();
+                }
+                if (onComplete) {
+                    onComplete();
+                }
+                return;
+            }
+
+            if (now - lastTime < 60) {
+                buffer += e.key;
+            } else {
+                buffer = e.key;
+            }
+            lastTime = now;
+        });
+
+        element.addEventListener('paste', function() {
+            setTimeout(function() {
+                if (nextElement) {
+                    nextElement.focus();
+                }
+                if (onComplete) {
+                    onComplete();
+                }
+            }, 50);
+        });
+
+        element.addEventListener('blur', function() {
+            if (!nextElement && onComplete) {
+                onComplete();
+            }
+        });
     }
 
     document.getElementById('btnShowRegistro').addEventListener('click', openRegistro);
     document.getElementById('btnShowReportes').addEventListener('click', openReporte);
     document.getElementById('btnBackFromRegistro').addEventListener('click', showMenu);
     document.getElementById('btnBackFromReporte').addEventListener('click', showMenu);
+
+    handleScanOnInput(vinInput, operadorInput, null);
+    handleScanOnInput(operadorInput, null, submitIfReady);
 
     var initialSection = '<?php echo $startSection; ?>';
     if (initialSection === 'registro') {
