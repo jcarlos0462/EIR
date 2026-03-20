@@ -335,6 +335,8 @@ if ($searchExecuted) {
     const vinInput = document.getElementById('vin');
     const operadorInput = document.getElementById('nombre');
     const isMobileViewport = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
+    let isSubmitting = false;
+    let pendingSubmit = false;
 
     function focusField(element) {
         if (!element) return;
@@ -384,6 +386,13 @@ if ($searchExecuted) {
             return;
         }
 
+        if (isSubmitting) {
+            pendingSubmit = true;
+            return;
+        }
+
+        isSubmitting = true;
+
         const formData = new FormData(formOperador);
         formData.append('ajax', '1');
         formData.append('guardar_operador', '1');
@@ -414,6 +423,8 @@ if ($searchExecuted) {
             if (data.success) {
                 vinInput.value = '';
                 operadorInput.value = '';
+                vinInput.dataset.lastProcessed = '';
+                operadorInput.dataset.lastProcessed = '';
                 openRegistro();
             }
             showFeedback(data.success, data.message);
@@ -421,6 +432,12 @@ if ($searchExecuted) {
             console.error('submitFormAsync error completo:', err);
             console.error('Stack:', err.stack);
             showFeedback(false, 'Error de red: ' + err.message);
+        } finally {
+            isSubmitting = false;
+            if (pendingSubmit) {
+                pendingSubmit = false;
+                submitIfReady();
+            }
         }
     }
 
@@ -431,19 +448,21 @@ if ($searchExecuted) {
     }
 
     function handleScanOnInput(element, nextElement, onComplete, minLength) {
-        let lastValue = element.value;
         let lastTime = 0;
         const threshold = typeof minLength === 'number' ? minLength : 1;
+        element.dataset.lastProcessed = element.dataset.lastProcessed || '';
 
         function checkForScan() {
             const now = Date.now();
             const currentValue = element.value;
-            const isPaste = currentValue !== lastValue && currentValue.length > lastValue.length;
+            const currentTrim = currentValue.trim();
+            const isPaste = currentValue.length > 0;
             const isQuickInput = now - lastTime < 200; // Más tiempo para móviles
-            const hasEnoughLength = currentValue.trim().length >= threshold;
-            const valueChanged = currentValue !== lastValue;
+            const hasEnoughLength = currentTrim.length >= threshold;
+            const alreadyProcessed = currentTrim !== '' && currentTrim === element.dataset.lastProcessed;
 
-            if (valueChanged && (isPaste || isQuickInput || hasEnoughLength)) {
+            if (!alreadyProcessed && currentTrim !== '' && (isPaste || isQuickInput || hasEnoughLength)) {
+                element.dataset.lastProcessed = currentTrim;
                 // Posible escaneo detectado
                 if (nextElement) {
                     setTimeout(() => focusField(nextElement), 50);
@@ -452,7 +471,10 @@ if ($searchExecuted) {
                     setTimeout(onComplete, 100);
                 }
             }
-            lastValue = currentValue;
+
+            if (currentTrim === '') {
+                element.dataset.lastProcessed = '';
+            }
             lastTime = now;
         }
 
@@ -484,6 +506,12 @@ if ($searchExecuted) {
                 focusField(element);
             }, { passive: true });
         }
+
+        element.addEventListener('blur', function() {
+            if (element.value.trim() === '') {
+                element.dataset.lastProcessed = '';
+            }
+        });
     }
 
     document.getElementById('btnShowRegistro').addEventListener('click', openRegistro);
