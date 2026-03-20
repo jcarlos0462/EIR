@@ -185,6 +185,7 @@ if ($searchExecuted) {
         #mainMenu .card { min-height: 180px; border: 1px solid #e9ecef; border-radius: 12px; }
         #mainMenu .card .card-body { display: flex; flex-direction: column; justify-content: center; align-items: center; }
         button#btnShowRegistro, button#btnShowReportes { min-width: 110px; }
+        .scan-hint { color: #5b6b8a; font-size: 0.92rem; font-weight: 500; }
 
         @media (max-width: 767px) {
             .main-content { padding: 1rem; }
@@ -247,11 +248,14 @@ if ($searchExecuted) {
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label for="vin" class="form-label">VIN</label>
-                                        <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" required>
+                                        <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" required inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
                                     </div>
                                     <div class="col-md-6">
                                         <label for="nombre" class="form-label">Operador</label>
-                                        <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" required>
+                                        <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" required inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="scan-hint">Escanea VIN y luego operador. En móvil el teclado no debe abrirse automáticamente.</div>
                                     </div>
                                 </div>
                                 <div class="mt-3">
@@ -330,6 +334,16 @@ if ($searchExecuted) {
     const formOperador = document.getElementById('formOperador');
     const vinInput = document.getElementById('vin');
     const operadorInput = document.getElementById('nombre');
+    const isMobileViewport = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
+
+    function focusField(element) {
+        if (!element) return;
+        element.focus({ preventScroll: true });
+        try {
+            element.setSelectionRange(element.value.length, element.value.length);
+        } catch (error) {
+        }
+    }
 
     function showMenu() {
         mainMenu.style.display = 'flex';
@@ -341,7 +355,7 @@ if ($searchExecuted) {
         mainMenu.style.display = 'none';
         registroSection.style.display = 'block';
         reporteSection.style.display = 'none';
-        vinInput.focus();
+        focusField(vinInput);
     }
 
     function openReporte() {
@@ -429,7 +443,7 @@ if ($searchExecuted) {
             if (isPaste || isQuickInput) {
                 // Posible escaneo detectado
                 if (nextElement) {
-                    setTimeout(() => nextElement.focus(), 50);
+                    setTimeout(() => focusField(nextElement), 50);
                 }
                 if (onComplete) {
                     setTimeout(onComplete, 100);
@@ -443,7 +457,7 @@ if ($searchExecuted) {
         element.addEventListener('paste', function() {
             setTimeout(function() {
                 if (nextElement) {
-                    nextElement.focus();
+                    focusField(nextElement);
                 }
                 if (onComplete) {
                     onComplete();
@@ -454,13 +468,19 @@ if ($searchExecuted) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 if (nextElement) {
-                    nextElement.focus();
+                    focusField(nextElement);
                 }
                 if (onComplete) {
                     onComplete();
                 }
             }
         });
+
+        if (isMobileViewport) {
+            element.addEventListener('touchstart', function() {
+                focusField(element);
+            }, { passive: true });
+        }
     }
 
     document.getElementById('btnShowRegistro').addEventListener('click', openRegistro);
