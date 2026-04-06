@@ -259,7 +259,14 @@ if (isset($_POST['export_pdf'])) {
 
     $vendor = __DIR__ . '/vendor/autoload.php';
     if (!file_exists($vendor)) {
-        echo '<div class="alert alert-danger">Dompdf no está instalado en el servidor. Para habilitar PDF server-side ejecuta en el servidor:<br><code>composer require dompdf/dompdf</code></div>';
+        // Fallback: abrir versión imprimible para guardar como PDF desde el navegador
+        echo '<!doctype html><html><head><meta charset="utf-8"><title>Reporte de daños</title>' .
+            '<style>body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#222;margin:14px} .hdr{margin-bottom:10px} .title{font-size:18px;font-weight:700} .meta{font-size:11px;color:#444;margin-top:4px} table{border-collapse:collapse;width:100%;margin-top:8px} th,td{border:1px solid #ddd;padding:6px 8px;text-align:left} th{background:#f1f5f9;font-weight:700} .note{margin-top:10px;font-size:12px;color:#7a4b00;background:#fff3cd;border:1px solid #ffe69c;padding:8px;border-radius:6px}</style>' .
+            '</head><body>';
+        echo $html;
+        echo '<div class="note">Dompdf no está instalado en el servidor. Se abrió una versión imprimible; usa "Guardar como PDF" en el diálogo de impresión.</div>';
+        echo '<script>window.onload=function(){setTimeout(function(){window.print();},450);};</script>';
+        echo '</body></html>';
         exit();
     }
     require $vendor;
