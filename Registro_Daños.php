@@ -63,6 +63,7 @@ if (!empty($usuario_id)) {
         $stmt_admin->close();
     }
 }
+$can_manage_damage_records = $is_admin;
 
 // Buscar VIN (por POST, GET o contexto de acción)
 if (isset($_POST['buscar_vin'])) {
@@ -102,7 +103,7 @@ if ($vin) {
 
 // Eliminar daño
 if (isset($_POST['eliminar_danio']) && isset($_POST['id_danio'])) {
-    if (!$is_admin) {
+    if (!$can_manage_damage_records) {
         $errores[] = 'No tienes permisos para eliminar danos.';
     } else {
     $id_danio = intval($_POST['id_danio']);
@@ -205,7 +206,7 @@ if (isset($_POST['guardar_danio'])) {
 }
 // Editar daño
 if (isset($_POST['editar_danio']) && isset($_POST['id_danio'])) {
-    if (!$is_admin) {
+    if (!$can_manage_damage_records) {
         $errores[] = 'No tienes permisos para editar danos.';
     } else {
     $id_danio = intval($_POST['id_danio']);
@@ -702,7 +703,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                         <th>Área</th>
                                         <th>Tipo</th>
                                         <th>Severidad</th>
-                                        <?php if ($is_admin): ?>
+                                        <?php if ($can_manage_damage_records): ?>
                                             <th class="text-end">Acciones</th>
                                         <?php endif; ?>
                                     </tr>
@@ -720,7 +721,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                             <td><?php echo htmlspecialchars($areaDisplay); ?></td>
                                             <td><?php echo htmlspecialchars($tipoDisplay); ?></td>
                                             <td><?php echo htmlspecialchars($sevDisplay); ?></td>
-                                            <?php if ($is_admin): ?>
+                                            <?php if ($can_manage_damage_records): ?>
                                                 <td class="text-end">
                                                     <button type="button" class="btn btn-sm modern-btn modern-btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo intval($danio['ID']); ?>">
                                                         <i class="bi bi-pencil-square"></i>
@@ -739,7 +740,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                 </tbody>
                             </table>
                         </div>
-                        <?php if ($is_admin): ?>
+                        <?php if ($can_manage_damage_records): ?>
                             <?php foreach ($danios as $danio): ?>
                                 <div class="modal fade" id="modalEditarDanio<?php echo intval($danio['ID']); ?>" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">

@@ -26,10 +26,10 @@ $areas = [];
 $res = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY CodAreaDano");
 if ($res) { while ($r = $res->fetch_assoc()) $areas[] = $r; }
 
-// Origen values from RegistroDanio if available
+// Origen values from RegistroDanio.Puerto
 $origenes = [];
-// table RegistroDanio does not have column 'Origen' on this schema — use TipoOperacion values instead
-$res = $conn->query("SELECT DISTINCT IFNULL(TipoOperacion,'') AS Origen FROM RegistroDanio WHERE IFNULL(TipoOperacion,'')<>'' ORDER BY Origen");
+// table RegistroDanio does not have column 'Origen' on this schema — use Puerto values instead
+$res = $conn->query("SELECT DISTINCT IFNULL(Puerto,'') AS Origen FROM RegistroDanio WHERE IFNULL(Puerto,'')<>'' ORDER BY Origen");
 if ($res) { while ($r = $res->fetch_assoc()) $origenes[] = $r['Origen']; }
 
 // Check if RegistroDanio has any rows; if empty, we will force queries to return no results
@@ -69,7 +69,7 @@ if ($date_to !== '') {
 }
 if ($area !== '') $where_rd[] = "rd.CodAreaDano = '" . $conn->real_escape_string($area) . "'";
 if ($maniobra !== '') $where_rd[] = "rd.TipoOperacion LIKE '%" . $conn->real_escape_string($maniobra) . "%'";
-if ($origen !== '') $where_rd[] = "rd.TipoOperacion = '" . $conn->real_escape_string($origen) . "'";
+if ($origen !== '') $where_rd[] = "rd.Puerto = '" . $conn->real_escape_string($origen) . "'";
 
 // Decide which base to use:
 // - If only vehicle filters provided (VIN/Buque) and no damage filters, start from vehiculo LEFT JOIN RegistroDanio
@@ -81,7 +81,7 @@ $has_rd = count($where_rd) > 0;
 if ($has_v && !$has_rd) {
     $where_sql = 'WHERE ' . implode(' AND ', $where_v);
     $sql = "SELECT rd.FechaRegistro, v.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
-                rd.CodAreaDano AS CodAreaDano, rd.CodTipoDano AS CodTipoDano, rd.CodSeveridadDano AS CodSeveridadDano, rd.TipoOperacion AS Origen, rd.TipoOperacion
+                rd.CodAreaDano AS CodAreaDano, rd.CodTipoDano AS CodTipoDano, rd.CodSeveridadDano AS CodSeveridadDano, rd.Puerto AS Origen, rd.TipoOperacion
             FROM vehiculo v
             LEFT JOIN RegistroDanio rd ON v.VIN = rd.VIN
             LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
@@ -95,7 +95,7 @@ if ($has_v && !$has_rd) {
     $where_sql = '';
     if (count($all_where) > 0) $where_sql = 'WHERE ' . implode(' AND ', $all_where);
     $sql = "SELECT rd.FechaRegistro, rd.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
-                rd.CodAreaDano AS CodAreaDano, rd.CodTipoDano AS CodTipoDano, rd.CodSeveridadDano AS CodSeveridadDano, rd.TipoOperacion AS Origen, rd.TipoOperacion
+                rd.CodAreaDano AS CodAreaDano, rd.CodTipoDano AS CodTipoDano, rd.CodSeveridadDano AS CodSeveridadDano, rd.Puerto AS Origen, rd.TipoOperacion
             FROM RegistroDanio rd
             LEFT JOIN vehiculo v ON rd.VIN = v.VIN
             LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
