@@ -1,5 +1,5 @@
 -- Crear base de datos
-CREATE DATABASE IF NOT EXISTS EIR;
+CREATE DATABASE IF NOT EXISTS EIR CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE EIR;
 
 -- Tabla vehículo
@@ -14,4 +14,4 @@ CREATE TABLE IF NOT EXISTS vehiculo (
     Año VARCHAR(10),
     Puerto VARCHAR(30),
     Terminal VARCHAR(20)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

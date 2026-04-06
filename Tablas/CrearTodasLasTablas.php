@@ -21,7 +21,7 @@ $tablas = array(
             Año VARCHAR(10),
             Puerto VARCHAR(30),
             Terminal VARCHAR(20)
-        )"
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     ),
 
     // Tabla usuario
@@ -32,7 +32,7 @@ $tablas = array(
             Nombre VARCHAR(50) NOT NULL,
             Usuario VARCHAR(30) NOT NULL UNIQUE,
             Contraseña VARCHAR(100) NOT NULL
-        )"
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     ),
 
     // Tabla usuario_operacion
@@ -44,7 +44,7 @@ $tablas = array(
             TipoOperacion VARCHAR(100) NOT NULL,
             FechaRegistro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (UsuarioID) REFERENCES usuario(ID)
-        )"
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     ),
 
     // Tabla operador
@@ -54,7 +54,7 @@ $tablas = array(
             ID INT(10) PRIMARY KEY AUTO_INCREMENT,
             Nombre VARCHAR(50) NOT NULL,
             Vehículo VARCHAR(50)
-        )"
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     ),
 
     // Tabla severidaddano
@@ -63,7 +63,7 @@ $tablas = array(
         "sql" => "CREATE TABLE IF NOT EXISTS severidaddano (
             CodSeveridadDano INT(10) PRIMARY KEY AUTO_INCREMENT,
             NomSeveridadDano VARCHAR(255) NOT NULL
-        )",
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
         "datos" => "INSERT INTO severidaddano (NomSeveridadDano) VALUES
             ('Menos de 1pulg incluyendo 1pulg / menos de 2.5 cm'),
             ('Más de 1pulg hasta 3 incluyendo 3pulg longitud / diámetro – 2.5 cm hasta 7.5 cm'),
@@ -79,7 +79,7 @@ $tablas = array(
         "sql" => "CREATE TABLE IF NOT EXISTS tipodano (
             CodTipoDano INT(10) PRIMARY KEY AUTO_INCREMENT,
             NomTipoDano VARCHAR(100) NOT NULL
-        )",
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
         "datos" => "INSERT INTO tipodano (NomTipoDano) VALUES
             ('Raspadura - no aplica a vidrios'),
             ('Rasgadura'),
@@ -109,7 +109,7 @@ $tablas = array(
         "sql" => "CREATE TABLE IF NOT EXISTS areadano (
             CodAreaDano INT(10) PRIMARY KEY AUTO_INCREMENT,
             NomAreaDano VARCHAR(100) NOT NULL
-        )",
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
         "datos" => "INSERT INTO areadano (NomAreaDano) VALUES
             ('ANTENA/ANTENA BASE'),
             ('BATERÍA'),
