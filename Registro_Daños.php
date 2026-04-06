@@ -639,7 +639,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                 <label class="modern-label">VIN</label>
                                 <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required placeholder="Escanea o ingresa el VIN" inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
                                 <div id="scanStatus" style="margin-top:0.4rem; color:#236fa1; font-weight:600; font-size:0.94rem; display:none;">Escaneo detectado: buscando...</div>
-                                <div id="vinHint" class="vin-hint">Escanea el VIN. En móvil el teclado no debe abrirse automáticamente.</div>
+                                
                             </div>
                             <div class="d-flex align-items-end gap-2 vin-actions"></div>
                             <div class="vin-submit">
