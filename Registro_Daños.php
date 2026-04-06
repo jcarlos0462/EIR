@@ -682,11 +682,13 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="mb-0">Daños Registrados</h4>
                         <div class="d-flex gap-2">
+                            <br>
                             <form method="post" class="d-inline">
                                 <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
                                 <button type="submit" name="marcar_revisado" class="btn btn-sm modern-btn modern-btn-success same-size-btn">
                                     <i class="bi bi-check2-circle"></i> Revisado
                                 </button>
+                                <br>
                             </form>
                             <button type="button" class="btn btn-sm modern-btn modern-btn-danger same-size-btn" data-bs-toggle="modal" data-bs-target="#modalAgregarDanio">
                                 <i class="bi bi-plus-lg"></i> Agregar Daño
