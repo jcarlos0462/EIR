@@ -712,7 +712,7 @@ if ($has_filter) {
                     <div class="col-12 mt-2 no-print">
                         <button type="submit" form="filterForm" class="btn btn-primary">Generar reporte</button>
                         <button type="submit" form="filterForm" name="export_xml" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-warning ms-2">Exportar XLS (XML)</button>
-                        <button type="button" id="btnPrint" class="btn btn-secondary ms-2">Imprimir PDF</button>
+                        <button type="submit" form="filterForm" name="export_pdf" value="1" formaction="reportes_vehiculos.php" formmethod="post" class="btn btn-secondary ms-2">Exportar PDF</button>
                     </div>
                 </div>
             </div>
@@ -799,18 +799,6 @@ if ($has_filter) {
     window.onload = function() { setTimeout(function(){ window.print(); }, 800); };
 </script>
 <?php endif; ?>
-<script>
-// Attach print handler to button so it doesn't trigger a page reload/search
-document.addEventListener('DOMContentLoaded', function(){
-    var btn = document.getElementById('btnPrint');
-    if (btn) {
-        btn.addEventListener('click', function(e){
-            // small delay to allow any UI changes before printing
-            setTimeout(function(){ window.print(); }, 250);
-        });
-    }
-});
-</script>
 </body>
 </html>
 <?php $conn->close(); ?>
