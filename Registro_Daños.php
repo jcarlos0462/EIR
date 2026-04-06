@@ -580,7 +580,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
         .modern-btn.same-size-btn {
             box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08) !important;
         }
-        .damage-header {
+        .damage-toolbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -589,10 +589,14 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
         }
         .damage-actions {
             display: flex;
-            gap: 0.5rem;
             align-items: center;
-            flex-wrap: wrap;
             justify-content: flex-end;
+            gap: 0.75rem;
+        }
+        .damage-actions form {
+            margin: 0;
+            display: flex;
+            align-items: center;
         }
         @media (max-width: 768px) {
             #formBuscar {
@@ -634,7 +638,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             .searchable-dropdown-help {
                 font-size: 0.84rem;
             }
-            .damage-header {
+            .damage-toolbar {
                 flex-direction: column;
                 align-items: stretch;
             }
@@ -643,11 +647,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 align-items: stretch;
                 width: 100%;
             }
-            .damage-header h4 {
-                margin-bottom: 0;
-            }
-            .damage-actions form,
-            .damage-actions .same-size-btn {
+            .damage-actions form {
                 width: 100%;
             }
             .damage-actions .same-size-btn {
@@ -712,10 +712,10 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     </div>
                 </div>
                 <div class="modern-table-card">
-                    <div class="damage-header">
+                    <div class="damage-toolbar">
                         <h4 class="mb-0">Daños Registrados</h4>
                         <div class="damage-actions">
-                            <form method="post" class="d-inline">
+                            <form method="post">
                                 <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
                                 <button type="submit" name="marcar_revisado" class="btn btn-sm modern-btn modern-btn-success same-size-btn">
                                     <i class="bi bi-check2-circle"></i> Revisado
