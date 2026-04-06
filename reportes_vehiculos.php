@@ -17,6 +17,17 @@ require_once 'access_control.php';
 require_module_access($conn, 'reportes');
 require_admin_role($conn);
 
+function countDistinctViajes(array $rows) {
+    $viajes = [];
+    foreach ($rows as $row) {
+        $viaje = trim((string)($row['Viaje'] ?? ''));
+        if ($viaje !== '') {
+            $viajes[$viaje] = true;
+        }
+    }
+    return count($viajes);
+}
+
 // Fetch filter lists
 $buques = [];
 $res = $conn->query("SELECT DISTINCT Buque FROM vehiculo WHERE IFNULL(Buque,'')<>'' ORDER BY Buque");
@@ -142,6 +153,7 @@ if (isset($_POST['export_xml'])) {
     $resx = $conn->query($sql);
     $rows = [];
     if ($resx) while ($r = $resx->fetch_assoc()) $rows[] = $r;
+    $cantidad_viajes = countDistinctViajes($rows);
 
     $headers_xml = ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
 
@@ -155,6 +167,15 @@ if (isset($_POST['export_xml'])) {
         . ' xmlns:x="urn:schemas-microsoft-com:office:excel"'
         . ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' . "\n";
     echo "<Worksheet ss:Name=\"Report\">\n<Table>\n";
+
+    // Header rows
+    echo "<Row>\n";
+    echo '<Cell ss:MergeAcross="14"><Data ss:Type="String">Reporte de daños</Data></Cell>' . "\n";
+    echo "</Row>\n";
+    echo "<Row>\n";
+    echo '<Cell ss:MergeAcross="14"><Data ss:Type="String">Cantidad de viajes: ' . intval($cantidad_viajes) . '</Data></Cell>' . "\n";
+    echo "</Row>\n";
+    echo "<Row></Row>\n";
 
     // header row
     echo "<Row>\n";
@@ -187,6 +208,7 @@ if (isset($_POST['export_pdf'])) {
     $resx = $conn->query($sql);
     $rows = [];
     if ($resx) while ($r = $resx->fetch_assoc()) $rows[] = $r;
+    $cantidad_viajes = countDistinctViajes($rows);
 
     $generated_at = date('Y-m-d H:i');
     $filters = [];
@@ -204,8 +226,8 @@ if (isset($_POST['export_pdf'])) {
         '.hdr{margin-bottom:10px} .title{font-size:18px;font-weight:700} .meta{font-size:11px;color:#444;margin-top:4px} ' .
         'table{border-collapse:collapse;width:100%;margin-top:8px} th,td{border:1px solid #ddd;padding:6px 8px;text-align:left} th{background:#f1f5f9;font-weight:700}' .
         '</style></head><body>';
-    $html .= '<div class="hdr"><div class="title">Reporte - Vehículos y Daños</div>';
-    $html .= '<div class="meta">Generado: '.htmlspecialchars($generated_at).' &nbsp; | &nbsp; Filtros: '.htmlspecialchars($filters_text).'</div></div>';
+    $html .= '<div class="hdr"><div class="title">Reporte de daños</div>';
+    $html .= '<div class="meta">Cantidad de viajes: '.intval($cantidad_viajes).' &nbsp; | &nbsp; Generado: '.htmlspecialchars($generated_at).' &nbsp; | &nbsp; Filtros: '.htmlspecialchars($filters_text).'</div></div>';
 
     $html .= '<table><thead><tr>' .
         '<th>Fecha</th><th>VIN</th><th>Marca</th><th>Modelo</th><th>Color</th><th>Año</th>' .
