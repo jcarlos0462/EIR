@@ -488,28 +488,82 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             padding: 0.5rem;
             line-height: 1.5;
         }
-        .searchable-select-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.65rem;
+        .searchable-dropdown {
+            position: relative;
         }
-        .searchable-select-input {
+        .searchable-dropdown-input {
             font-size: 1rem;
-            padding: 0.72rem 0.95rem;
+            padding: 0.72rem 2.85rem 0.72rem 0.95rem;
             border-radius: 12px;
             border: 1px solid #d8e1f3;
-            letter-spacing: 0.4px;
-            text-align: left;
-        }
-        .searchable-select-input::placeholder {
-            color: #7483a8;
             letter-spacing: 0.2px;
+            text-align: left;
+            background-image: linear-gradient(45deg, transparent 50%, #4f628d 50%), linear-gradient(135deg, #4f628d 50%, transparent 50%);
+            background-position: calc(100% - 22px) calc(50% - 3px), calc(100% - 16px) calc(50% - 3px);
+            background-size: 6px 6px, 6px 6px;
+            background-repeat: no-repeat;
         }
-        .searchable-select-help {
-            margin-top: -0.15rem;
+        .searchable-dropdown-input::placeholder {
+            color: #7483a8;
+        }
+        .searchable-dropdown.is-open .searchable-dropdown-input,
+        .searchable-dropdown-input:focus {
+            border-color: #8db6ff;
+            box-shadow: 0 0 0 0.2rem rgba(66, 109, 201, 0.12);
+            outline: none;
+        }
+        .searchable-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.45rem);
+            left: 0;
+            right: 0;
+            z-index: 1080;
+            display: none;
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 0.45rem;
+            border-radius: 14px;
+            background: #fff;
+            border: 1px solid #d8e1f3;
+            box-shadow: 0 14px 32px rgba(40, 64, 120, 0.18);
+        }
+        .searchable-dropdown.is-open .searchable-dropdown-menu {
+            display: block;
+        }
+        .searchable-dropdown-option {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+            padding: 0.8rem 0.85rem;
+            border-radius: 10px;
+            color: #233150;
+            font-size: 0.97rem;
+            line-height: 1.35;
+        }
+        .searchable-dropdown-option:hover,
+        .searchable-dropdown-option.is-active {
+            background: #edf3ff;
+            color: #244f9c;
+        }
+        .searchable-dropdown-empty {
+            display: none;
+            padding: 0.8rem 0.85rem;
+            color: #6a7596;
+            font-size: 0.92rem;
+        }
+        .searchable-dropdown-empty.is-visible {
+            display: block;
+        }
+        .searchable-dropdown-help {
+            margin-top: 0.45rem;
             color: #6a7596;
             font-size: 0.88rem;
             font-weight: 500;
+        }
+        .searchable-dropdown-invalid .searchable-dropdown-input {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.12);
         }
         .same-size-btn {
             width: 160px !important;
@@ -556,10 +610,13 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 flex-direction: row;
                 gap: 1.25rem;
             }
-            .searchable-select-input {
+            .searchable-dropdown-input {
                 font-size: 1rem;
             }
-            .searchable-select-help {
+            .searchable-dropdown-menu {
+                max-height: 190px;
+            }
+            .searchable-dropdown-help {
                 font-size: 0.84rem;
             }
         }
@@ -697,47 +754,59 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                                     <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
                                                     <div class="mb-3">
                                                         <label class="form-label modern-label">Área</label>
-                                                        <div class="searchable-select-group">
-                                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de área">
-                                                            <select name="area" class="form-select modern-input" required>
-                                                                <option value="">Seleccione</option>
+                                                        <div class="searchable-dropdown" data-searchable-dropdown>
+                                                            <?php $selectedAreaLabel = ''; ?>
+                                                            <?php foreach ($areasList as $area): ?>
+                                                                <?php if (intval($danio['CodAreaDano']) === intval($area['CodAreaDano'])) { $selectedAreaLabel = formatDamageOptionLabel($area['CodAreaDano'], $area['NomAreaDano']); } ?>
+                                                            <?php endforeach; ?>
+                                                            <input type="hidden" name="area" value="<?php echo intval($danio['CodAreaDano']); ?>" required>
+                                                            <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione área" value="<?php echo htmlspecialchars($selectedAreaLabel); ?>" autocomplete="off" spellcheck="false">
+                                                            <div class="searchable-dropdown-menu">
+                                                                <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
                                                                 <?php foreach ($areasList as $area): ?>
-                                                                    <option value="<?php echo intval($area['CodAreaDano']); ?>" <?php echo (intval($danio['CodAreaDano']) === intval($area['CodAreaDano'])) ? 'selected' : ''; ?>>
-                                                                        <?php echo htmlspecialchars(formatDamageOptionLabel($area['CodAreaDano'], $area['NomAreaDano'])); ?>
-                                                                    </option>
+                                                                    <?php $areaLabel = formatDamageOptionLabel($area['CodAreaDano'], $area['NomAreaDano']); ?>
+                                                                    <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($area['CodAreaDano']); ?>" data-label="<?php echo htmlspecialchars($areaLabel); ?>"><?php echo htmlspecialchars($areaLabel); ?></button>
                                                                 <?php endforeach; ?>
-                                                            </select>
-                                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                                            </div>
+                                                            <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
                                                         </div>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label modern-label">Tipo</label>
-                                                        <div class="searchable-select-group">
-                                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de tipo">
-                                                            <select name="tipo" class="form-select modern-input" required>
-                                                                <option value="">Seleccione</option>
+                                                        <div class="searchable-dropdown" data-searchable-dropdown>
+                                                            <?php $selectedTipoLabel = ''; ?>
+                                                            <?php foreach ($tiposList as $tipo): ?>
+                                                                <?php if (intval($danio['CodTipoDano']) === intval($tipo['CodTipoDano'])) { $selectedTipoLabel = formatDamageOptionLabel($tipo['CodTipoDano'], $tipo['NomTipoDano']); } ?>
+                                                            <?php endforeach; ?>
+                                                            <input type="hidden" name="tipo" value="<?php echo intval($danio['CodTipoDano']); ?>" required>
+                                                            <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione tipo" value="<?php echo htmlspecialchars($selectedTipoLabel); ?>" autocomplete="off" spellcheck="false">
+                                                            <div class="searchable-dropdown-menu">
+                                                                <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
                                                                 <?php foreach ($tiposList as $tipo): ?>
-                                                                    <option value="<?php echo intval($tipo['CodTipoDano']); ?>" <?php echo (intval($danio['CodTipoDano']) === intval($tipo['CodTipoDano'])) ? 'selected' : ''; ?>>
-                                                                        <?php echo htmlspecialchars(formatDamageOptionLabel($tipo['CodTipoDano'], $tipo['NomTipoDano'])); ?>
-                                                                    </option>
+                                                                    <?php $tipoLabel = formatDamageOptionLabel($tipo['CodTipoDano'], $tipo['NomTipoDano']); ?>
+                                                                    <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($tipo['CodTipoDano']); ?>" data-label="<?php echo htmlspecialchars($tipoLabel); ?>"><?php echo htmlspecialchars($tipoLabel); ?></button>
                                                                 <?php endforeach; ?>
-                                                            </select>
-                                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                                            </div>
+                                                            <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
                                                         </div>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label modern-label">Severidad</label>
-                                                        <div class="searchable-select-group">
-                                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de severidad">
-                                                            <select name="severidad" class="form-select modern-input" required>
-                                                                <option value="">Seleccione</option>
+                                                        <div class="searchable-dropdown" data-searchable-dropdown>
+                                                            <?php $selectedSeveridadLabel = ''; ?>
+                                                            <?php foreach ($severidadesList as $severidad): ?>
+                                                                <?php if (intval($danio['CodSeveridadDano']) === intval($severidad['CodSeveridadDano'])) { $selectedSeveridadLabel = formatDamageOptionLabel($severidad['CodSeveridadDano'], $severidad['NomSeveridadDano']); } ?>
+                                                            <?php endforeach; ?>
+                                                            <input type="hidden" name="severidad" value="<?php echo intval($danio['CodSeveridadDano']); ?>" required>
+                                                            <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione severidad" value="<?php echo htmlspecialchars($selectedSeveridadLabel); ?>" autocomplete="off" spellcheck="false">
+                                                            <div class="searchable-dropdown-menu">
+                                                                <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
                                                                 <?php foreach ($severidadesList as $severidad): ?>
-                                                                    <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>" <?php echo (intval($danio['CodSeveridadDano']) === intval($severidad['CodSeveridadDano'])) ? 'selected' : ''; ?>>
-                                                                        <?php echo htmlspecialchars(formatDamageOptionLabel($severidad['CodSeveridadDano'], $severidad['NomSeveridadDano'])); ?>
-                                                                    </option>
+                                                                    <?php $severidadLabel = formatDamageOptionLabel($severidad['CodSeveridadDano'], $severidad['NomSeveridadDano']); ?>
+                                                                    <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($severidad['CodSeveridadDano']); ?>" data-label="<?php echo htmlspecialchars($severidadLabel); ?>"><?php echo htmlspecialchars($severidadLabel); ?></button>
                                                                 <?php endforeach; ?>
-                                                            </select>
-                                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                                            </div>
+                                                            <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -767,41 +836,47 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                     <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
                                     <div class="mb-3">
                                         <label class="form-label modern-label">Área</label>
-                                        <div class="searchable-select-group">
-                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de área">
-                                            <select name="area" class="form-select modern-input" required>
-                                                <option value="">Seleccione</option>
+                                        <div class="searchable-dropdown" data-searchable-dropdown>
+                                            <input type="hidden" name="area" value="" required>
+                                            <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione área" value="" autocomplete="off" spellcheck="false">
+                                            <div class="searchable-dropdown-menu">
+                                                <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
                                                 <?php foreach ($areasList as $area): ?>
-                                                    <option value="<?php echo intval($area['CodAreaDano']); ?>"><?php echo htmlspecialchars(formatDamageOptionLabel($area['CodAreaDano'], $area['NomAreaDano'])); ?></option>
+                                                    <?php $areaLabel = formatDamageOptionLabel($area['CodAreaDano'], $area['NomAreaDano']); ?>
+                                                    <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($area['CodAreaDano']); ?>" data-label="<?php echo htmlspecialchars($areaLabel); ?>"><?php echo htmlspecialchars($areaLabel); ?></button>
                                                 <?php endforeach; ?>
-                                            </select>
-                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                            </div>
+                                            <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
                                         </div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label modern-label">Tipo</label>
-                                        <div class="searchable-select-group">
-                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de tipo">
-                                            <select name="tipo" class="form-select modern-input" required>
-                                                <option value="">Seleccione</option>
+                                        <div class="searchable-dropdown" data-searchable-dropdown>
+                                            <input type="hidden" name="tipo" value="" required>
+                                            <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione tipo" value="" autocomplete="off" spellcheck="false">
+                                            <div class="searchable-dropdown-menu">
+                                                <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
                                                 <?php foreach ($tiposList as $tipo): ?>
-                                                    <option value="<?php echo intval($tipo['CodTipoDano']); ?>"><?php echo htmlspecialchars(formatDamageOptionLabel($tipo['CodTipoDano'], $tipo['NomTipoDano'])); ?></option>
+                                                    <?php $tipoLabel = formatDamageOptionLabel($tipo['CodTipoDano'], $tipo['NomTipoDano']); ?>
+                                                    <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($tipo['CodTipoDano']); ?>" data-label="<?php echo htmlspecialchars($tipoLabel); ?>"><?php echo htmlspecialchars($tipoLabel); ?></button>
                                                 <?php endforeach; ?>
-                                            </select>
-                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                            </div>
+                                            <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
                                         </div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label modern-label">Severidad</label>
-                                        <div class="searchable-select-group">
-                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de severidad">
-                                            <select name="severidad" class="form-select modern-input" required>
-                                                <option value="">Seleccione</option>
+                                        <div class="searchable-dropdown" data-searchable-dropdown>
+                                            <input type="hidden" name="severidad" value="" required>
+                                            <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione severidad" value="" autocomplete="off" spellcheck="false">
+                                            <div class="searchable-dropdown-menu">
+                                                <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
                                                 <?php foreach ($severidadesList as $severidad): ?>
-                                                    <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>"><?php echo htmlspecialchars(formatDamageOptionLabel($severidad['CodSeveridadDano'], $severidad['NomSeveridadDano'])); ?></option>
+                                                    <?php $severidadLabel = formatDamageOptionLabel($severidad['CodSeveridadDano'], $severidad['NomSeveridadDano']); ?>
+                                                    <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($severidad['CodSeveridadDano']); ?>" data-label="<?php echo htmlspecialchars($severidadLabel); ?>"><?php echo htmlspecialchars($severidadLabel); ?></button>
                                                 <?php endforeach; ?>
-                                            </select>
-                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                            </div>
+                                            <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -909,111 +984,156 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     .trim();
             }
 
-            function initSearchableSelect(searchInput) {
-                const group = searchInput.closest('.searchable-select-group');
-                if (!group) return;
-
-                const select = group.querySelector('select');
-                if (!select || select.dataset.searchableReady === '1') return;
-
-                const originalOptions = Array.from(select.options).map(function(option) {
-                    return {
-                        value: option.value,
-                        text: option.text,
-                        selected: option.selected,
-                        disabled: option.disabled
-                    };
-                });
-
-                function renderOptions(query) {
-                    const normalizedQuery = normalizeSearchValue(query);
-                    const selectedValue = select.value;
-                    const placeholder = originalOptions.find(function(option) {
-                        return option.value === '';
-                    });
-                    const selectedOption = originalOptions.find(function(option) {
-                        return option.value === selectedValue;
-                    });
-                    const matches = originalOptions.filter(function(option) {
-                        if (option.value === '') return false;
-                        return normalizeSearchValue(option.text).includes(normalizedQuery);
-                    });
-
-                    let nextOptions = matches;
-                    if (selectedOption && selectedOption.value !== '' && !matches.some(function(option) { return option.value === selectedOption.value; })) {
-                        nextOptions = matches.concat(selectedOption);
-                    }
-
-                    select.innerHTML = '';
-
-                    if (placeholder) {
-                        const placeholderOption = new Option(placeholder.text, placeholder.value, false, selectedValue === placeholder.value);
-                        placeholderOption.disabled = placeholder.disabled;
-                        select.add(placeholderOption);
-                    }
-
-                    nextOptions.forEach(function(option) {
-                        const optionElement = new Option(option.text, option.value, false, option.value === selectedValue);
-                        optionElement.disabled = option.disabled;
-                        select.add(optionElement);
-                    });
-                }
-
-                function syncSearchInputFromSelection() {
-                    const selectedText = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
-                    searchInput.value = select.value ? selectedText : '';
-                }
-
-                renderOptions('');
-                syncSearchInputFromSelection();
-
-                searchInput.addEventListener('input', function() {
-                    renderOptions(searchInput.value);
-                });
-
-                searchInput.addEventListener('focus', function() {
-                    if (!searchInput.value) {
-                        renderOptions('');
+            function closeAllSearchableDropdowns(exceptDropdown) {
+                document.querySelectorAll('[data-searchable-dropdown]').forEach(function(dropdown) {
+                    if (dropdown !== exceptDropdown) {
+                        dropdown.classList.remove('is-open');
                     }
                 });
-
-                searchInput.addEventListener('search', function() {
-                    renderOptions(searchInput.value);
-                    if (!searchInput.value) {
-                        syncSearchInputFromSelection();
-                    }
-                });
-
-                select.addEventListener('change', function() {
-                    syncSearchInputFromSelection();
-                    renderOptions(searchInput.value);
-                });
-
-                const modal = searchInput.closest('.modal');
-                if (modal) {
-                    modal.addEventListener('shown.bs.modal', function() {
-                        if (select.value) {
-                            syncSearchInputFromSelection();
-                        } else {
-                            searchInput.value = '';
-                            renderOptions('');
-                        }
-                    });
-
-                    modal.addEventListener('hidden.bs.modal', function() {
-                        if (select.value) {
-                            syncSearchInputFromSelection();
-                        } else {
-                            searchInput.value = '';
-                            renderOptions('');
-                        }
-                    });
-                }
-
-                select.dataset.searchableReady = '1';
             }
 
-            document.querySelectorAll('[data-searchable-select]').forEach(initSearchableSelect);
+            function initSearchableDropdown(dropdown) {
+                if (!dropdown || dropdown.dataset.searchableReady === '1') return;
+
+                const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+                const textInput = dropdown.querySelector('[data-searchable-input]');
+                const emptyState = dropdown.querySelector('.searchable-dropdown-empty');
+                const options = Array.from(dropdown.querySelectorAll('.searchable-dropdown-option'));
+
+                if (!hiddenInput || !textInput || options.length === 0) return;
+
+                let selectedLabel = textInput.value.trim();
+
+                function filterOptions(query) {
+                    const normalizedQuery = normalizeSearchValue(query);
+                    let visibleCount = 0;
+
+                    options.forEach(function(option, index) {
+                        const label = option.dataset.label || option.textContent || '';
+                        const matches = normalizedQuery === '' || normalizeSearchValue(label).includes(normalizedQuery);
+                        option.style.display = matches ? '' : 'none';
+                        option.classList.toggle('is-active', matches && visibleCount === 0);
+                        if (matches) {
+                            visibleCount += 1;
+                        }
+                    });
+
+                    if (emptyState) {
+                        emptyState.classList.toggle('is-visible', visibleCount === 0);
+                    }
+                }
+
+                function selectOption(option) {
+                    hiddenInput.value = option.dataset.value || '';
+                    textInput.value = option.dataset.label || option.textContent || '';
+                    selectedLabel = textInput.value;
+                    dropdown.classList.remove('searchable-dropdown-invalid');
+                    filterOptions(textInput.value);
+                    dropdown.classList.remove('is-open');
+                }
+
+                function resetToSelection() {
+                    textInput.value = selectedLabel;
+                    filterOptions(textInput.value);
+                }
+
+                textInput.addEventListener('focus', function() {
+                    closeAllSearchableDropdowns(dropdown);
+                    dropdown.classList.add('is-open');
+                    filterOptions(textInput.value);
+                });
+
+                textInput.addEventListener('input', function() {
+                    if (hiddenInput.value && textInput.value.trim() !== selectedLabel) {
+                        hiddenInput.value = '';
+                    }
+                    closeAllSearchableDropdowns(dropdown);
+                    dropdown.classList.add('is-open');
+                    dropdown.classList.remove('searchable-dropdown-invalid');
+                    filterOptions(textInput.value);
+                });
+
+                textInput.addEventListener('keydown', function(event) {
+                    const visibleOptions = options.filter(function(option) {
+                        return option.style.display !== 'none';
+                    });
+
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        if (visibleOptions[0]) {
+                            selectOption(visibleOptions[0]);
+                        }
+                    }
+
+                    if (event.key === 'Escape') {
+                        dropdown.classList.remove('is-open');
+                        resetToSelection();
+                    }
+                });
+
+                options.forEach(function(option) {
+                    option.addEventListener('click', function() {
+                        selectOption(option);
+                    });
+                });
+
+                const form = dropdown.closest('form');
+                if (form && !form.dataset.searchableValidationReady) {
+                    form.addEventListener('submit', function(event) {
+                        let formIsValid = true;
+
+                        form.querySelectorAll('[data-searchable-dropdown]').forEach(function(formDropdown) {
+                            const formHiddenInput = formDropdown.querySelector('input[type="hidden"]');
+                            if (!formHiddenInput || formHiddenInput.value) {
+                                formDropdown.classList.remove('searchable-dropdown-invalid');
+                                return;
+                            }
+                            formDropdown.classList.add('searchable-dropdown-invalid');
+                            formIsValid = false;
+                        });
+
+                        if (!formIsValid) {
+                            event.preventDefault();
+                        }
+                    });
+
+                    form.dataset.searchableValidationReady = '1';
+                }
+
+                const modal = dropdown.closest('.modal');
+                if (modal && !modal.dataset.searchableModalReady) {
+                    modal.addEventListener('hidden.bs.modal', function() {
+                        modal.querySelectorAll('[data-searchable-dropdown]').forEach(function(modalDropdown) {
+                            modalDropdown.classList.remove('is-open');
+                            modalDropdown.classList.remove('searchable-dropdown-invalid');
+
+                            const modalHiddenInput = modalDropdown.querySelector('input[type="hidden"]');
+                            const modalTextInput = modalDropdown.querySelector('[data-searchable-input]');
+                            const selectedOption = Array.from(modalDropdown.querySelectorAll('.searchable-dropdown-option')).find(function(option) {
+                                return option.dataset.value === modalHiddenInput.value;
+                            });
+
+                            if (modalTextInput) {
+                                modalTextInput.value = selectedOption ? (selectedOption.dataset.label || selectedOption.textContent || '') : '';
+                            }
+                        });
+                    });
+
+                    modal.dataset.searchableModalReady = '1';
+                }
+
+                filterOptions(textInput.value);
+                dropdown.dataset.searchableReady = '1';
+            }
+
+            document.addEventListener('click', function(event) {
+                const dropdown = event.target.closest('[data-searchable-dropdown]');
+                if (!dropdown) {
+                    closeAllSearchableDropdowns(null);
+                }
+            });
+
+            document.querySelectorAll('[data-searchable-dropdown]').forEach(initSearchableDropdown);
         })();
     </script>
 </body>
