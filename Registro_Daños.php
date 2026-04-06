@@ -580,6 +580,20 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
         .modern-btn.same-size-btn {
             box-shadow: 0 2px 8px 0 rgba(60,60,120,0.08) !important;
         }
+        .damage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .damage-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
         @media (max-width: 768px) {
             #formBuscar {
                 flex-direction: column !important;
@@ -619,6 +633,25 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             }
             .searchable-dropdown-help {
                 font-size: 0.84rem;
+            }
+            .damage-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .damage-actions {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+            }
+            .damage-header h4 {
+                margin-bottom: 0;
+            }
+            .damage-actions form,
+            .damage-actions .same-size-btn {
+                width: 100%;
+            }
+            .damage-actions .same-size-btn {
+                width: 100% !important;
             }
         }
     </style>
@@ -679,16 +712,14 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     </div>
                 </div>
                 <div class="modern-table-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="damage-header">
                         <h4 class="mb-0">Daños Registrados</h4>
-                        <div class="d-flex gap-2">
-                            <br>
+                        <div class="damage-actions">
                             <form method="post" class="d-inline">
                                 <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
                                 <button type="submit" name="marcar_revisado" class="btn btn-sm modern-btn modern-btn-success same-size-btn">
                                     <i class="bi bi-check2-circle"></i> Revisado
                                 </button>
-                                <br>
                             </form>
                             <button type="button" class="btn btn-sm modern-btn modern-btn-danger same-size-btn" data-bs-toggle="modal" data-bs-target="#modalAgregarDanio">
                                 <i class="bi bi-plus-lg"></i> Agregar Daño
