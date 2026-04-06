@@ -32,6 +32,10 @@ function createRevisadoIfMissing($conn, $table, $codeCol, $nameCol) {
     return null;
 }
 
+function formatDamageOptionLabel($code, $name) {
+    return trim((string)$code) . ' - ' . trim((string)$name);
+}
+
 // Cargar IDs sentinel (si existen) para mapearlos a 0 en la vista
 $sentinelAreaId = findRevisadoId($conn, 'areadano', 'CodAreaDano', 'NomAreaDano');
 $sentinelTipoId = findRevisadoId($conn, 'tipodano', 'CodTipoDano', 'NomTipoDano');
@@ -484,6 +488,29 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             padding: 0.5rem;
             line-height: 1.5;
         }
+        .searchable-select-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+        .searchable-select-input {
+            font-size: 1rem;
+            padding: 0.72rem 0.95rem;
+            border-radius: 12px;
+            border: 1px solid #d8e1f3;
+            letter-spacing: 0.4px;
+            text-align: left;
+        }
+        .searchable-select-input::placeholder {
+            color: #7483a8;
+            letter-spacing: 0.2px;
+        }
+        .searchable-select-help {
+            margin-top: -0.15rem;
+            color: #6a7596;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
         .same-size-btn {
             width: 160px !important;
             padding: 0.6rem 0.8rem !important;
@@ -528,6 +555,12 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             .vehiculo-row {
                 flex-direction: row;
                 gap: 1.25rem;
+            }
+            .searchable-select-input {
+                font-size: 1rem;
+            }
+            .searchable-select-help {
+                font-size: 0.84rem;
             }
         }
     </style>
@@ -664,36 +697,48 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                                     <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
                                                     <div class="mb-3">
                                                         <label class="form-label modern-label">Área</label>
-                                                        <select name="area" class="form-select modern-input" required>
-                                                            <option value="">Seleccione</option>
-                                                            <?php foreach ($areasList as $area): ?>
-                                                                <option value="<?php echo intval($area['CodAreaDano']); ?>" <?php echo (intval($danio['CodAreaDano']) === intval($area['CodAreaDano'])) ? 'selected' : ''; ?>>
-                                                                    <?php echo htmlspecialchars($area['CodAreaDano']); ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
+                                                        <div class="searchable-select-group">
+                                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de área">
+                                                            <select name="area" class="form-select modern-input" required>
+                                                                <option value="">Seleccione</option>
+                                                                <?php foreach ($areasList as $area): ?>
+                                                                    <option value="<?php echo intval($area['CodAreaDano']); ?>" <?php echo (intval($danio['CodAreaDano']) === intval($area['CodAreaDano'])) ? 'selected' : ''; ?>>
+                                                                        <?php echo htmlspecialchars(formatDamageOptionLabel($area['CodAreaDano'], $area['NomAreaDano'])); ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                                        </div>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label modern-label">Tipo</label>
-                                                        <select name="tipo" class="form-select modern-input" required>
-                                                            <option value="">Seleccione</option>
-                                                            <?php foreach ($tiposList as $tipo): ?>
-                                                                <option value="<?php echo intval($tipo['CodTipoDano']); ?>" <?php echo (intval($danio['CodTipoDano']) === intval($tipo['CodTipoDano'])) ? 'selected' : ''; ?>>
-                                                                    <?php echo htmlspecialchars($tipo['CodTipoDano']); ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
+                                                        <div class="searchable-select-group">
+                                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de tipo">
+                                                            <select name="tipo" class="form-select modern-input" required>
+                                                                <option value="">Seleccione</option>
+                                                                <?php foreach ($tiposList as $tipo): ?>
+                                                                    <option value="<?php echo intval($tipo['CodTipoDano']); ?>" <?php echo (intval($danio['CodTipoDano']) === intval($tipo['CodTipoDano'])) ? 'selected' : ''; ?>>
+                                                                        <?php echo htmlspecialchars(formatDamageOptionLabel($tipo['CodTipoDano'], $tipo['NomTipoDano'])); ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                                        </div>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label modern-label">Severidad</label>
-                                                        <select name="severidad" class="form-select modern-input" required>
-                                                            <option value="">Seleccione</option>
-                                                            <?php foreach ($severidadesList as $severidad): ?>
-                                                                <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>" <?php echo (intval($danio['CodSeveridadDano']) === intval($severidad['CodSeveridadDano'])) ? 'selected' : ''; ?>>
-                                                                    <?php echo htmlspecialchars($severidad['CodSeveridadDano']); ?>
-                                                                </option>
-                                                            <?php endforeach; ?>
-                                                        </select>
+                                                        <div class="searchable-select-group">
+                                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de severidad">
+                                                            <select name="severidad" class="form-select modern-input" required>
+                                                                <option value="">Seleccione</option>
+                                                                <?php foreach ($severidadesList as $severidad): ?>
+                                                                    <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>" <?php echo (intval($danio['CodSeveridadDano']) === intval($severidad['CodSeveridadDano'])) ? 'selected' : ''; ?>>
+                                                                        <?php echo htmlspecialchars(formatDamageOptionLabel($severidad['CodSeveridadDano'], $severidad['NomSeveridadDano'])); ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
@@ -722,30 +767,42 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                     <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
                                     <div class="mb-3">
                                         <label class="form-label modern-label">Área</label>
-                                        <select name="area" class="form-select modern-input" required>
-                                            <option value="">Seleccione</option>
-                                            <?php foreach ($areasList as $area): ?>
-                                                <option value="<?php echo intval($area['CodAreaDano']); ?>"><?php echo htmlspecialchars($area['CodAreaDano'] . ' - ' . $area['NomAreaDano']); ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <div class="searchable-select-group">
+                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de área">
+                                            <select name="area" class="form-select modern-input" required>
+                                                <option value="">Seleccione</option>
+                                                <?php foreach ($areasList as $area): ?>
+                                                    <option value="<?php echo intval($area['CodAreaDano']); ?>"><?php echo htmlspecialchars(formatDamageOptionLabel($area['CodAreaDano'], $area['NomAreaDano'])); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label modern-label">Tipo</label>
-                                        <select name="tipo" class="form-select modern-input" required>
-                                            <option value="">Seleccione</option>
-                                            <?php foreach ($tiposList as $tipo): ?>
-                                                <option value="<?php echo intval($tipo['CodTipoDano']); ?>"><?php echo htmlspecialchars($tipo['CodTipoDano'] . ' - ' . $tipo['NomTipoDano']); ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <div class="searchable-select-group">
+                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de tipo">
+                                            <select name="tipo" class="form-select modern-input" required>
+                                                <option value="">Seleccione</option>
+                                                <?php foreach ($tiposList as $tipo): ?>
+                                                    <option value="<?php echo intval($tipo['CodTipoDano']); ?>"><?php echo htmlspecialchars(formatDamageOptionLabel($tipo['CodTipoDano'], $tipo['NomTipoDano'])); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label modern-label">Severidad</label>
-                                        <select name="severidad" class="form-select modern-input" required>
-                                            <option value="">Seleccione</option>
-                                            <?php foreach ($severidadesList as $severidad): ?>
-                                                <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>"><?php echo htmlspecialchars($severidad['CodSeveridadDano'] . ' - ' . $severidad['NomSeveridadDano']); ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <div class="searchable-select-group">
+                                            <input type="text" class="form-control searchable-select-input" data-searchable-select placeholder="Buscar por código o nombre de severidad">
+                                            <select name="severidad" class="form-select modern-input" required>
+                                                <option value="">Seleccione</option>
+                                                <?php foreach ($severidadesList as $severidad): ?>
+                                                    <option value="<?php echo intval($severidad['CodSeveridadDano']); ?>"><?php echo htmlspecialchars(formatDamageOptionLabel($severidad['CodSeveridadDano'], $severidad['NomSeveridadDano'])); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <div class="searchable-select-help">Escribe el código o el nombre para filtrar.</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -842,6 +899,121 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             if (isMobileViewport && vinHint) {
                 vinHint.textContent = 'Escanea el VIN. Si tu navegador abre teclado, vuelve a tocar fuera del campo y escanea.';
             }
+
+            function normalizeSearchValue(value) {
+                return value
+                    .toString()
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .trim();
+            }
+
+            function initSearchableSelect(searchInput) {
+                const group = searchInput.closest('.searchable-select-group');
+                if (!group) return;
+
+                const select = group.querySelector('select');
+                if (!select || select.dataset.searchableReady === '1') return;
+
+                const originalOptions = Array.from(select.options).map(function(option) {
+                    return {
+                        value: option.value,
+                        text: option.text,
+                        selected: option.selected,
+                        disabled: option.disabled
+                    };
+                });
+
+                function renderOptions(query) {
+                    const normalizedQuery = normalizeSearchValue(query);
+                    const selectedValue = select.value;
+                    const placeholder = originalOptions.find(function(option) {
+                        return option.value === '';
+                    });
+                    const selectedOption = originalOptions.find(function(option) {
+                        return option.value === selectedValue;
+                    });
+                    const matches = originalOptions.filter(function(option) {
+                        if (option.value === '') return false;
+                        return normalizeSearchValue(option.text).includes(normalizedQuery);
+                    });
+
+                    let nextOptions = matches;
+                    if (selectedOption && selectedOption.value !== '' && !matches.some(function(option) { return option.value === selectedOption.value; })) {
+                        nextOptions = matches.concat(selectedOption);
+                    }
+
+                    select.innerHTML = '';
+
+                    if (placeholder) {
+                        const placeholderOption = new Option(placeholder.text, placeholder.value, false, selectedValue === placeholder.value);
+                        placeholderOption.disabled = placeholder.disabled;
+                        select.add(placeholderOption);
+                    }
+
+                    nextOptions.forEach(function(option) {
+                        const optionElement = new Option(option.text, option.value, false, option.value === selectedValue);
+                        optionElement.disabled = option.disabled;
+                        select.add(optionElement);
+                    });
+                }
+
+                function syncSearchInputFromSelection() {
+                    const selectedText = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
+                    searchInput.value = select.value ? selectedText : '';
+                }
+
+                renderOptions('');
+                syncSearchInputFromSelection();
+
+                searchInput.addEventListener('input', function() {
+                    renderOptions(searchInput.value);
+                });
+
+                searchInput.addEventListener('focus', function() {
+                    if (!searchInput.value) {
+                        renderOptions('');
+                    }
+                });
+
+                searchInput.addEventListener('search', function() {
+                    renderOptions(searchInput.value);
+                    if (!searchInput.value) {
+                        syncSearchInputFromSelection();
+                    }
+                });
+
+                select.addEventListener('change', function() {
+                    syncSearchInputFromSelection();
+                    renderOptions(searchInput.value);
+                });
+
+                const modal = searchInput.closest('.modal');
+                if (modal) {
+                    modal.addEventListener('shown.bs.modal', function() {
+                        if (select.value) {
+                            syncSearchInputFromSelection();
+                        } else {
+                            searchInput.value = '';
+                            renderOptions('');
+                        }
+                    });
+
+                    modal.addEventListener('hidden.bs.modal', function() {
+                        if (select.value) {
+                            syncSearchInputFromSelection();
+                        } else {
+                            searchInput.value = '';
+                            renderOptions('');
+                        }
+                    });
+                }
+
+                select.dataset.searchableReady = '1';
+            }
+
+            document.querySelectorAll('[data-searchable-select]').forEach(initSearchableSelect);
         })();
     </script>
 </body>
