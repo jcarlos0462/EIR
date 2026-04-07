@@ -59,6 +59,36 @@ if ($filters_ready) {
 }
 
 // Helper: parse simple XLSX (sheet1) into array of rows (supports sharedStrings)
+function normalize_import_text($value) {
+    $text = is_string($value) ? trim($value) : '';
+    if ($text === '') {
+        return '';
+    }
+
+    // Strip UTF-8 BOM if present in the first cell/header.
+    $text = preg_replace('/^\xEF\xBB\xBF/', '', $text);
+
+    // Keep valid UTF-8 as-is; otherwise convert from common Excel/Windows encodings.
+    if (mb_check_encoding($text, 'UTF-8')) {
+        return $text;
+    }
+
+    $converted = @mb_convert_encoding($text, 'UTF-8', 'Windows-1252,ISO-8859-1,UTF-8');
+    if ($converted !== false && $converted !== null) {
+        return trim($converted);
+    }
+
+    return $text;
+}
+
+function normalize_import_row($row) {
+    if (!is_array($row)) {
+        return [];
+    }
+
+    return array_map('normalize_import_text', $row);
+}
+
 function parse_xlsx_simple($file) {
     $zip = new ZipArchive();
     $res = $zip->open($file);
@@ -135,7 +165,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
             if ($rows === false || count($rows) === 0) {
                 $import_summary = ['error' => 'No se pudo parsear el archivo XLSX o está vacío.'];
             } else {
-                $cols = array_map(function($c){ return mb_strtolower(trim($c)); }, $rows[0]);
+                $header = normalize_import_row($rows[0]);
+                $cols = array_map(function($c){ return mb_strtolower($c, 'UTF-8'); }, $header);
                 $dataRows = array_slice($rows, 1);
             }
         } else {
@@ -155,7 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $import_summary = ['error' => 'No se pudo leer cabecera del archivo.'];
                         fclose($handle);
                     } else {
-                        $cols = array_map(function($c){ return mb_strtolower(trim($c)); }, $header);
+                        $header = normalize_import_row($header);
+                        $cols = array_map(function($c){ return mb_strtolower($c, 'UTF-8'); }, $header);
                         $header_row = $header;
                         // dejar $handle abierto para lectura secuencial más abajo
                     }
@@ -193,6 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
             } else {
                 if ($ext === 'xlsx') {
                     foreach ($dataRows as $data) {
+                        $data = normalize_import_row($data);
                         $rowCount++;
                         $allEmpty = true; foreach ($data as $v) if (trim($v) !== '') { $allEmpty = false; break; }
                         if ($allEmpty) continue;
@@ -223,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                 } else {
                     // CSV - continuar leyendo desde el handle abierto
                     if ($header_is_data && $header_row) {
-                        $data = $header_row;
+                        $data = normalize_import_row($header_row);
                         $rowCount++;
                         $allEmpty = true; foreach ($data as $v) if (trim($v) !== '') { $allEmpty = false; break; }
                         if (!$allEmpty) {
@@ -258,6 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                     }
 
                     while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
+                        $data = normalize_import_row($data);
                         $rowCount++;
                         $allEmpty = true; foreach ($data as $v) if (trim($v) !== '') { $allEmpty = false; break; }
                         if ($allEmpty) continue;
