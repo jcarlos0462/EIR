@@ -8,7 +8,6 @@ function module_to_page($module) {
         'danos' => 'Registro_Daños.php',
         'vehiculos' => 'listar_vehiculos.php',
         'reportes' => 'reportes_vehiculos.php',
-        'usuarios' => 'gestionar_usuarios.php',
         'operadores' => 'Registro_Operadores.php',
         'configuracion' => 'configuracion.php',
     ];
@@ -54,7 +53,7 @@ function get_home_page_for_access_map($accessMap) {
     }
 
     // Prioridad de módulos para definir la página inicial cuando hay varios accesos.
-    $priority = ['danos', 'vehiculos', 'reportes', 'usuarios', 'operadores', 'configuracion'];
+    $priority = ['danos', 'vehiculos', 'reportes', 'operadores', 'configuracion'];
     foreach ($priority as $module) {
         if (isset($accessMap[$module])) {
             $page = module_to_page($module);

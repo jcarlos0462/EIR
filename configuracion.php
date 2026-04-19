@@ -748,7 +748,6 @@ $usuarios_count = $totalUsuarios;
                                         <option value="vehiculos">Vehículos</option>
                                         <option value="danos">Daños</option>
                                         <option value="reportes">Reportes</option>
-                                        <option value="usuarios">Gestión de Usuarios</option>
                                         <option value="operadores">Registro de Operadores</option>
                                         <option value="configuracion">Configuración</option>
                                     </select>

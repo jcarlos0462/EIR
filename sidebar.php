@@ -33,7 +33,6 @@ if ($userId > 0) {
 $allowDanos = user_has_module_access($accessMap, 'danos');
 $allowVehiculos = user_has_module_access($accessMap, 'vehiculos');
 $allowReportes = user_has_module_access($accessMap, 'reportes');
-$allowUsuarios = user_has_module_access($accessMap, 'usuarios');
 $allowOperadores = user_has_module_access($accessMap, 'operadores');
 $allowConfig = user_has_module_access($accessMap, 'configuracion');
 
