@@ -7,6 +7,7 @@ session_start();
 
 // Conexión a la base de datos
 include 'database_connection.php';
+require_once 'access_control.php';
 
 // Verificar si se envió el formulario
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -86,7 +87,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $stmt_op->close();
             
-            header("Location: Registro_Daños.php");
+            $homePage = get_user_home_page($conn, intval($row['ID']));
+            header("Location: " . $homePage);
             exit();
         } else {
             $_SESSION['error'] = "Usuario o contraseña incorrectos";
