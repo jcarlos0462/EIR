@@ -304,9 +304,16 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 }
                 .modern-table {
                     border-radius: 12px;
-                    overflow: hidden;
+                    overflow-x: auto;
+                    overflow-y: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    touch-action: pan-x;
                     background: #f4f7fb;
                     box-shadow: 0 2px 8px 0 rgba(60,60,120,0.07);
+                }
+                .modern-table table {
+                    min-width: 760px;
+                    margin-bottom: 0;
                 }
                 .modern-table thead {
                     background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
@@ -416,8 +423,15 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
         }
         .modern-table {
             border-radius: 12px;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
             background: #f8f9fa;
+        }
+        .modern-table table {
+            min-width: 760px;
+            margin-bottom: 0;
         }
         .modern-table thead {
             background: linear-gradient(90deg, #426dc9 60%, #6a82fb 100%);
