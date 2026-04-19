@@ -306,11 +306,16 @@ if (isset($_POST['editar_danio']) && isset($_POST['id_danio'])) {
     $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
     $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
     $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
+    $foto_danio_data = $_POST['foto_danio_data'] ?? '';
     if ($area && $tipo && $severidad) {
         $stmt = $conn->prepare("UPDATE RegistroDanio SET CodAreaDano = ?, CodTipoDano = ?, CodSeveridadDano = ? WHERE ID = ?");
         $stmt->bind_param('iiii', $area, $tipo, $severidad, $id_danio);
         $stmt->execute();
         $stmt->close();
+        $photoWarning = save_damage_photo($conn, $id_danio, $foto_danio_data);
+        if ($photoWarning) {
+            $_SESSION['damage_photo_warning'] = $photoWarning;
+        }
         // Redirigir para evitar reenvío y mantener contexto VIN
         if ($vin) {
             header("Location: Registro_Daños.php?vin=" . urlencode($vin));
@@ -718,6 +723,16 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             object-fit: cover;
             background: #0f172a;
         }
+        .camera-icon-btn {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 1.15rem;
+        }
         @media (max-width: 768px) {
             #formBuscar {
                 flex-direction: column !important;
@@ -985,6 +1000,33 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                                             <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
                                                         </div>
                                                     </div>
+                                                    <div class="mb-3 camera-widget" data-camera-widget>
+                                                        <label class="form-label modern-label">Fotografía del daño</label>
+                                                        <?php if (!empty($danio['FotoRuta'])): ?>
+                                                            <div class="mb-2">
+                                                                <img src="<?php echo htmlspecialchars($danio['FotoRuta'], ENT_QUOTES, 'UTF-8'); ?>" alt="Foto actual del daño" class="img-fluid rounded" style="max-height:220px; object-fit:contain; background:#f8f9fa;">
+                                                            </div>
+                                                        <?php endif; ?>
+                                                        <div class="d-flex gap-2 flex-wrap mb-2">
+                                                            <button type="button" class="btn btn-sm modern-btn modern-btn-primary camera-icon-btn camera-enable-btn" title="Habilitar cámara" aria-label="Habilitar cámara">
+                                                                <i class="bi bi-camera-fill"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm modern-btn modern-btn-success camera-icon-btn camera-capture-btn" title="Capturar foto" aria-label="Capturar foto" disabled>
+                                                                <i class="bi bi-camera"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm modern-btn modern-btn-warning camera-icon-btn camera-retake-btn" title="Repetir foto" aria-label="Repetir foto" disabled>
+                                                                <i class="bi bi-arrow-repeat"></i>
+                                                            </button>
+                                                        </div>
+                                                        <div class="alert alert-warning py-2 d-none mb-2 camera-error"></div>
+                                                        <div class="camera-preview d-none camera-preview-box">
+                                                            <video class="camera-video" autoplay playsinline muted></video>
+                                                            <canvas class="camera-canvas d-none"></canvas>
+                                                            <img alt="Foto capturada del daño" class="d-none camera-snapshot">
+                                                        </div>
+                                                        <input type="hidden" name="foto_danio_data" value="" class="camera-photo-input">
+                                                        <div class="searchable-dropdown-help">Usa la cámara para cambiar la fotografía asociada a este daño.</div>
+                                                    </div>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn modern-btn" data-bs-dismiss="modal">Cancelar</button>
@@ -1071,18 +1113,26 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label modern-label">Fotografía del daño (opcional)</label>
-                                            <div class="d-flex gap-2 flex-wrap mb-2">
-                                                <button type="button" class="btn btn-sm modern-btn modern-btn-primary" id="cameraEnableBtn">Habilitar cámara</button>
-                                                <button type="button" class="btn btn-sm modern-btn modern-btn-success" id="cameraCaptureBtn" disabled>Capturar foto</button>
-                                                <button type="button" class="btn btn-sm modern-btn modern-btn-warning" id="cameraRetakeBtn" disabled>Repetir</button>
+                                            <div class="camera-widget" data-camera-widget>
+                                                <div class="d-flex gap-2 flex-wrap mb-2">
+                                                    <button type="button" class="btn btn-sm modern-btn modern-btn-primary camera-icon-btn camera-enable-btn" title="Habilitar cámara" aria-label="Habilitar cámara">
+                                                        <i class="bi bi-camera-fill"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm modern-btn modern-btn-success camera-icon-btn camera-capture-btn" title="Capturar foto" aria-label="Capturar foto" disabled>
+                                                        <i class="bi bi-camera"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm modern-btn modern-btn-warning camera-icon-btn camera-retake-btn" title="Repetir foto" aria-label="Repetir foto" disabled>
+                                                        <i class="bi bi-arrow-repeat"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="alert alert-warning py-2 d-none mb-2 camera-error"></div>
+                                                <div class="camera-preview d-none camera-preview-box">
+                                                    <video class="camera-video" autoplay playsinline muted></video>
+                                                    <canvas class="camera-canvas d-none"></canvas>
+                                                    <img alt="Foto del daño" class="d-none camera-snapshot">
+                                                </div>
+                                                <input type="hidden" name="foto_danio_data" value="" class="camera-photo-input">
                                             </div>
-                                            <div id="cameraError" class="alert alert-warning py-2 d-none mb-2"></div>
-                                            <div class="camera-preview d-none" id="cameraPreviewBox">
-                                                <video id="cameraVideo" autoplay playsinline muted></video>
-                                                <canvas id="cameraCanvas" class="d-none"></canvas>
-                                                <img id="cameraSnapshot" alt="Foto del daño" class="d-none">
-                                            </div>
-                                            <input type="hidden" name="foto_danio_data" id="fotoDanioData" value="">
                                             <div class="searchable-dropdown-help">Activa la cámara, captura la evidencia y guarda el daño.</div>
                                         </div>
                                     </div>
@@ -1342,128 +1392,152 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
 
             document.querySelectorAll('[data-searchable-dropdown]').forEach(initSearchableDropdown);
 
-            const addDamageModal = document.getElementById('modalAgregarDanio');
-            const cameraEnableBtn = document.getElementById('cameraEnableBtn');
-            const cameraCaptureBtn = document.getElementById('cameraCaptureBtn');
-            const cameraRetakeBtn = document.getElementById('cameraRetakeBtn');
-            const cameraPreviewBox = document.getElementById('cameraPreviewBox');
-            const cameraVideo = document.getElementById('cameraVideo');
-            const cameraCanvas = document.getElementById('cameraCanvas');
-            const cameraSnapshot = document.getElementById('cameraSnapshot');
-            const cameraError = document.getElementById('cameraError');
-            const fotoDanioData = document.getElementById('fotoDanioData');
-            let cameraStream = null;
+            const cameraWidgets = [];
 
-            function showCameraError(message) {
-                if (!cameraError) return;
-                if (!message) {
-                    cameraError.textContent = '';
-                    cameraError.classList.add('d-none');
-                    return;
-                }
-                cameraError.textContent = message;
-                cameraError.classList.remove('d-none');
-            }
+            function initCameraWidget(widget) {
+                if (!widget || widget.dataset.cameraReady === '1') return;
 
-            function stopCameraStream() {
-                if (cameraStream) {
-                    cameraStream.getTracks().forEach(function(track) { track.stop(); });
-                    cameraStream = null;
-                }
-                if (cameraVideo) {
-                    cameraVideo.pause();
-                    cameraVideo.srcObject = null;
-                }
-            }
+                const enableBtn = widget.querySelector('.camera-enable-btn');
+                const captureBtn = widget.querySelector('.camera-capture-btn');
+                const retakeBtn = widget.querySelector('.camera-retake-btn');
+                const previewBox = widget.querySelector('.camera-preview-box');
+                const video = widget.querySelector('.camera-video');
+                const canvas = widget.querySelector('.camera-canvas');
+                const snapshot = widget.querySelector('.camera-snapshot');
+                const errorBox = widget.querySelector('.camera-error');
+                const photoInput = widget.querySelector('.camera-photo-input');
+                let stream = null;
 
-            async function enableCamera() {
-                if (!cameraVideo || !cameraPreviewBox) return;
-
-                showCameraError('');
-
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    showCameraError('Tu navegador no soporta acceso a cámara.');
-                    return;
+                function showError(message) {
+                    if (!errorBox) return;
+                    if (!message) {
+                        errorBox.textContent = '';
+                        errorBox.classList.add('d-none');
+                        return;
+                    }
+                    errorBox.textContent = message;
+                    errorBox.classList.remove('d-none');
                 }
 
-                stopCameraStream();
+                function stopStream() {
+                    if (stream) {
+                        stream.getTracks().forEach(function(track) { track.stop(); });
+                        stream = null;
+                    }
+                    if (video) {
+                        video.pause();
+                        video.srcObject = null;
+                    }
+                }
 
-                try {
-                    cameraStream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: { ideal: 'environment' } },
-                        audio: false
+                function resetCapturedPhoto(clearData) {
+                    if (clearData && photoInput) {
+                        photoInput.value = '';
+                    }
+                    if (snapshot) {
+                        snapshot.src = '';
+                        snapshot.classList.add('d-none');
+                    }
+                    if (video) {
+                        video.classList.remove('d-none');
+                    }
+                    showError('');
+                }
+
+                async function enableCamera() {
+                    if (!video || !previewBox) return;
+
+                    showError('');
+
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        showError('Tu navegador no soporta acceso a cámara.');
+                        return;
+                    }
+
+                    stopStream();
+
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: { ideal: 'environment' } },
+                            audio: false
+                        });
+                        video.srcObject = stream;
+                        previewBox.classList.remove('d-none');
+                        video.classList.remove('d-none');
+                        if (snapshot) snapshot.classList.add('d-none');
+                        if (captureBtn) captureBtn.disabled = false;
+                        if (retakeBtn) retakeBtn.disabled = false;
+                    } catch (error) {
+                        showError('No se pudo habilitar la cámara. Verifica permisos del navegador.');
+                    }
+                }
+
+                function capturePhoto() {
+                    if (!video || !canvas || !snapshot || !photoInput) return;
+                    if (!video.videoWidth || !video.videoHeight) {
+                        showError('La cámara todavía no está lista para capturar.');
+                        return;
+                    }
+
+                    showError('');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+                    photoInput.value = dataUrl;
+                    snapshot.src = dataUrl;
+                    snapshot.classList.remove('d-none');
+                    video.classList.add('d-none');
+                    stopStream();
+                }
+
+                if (enableBtn) {
+                    enableBtn.addEventListener('click', function() {
+                        enableCamera();
                     });
-                    cameraVideo.srcObject = cameraStream;
-                    cameraPreviewBox.classList.remove('d-none');
-                    cameraVideo.classList.remove('d-none');
-                    if (cameraSnapshot) cameraSnapshot.classList.add('d-none');
-                    if (cameraCaptureBtn) cameraCaptureBtn.disabled = false;
-                    if (cameraRetakeBtn) cameraRetakeBtn.disabled = false;
-                } catch (error) {
-                    showCameraError('No se pudo habilitar la cámara. Verifica permisos del navegador.');
-                }
-            }
-
-            function capturePhoto() {
-                if (!cameraVideo || !cameraCanvas || !cameraSnapshot || !fotoDanioData) return;
-                if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
-                    showCameraError('La cámara todavía no está lista para capturar.');
-                    return;
                 }
 
-                showCameraError('');
-                cameraCanvas.width = cameraVideo.videoWidth;
-                cameraCanvas.height = cameraVideo.videoHeight;
-                const ctx = cameraCanvas.getContext('2d');
-                ctx.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
-                const dataUrl = cameraCanvas.toDataURL('image/jpeg', 0.88);
-                fotoDanioData.value = dataUrl;
-                cameraSnapshot.src = dataUrl;
-                cameraSnapshot.classList.remove('d-none');
-                cameraVideo.classList.add('d-none');
-                stopCameraStream();
-            }
-
-            function resetCapturedPhoto() {
-                if (fotoDanioData) fotoDanioData.value = '';
-                if (cameraSnapshot) {
-                    cameraSnapshot.src = '';
-                    cameraSnapshot.classList.add('d-none');
+                if (captureBtn) {
+                    captureBtn.addEventListener('click', function() {
+                        capturePhoto();
+                    });
                 }
-                if (cameraVideo) {
-                    cameraVideo.classList.remove('d-none');
-                }
-                showCameraError('');
-            }
 
-            if (cameraEnableBtn) {
-                cameraEnableBtn.addEventListener('click', function() {
-                    enableCamera();
+                if (retakeBtn) {
+                    retakeBtn.addEventListener('click', function() {
+                        resetCapturedPhoto(true);
+                        enableCamera();
+                    });
+                }
+
+                const parentModal = widget.closest('.modal');
+                if (parentModal && !parentModal.dataset.cameraCleanupReady) {
+                    parentModal.addEventListener('hidden.bs.modal', function() {
+                        parentModal.querySelectorAll('[data-camera-widget]').forEach(function(cameraWidget) {
+                            const cleanup = cameraWidgets.find(function(entry) { return entry.widget === cameraWidget; });
+                            if (cleanup && typeof cleanup.reset === 'function') {
+                                cleanup.reset();
+                            }
+                        });
+                    });
+                    parentModal.dataset.cameraCleanupReady = '1';
+                }
+
+                widget.dataset.cameraReady = '1';
+                cameraWidgets.push({
+                    widget: widget,
+                    reset: function() {
+                        stopStream();
+                        resetCapturedPhoto(true);
+                        if (captureBtn) captureBtn.disabled = true;
+                        if (retakeBtn) retakeBtn.disabled = true;
+                        if (previewBox) previewBox.classList.add('d-none');
+                    }
                 });
             }
 
-            if (cameraCaptureBtn) {
-                cameraCaptureBtn.addEventListener('click', function() {
-                    capturePhoto();
-                });
-            }
-
-            if (cameraRetakeBtn) {
-                cameraRetakeBtn.addEventListener('click', function() {
-                    resetCapturedPhoto();
-                    enableCamera();
-                });
-            }
-
-            if (addDamageModal) {
-                addDamageModal.addEventListener('hidden.bs.modal', function() {
-                    stopCameraStream();
-                    resetCapturedPhoto();
-                    if (cameraCaptureBtn) cameraCaptureBtn.disabled = true;
-                    if (cameraRetakeBtn) cameraRetakeBtn.disabled = true;
-                    if (cameraPreviewBox) cameraPreviewBox.classList.add('d-none');
-                });
-            }
+            document.querySelectorAll('[data-camera-widget]').forEach(initCameraWidget);
 
             const viewPhotoModalEl = document.getElementById('modalVerFotoDanio');
             const fotoDanioPreview = document.getElementById('fotoDanioPreview');
