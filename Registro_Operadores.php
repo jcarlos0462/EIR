@@ -17,12 +17,16 @@ try {
     exit();
 }
 // Deshabilitar temporalmente control de acceso a módulo para evitar bloqueos HTTP 500
-//require_module_access($conn, 'operadores');
+require_module_access($conn, 'operadores');
 
 if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
     header('Location: index.php');
     exit();
 }
+
+$current_user_id = intval($_SESSION['id'] ?? 0);
+$is_read_only = user_has_role_name($conn, $current_user_id, 'lector');
+$can_write_operadores = $current_user_id > 0 && can_user_write_module($conn, $current_user_id, 'operadores');
 
 // Crear tabla y columnas necesarias si no existen
 $createSql = "CREATE TABLE IF NOT EXISTS operador (
@@ -62,7 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
     $vin = trim($_POST['vin'] ?? '');
     $nombre = trim($_POST['nombre'] ?? '');
 
-    if ($vin === '' || $nombre === '') {
+    if (!$can_write_operadores) {
+        $error = 'Tu rol es solo lectura. No puedes guardar registros.';
+    } elseif ($vin === '' || $nombre === '') {
         $error = 'Debe completar ambos campos: VIN y Operador.';
     } else {
         $fecha = date('Y-m-d H:i:s');
@@ -344,6 +350,9 @@ if ($exportExcel) {
             <div class="p-4">
                 <h1>Registro de Operadores</h1>
                 <div id="ajaxFeedback" style="display:none;" class="alert"></div>
+                <?php if (!$can_write_operadores): ?>
+                    <div class="alert alert-warning">Modo solo lectura: puedes consultar y filtrar reportes, pero no guardar registros.</div>
+                <?php endif; ?>
                 <?php if ($mensaje): ?>
                     <div class="alert alert-success"><?php echo htmlspecialchars($mensaje); ?></div>
                 <?php endif; ?>
@@ -382,18 +391,18 @@ if ($exportExcel) {
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label for="vin" class="form-label">VIN</label>
-                                        <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" required inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
+                                        <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" <?php echo $can_write_operadores ? 'required' : 'disabled'; ?> inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
                                     </div>
                                     <div class="col-md-6">
                                         <label for="nombre" class="form-label">Operador</label>
-                                        <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" required inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
+                                        <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" <?php echo $can_write_operadores ? 'required' : 'disabled'; ?> inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
                                     </div>
                                     <div class="col-12">
                                         <div class="scan-hint">Escanea VIN y luego operador. En móvil el teclado no debe abrirse automáticamente.</div>
                                     </div>
                                 </div>
                                 <div class="mt-3">
-                                    <button type="submit" name="guardar_operador" class="btn btn-primary">Guardar Registro</button>
+                                    <button type="submit" name="guardar_operador" class="btn btn-primary" <?php echo $can_write_operadores ? '' : 'disabled'; ?>>Guardar Registro</button>
                                 </div>
                             </form>
                         </div>
@@ -546,6 +555,11 @@ if ($exportExcel) {
     }
 
     async function submitFormAsync() {
+        if (!<?php echo $can_write_operadores ? 'true' : 'false'; ?>) {
+            showFeedback(false, 'Tu rol es solo lectura. No puedes guardar registros.');
+            return;
+        }
+
         if (vinInput.value.trim() === '' || operadorInput.value.trim() === '') {
             return;
         }

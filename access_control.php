@@ -47,6 +47,82 @@ function user_has_module_access($accessMap, $module) {
     return isset($accessMap[$module]);
 }
 
+function user_has_role_name($conn, $userId, $roleName) {
+    $userId = intval($userId);
+    if ($userId <= 0) {
+        return false;
+    }
+
+    $normalizedRole = mb_strtolower(trim((string)$roleName), 'UTF-8');
+    if ($normalizedRole === '') {
+        return false;
+    }
+
+    $stmt = $conn->prepare("SELECT 1 FROM usuario_rol ur JOIN roles r ON ur.rol_id = r.id WHERE ur.usuario_id = ? AND LOWER(r.nombre) = ? LIMIT 1");
+    if (!$stmt) {
+        return false;
+    }
+
+    $stmt->bind_param('is', $userId, $normalizedRole);
+    $stmt->execute();
+    $stmt->store_result();
+    $hasRole = $stmt->num_rows > 0;
+    $stmt->close();
+
+    return $hasRole;
+}
+
+function get_user_module_permissions($conn, $userId, $module) {
+    ensure_usuario_acceso_table($conn);
+
+    $permissions = [
+        'lectura' => false,
+        'escritura' => false,
+        'eliminacion' => false,
+    ];
+
+    $userId = intval($userId);
+    $module = trim((string)$module);
+    if ($userId <= 0 || $module === '') {
+        return $permissions;
+    }
+
+    $stmt = $conn->prepare("SELECT lectura, escritura, eliminacion FROM usuario_acceso WHERE usuario_id = ? AND modulo = ? LIMIT 1");
+    if (!$stmt) {
+        return $permissions;
+    }
+
+    $stmt->bind_param('is', $userId, $module);
+    $stmt->execute();
+    $stmt->bind_result($lectura, $escritura, $eliminacion);
+    if ($stmt->fetch()) {
+        $permissions['lectura'] = intval($lectura) === 1;
+        $permissions['escritura'] = intval($escritura) === 1;
+        $permissions['eliminacion'] = intval($eliminacion) === 1;
+    }
+    $stmt->close();
+
+    return $permissions;
+}
+
+function can_user_write_module($conn, $userId, $module) {
+    if (user_has_role_name($conn, $userId, 'lector')) {
+        return false;
+    }
+
+    $permissions = get_user_module_permissions($conn, $userId, $module);
+    return !empty($permissions['escritura']);
+}
+
+function can_user_delete_module($conn, $userId, $module) {
+    if (user_has_role_name($conn, $userId, 'lector')) {
+        return false;
+    }
+
+    $permissions = get_user_module_permissions($conn, $userId, $module);
+    return !empty($permissions['eliminacion']);
+}
+
 function get_home_page_for_access_map($accessMap) {
     if (empty($accessMap)) {
         return 'index.php';

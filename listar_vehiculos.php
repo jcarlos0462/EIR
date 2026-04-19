@@ -12,7 +12,12 @@ include 'database_connection.php';
 
 require_once 'access_control.php';
 require_module_access($conn, 'vehiculos');
-require_admin_role($conn);
+
+$current_user_id = intval($_SESSION['id'] ?? 0);
+$is_read_only = user_has_role_name($conn, $current_user_id, 'lector');
+$can_write_vehiculos = $current_user_id > 0 && can_user_write_module($conn, $current_user_id, 'vehiculos');
+$can_delete_vehiculos = $current_user_id > 0 && can_user_delete_module($conn, $current_user_id, 'vehiculos');
+$readonly_message = '';
 
 // Filtros
 $filter_marca = trim($_GET['marca'] ?? '');
@@ -135,7 +140,9 @@ function parse_xlsx_simple($file) {
 // Procesar importación de CSV/XLSX (exportado desde Excel)
 $import_summary = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) {
-    if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
+    if (!$can_write_vehiculos) {
+        $import_summary = ['error' => 'Tu rol es solo lectura. No puedes importar vehiculos.'];
+    } elseif (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
         $import_summary = ['error' => 'No se seleccionó archivo o hubo un error al subirlo.'];
     } else {
         $tmp = $_FILES['import_file']['tmp_name'];
@@ -362,28 +369,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos']) &
 
 // Procesar actualización si se envía
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
-    $id = $_POST['id'];
-    $buque = trim($_POST['buque']);
-    $viaje = trim($_POST['viaje']);
-    $marca = trim($_POST['marca']);
-    $modelo = trim($_POST['modelo']);
-    $color = trim($_POST['color']);
-    $puerto = trim($_POST['puerto']);
-    $terminal = trim($_POST['terminal']);
-    
-    $sql_update = "UPDATE vehiculo SET Buque=?, Viaje=?, Marca=?, Modelo=?, Color=?, Puerto=?, Terminal=? WHERE ID=?";
-    $stmt = $conn->prepare($sql_update);
-    $stmt->bind_param("sssssssi", $buque, $viaje, $marca, $modelo, $color, $puerto, $terminal, $id);
-    
-    if ($stmt->execute()) {
-        header("Location: listar_vehiculos.php?exito=1");
+    if (!$can_write_vehiculos) {
+        header("Location: listar_vehiculos.php?readonly=1");
         exit();
+    } else {
+        $id = $_POST['id'];
+        $buque = trim($_POST['buque']);
+        $viaje = trim($_POST['viaje']);
+        $marca = trim($_POST['marca']);
+        $modelo = trim($_POST['modelo']);
+        $color = trim($_POST['color']);
+        $puerto = trim($_POST['puerto']);
+        $terminal = trim($_POST['terminal']);
+
+        $sql_update = "UPDATE vehiculo SET Buque=?, Viaje=?, Marca=?, Modelo=?, Color=?, Puerto=?, Terminal=? WHERE ID=?";
+        $stmt = $conn->prepare($sql_update);
+        $stmt->bind_param("sssssssi", $buque, $viaje, $marca, $modelo, $color, $puerto, $terminal, $id);
+
+        if ($stmt->execute()) {
+            header("Location: listar_vehiculos.php?exito=1");
+            exit();
+        }
+        $stmt->close();
     }
-    $stmt->close();
 }
 
 // Procesar eliminación si se solicita
 if (isset($_GET['eliminar'])) {
+    if (!$can_delete_vehiculos) {
+        header("Location: listar_vehiculos.php?readonly=1");
+        exit();
+    }
     $id = intval($_GET['eliminar']);
     $conn->begin_transaction();
     try {
@@ -422,14 +438,18 @@ if (isset($_GET['eliminar'])) {
 $edit_mode = false;
 $vehiculo_edit = null;
 if (isset($_GET['editar'])) {
-    $edit_mode = true;
-    $id_edit = $_GET['editar'];
-    $sql_edit = "SELECT * FROM vehiculo WHERE ID = ?";
-    $stmt = $conn->prepare($sql_edit);
-    $stmt->bind_param("i", $id_edit);
-    $stmt->execute();
-    $vehiculo_edit = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+    if ($can_write_vehiculos) {
+        $edit_mode = true;
+        $id_edit = $_GET['editar'];
+        $sql_edit = "SELECT * FROM vehiculo WHERE ID = ?";
+        $stmt = $conn->prepare($sql_edit);
+        $stmt->bind_param("i", $id_edit);
+        $stmt->execute();
+        $vehiculo_edit = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+    } else {
+        $readonly_message = 'Tu rol es solo lectura. Solo puedes consultar vehiculos.';
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -490,12 +510,21 @@ if (isset($_GET['editar'])) {
                     <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Lista de Vehículos</h2>
                     <div class="d-flex gap-2 align-items-center">
-                        <form method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
-                            <input type="file" name="import_file" accept=".csv,.xlsx" class="form-control form-control-sm">
-                            <button type="submit" name="import_vehiculos" class="btn btn-success btn-sm">Importar archivo</button>
-                        </form>
+                        <?php if ($can_write_vehiculos): ?>
+                            <form method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                                <input type="file" name="import_file" accept=".csv,.xlsx" class="form-control form-control-sm">
+                                <button type="submit" name="import_vehiculos" class="btn btn-success btn-sm">Importar archivo</button>
+                            </form>
+                        <?php else: ?>
+                            <span class="badge bg-secondary">Modo solo lectura</span>
+                        <?php endif; ?>
                     </div>
                 </div>
+                <?php if (isset($_GET['readonly']) || $readonly_message !== ''): ?>
+                    <div class="alert alert-warning" role="alert">
+                        <?php echo htmlspecialchars($readonly_message !== '' ? $readonly_message : 'Tu rol es solo lectura. No puedes realizar cambios.'); ?>
+                    </div>
+                <?php endif; ?>
                 <?php if ($import_summary !== null): ?>
                     <div class="alert alert-info">
                         <strong>Importación:</strong>
@@ -588,7 +617,9 @@ if (isset($_GET['editar'])) {
                                 <th>Color</th>
                                 <th>Puerto</th>
                                 <th>Terminal</th>
-                                <th>Acciones</th>
+                                <?php if ($can_write_vehiculos || $can_delete_vehiculos): ?>
+                                    <th>Acciones</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -603,10 +634,16 @@ if (isset($_GET['editar'])) {
                                         <td><?php echo htmlspecialchars($row['Color']); ?></td>
                                         <td><?php echo htmlspecialchars($row['Puerto']); ?></td>
                                         <td><?php echo htmlspecialchars($row['Terminal']); ?></td>
-                                        <td>
-                                            <a href="?editar=<?php echo $row['ID']; ?>" class="btn btn-sm btn-edit">Editar</a>
-                                            <a href="?eliminar=<?php echo $row['ID']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Está seguro de que desea eliminar este vehículo?')">Eliminar</a>
-                                        </td>
+                                        <?php if ($can_write_vehiculos || $can_delete_vehiculos): ?>
+                                            <td>
+                                                <?php if ($can_write_vehiculos): ?>
+                                                    <a href="?editar=<?php echo $row['ID']; ?>" class="btn btn-sm btn-edit">Editar</a>
+                                                <?php endif; ?>
+                                                <?php if ($can_delete_vehiculos): ?>
+                                                    <a href="?eliminar=<?php echo $row['ID']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Está seguro de que desea eliminar este vehículo?')">Eliminar</a>
+                                                <?php endif; ?>
+                                            </td>
+                                        <?php endif; ?>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php elseif ($filters_ready): ?>
@@ -626,7 +663,7 @@ if (isset($_GET['editar'])) {
     </div>
 
     <!-- Modal para Editar -->
-    <?php if ($edit_mode && $vehiculo_edit): ?>
+    <?php if ($can_write_vehiculos && $edit_mode && $vehiculo_edit): ?>
         <div class="modal fade show" id="editModal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">

@@ -51,6 +51,7 @@ $tipo_operacion = $_SESSION['tipo_operacion'] ?? '';
 $puerto_sesion = $_SESSION['puerto'] ?? '';
 $puerto_vehiculo = '';
 $is_admin = false;
+$is_read_only = false;
 
 if (!empty($usuario_id)) {
     $stmt_admin = $conn->prepare("SELECT 1 FROM usuario_rol ur JOIN roles r ON ur.rol_id = r.id WHERE ur.usuario_id = ? AND LOWER(r.nombre) = 'administrador' LIMIT 1");
@@ -62,8 +63,11 @@ if (!empty($usuario_id)) {
         $is_admin = $stmt_admin->num_rows > 0;
         $stmt_admin->close();
     }
+
+    $is_read_only = user_has_role_name($conn, intval($usuario_id), 'lector');
 }
-$can_manage_damage_records = $is_admin;
+$can_create_damage_records = !empty($usuario_id) && can_user_write_module($conn, intval($usuario_id), 'danos');
+$can_manage_damage_records = $is_admin && !$is_read_only;
 
 // Buscar VIN (por POST, GET o contexto de acción)
 if (isset($_POST['buscar_vin'])) {
@@ -123,6 +127,9 @@ if (isset($_POST['eliminar_danio']) && isset($_POST['id_danio'])) {
 }
 // Marcar como revisado: insertar un nuevo registro con area/tipo/severidad = 0 para el VIN
 if (isset($_POST['marcar_revisado'])) {
+    if (!$can_create_damage_records) {
+        $errores[] = 'Tu rol es solo lectura. No puedes marcar revisado.';
+    } else {
     $vin_revisado = isset($_POST['vin']) ? trim($_POST['vin']) : '';
         if ($vin_revisado) {
         $tipo_operacion_to_use = !empty($tipo_operacion) ? $tipo_operacion : 'Revisado';
@@ -178,9 +185,13 @@ if (isset($_POST['marcar_revisado'])) {
         header("Location: Registro_Daños.php");
     }
     exit();
+    }
 }
 // Guardar daño
 if (isset($_POST['guardar_danio'])) {
+    if (!$can_create_damage_records) {
+        $errores[] = 'Tu rol es solo lectura. No puedes agregar danos.';
+    } else {
     $vin = trim($_POST['vin']);
     $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
     $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
@@ -202,6 +213,7 @@ if (isset($_POST['guardar_danio'])) {
     } else {
         $errores[] = 'Todos los campos son obligatorios.';
         $show_form = true;
+    }
     }
 }
 // Editar daño
@@ -729,15 +741,24 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     <div class="damage-toolbar">
                         <h4 class="mb-0">Daños Registrados</h4>
                         <div class="damage-actions">
-                            <form method="post">
-                                <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                <button type="submit" name="marcar_revisado" class="btn btn-sm modern-btn modern-btn-success same-size-btn">
+                            <?php if ($can_create_damage_records): ?>
+                                <form method="post">
+                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                    <button type="submit" name="marcar_revisado" class="btn btn-sm modern-btn modern-btn-success same-size-btn">
+                                        <i class="bi bi-check2-circle"></i> Revisado
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm modern-btn modern-btn-danger same-size-btn" data-bs-toggle="modal" data-bs-target="#modalAgregarDanio">
+                                    <i class="bi bi-plus-lg"></i> Agregar Daño
+                                </button>
+                            <?php else: ?>
+                                <button type="button" class="btn btn-sm modern-btn modern-btn-success same-size-btn" disabled>
                                     <i class="bi bi-check2-circle"></i> Revisado
                                 </button>
-                            </form>
-                            <button type="button" class="btn btn-sm modern-btn modern-btn-danger same-size-btn" data-bs-toggle="modal" data-bs-target="#modalAgregarDanio">
-                                <i class="bi bi-plus-lg"></i> Agregar Daño
-                            </button>
+                                <button type="button" class="btn btn-sm modern-btn modern-btn-danger same-size-btn" disabled>
+                                    <i class="bi bi-plus-lg"></i> Agregar Daño
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <?php if (!empty($danios)): ?>
@@ -872,70 +893,72 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                         <div class="alert alert-info mb-0">No hay daños registrados para este VIN.</div>
                     <?php endif; ?>
                 </div>
-                <div class="modal fade" id="modalAgregarDanio" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content modern-modal-content">
-                            <div class="modal-header modern-modal-header-primary">
-                                <h5 class="modal-title">Agregar Daño</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <?php if ($can_create_damage_records): ?>
+                    <div class="modal fade" id="modalAgregarDanio" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content modern-modal-content">
+                                <div class="modal-header modern-modal-header-primary">
+                                    <h5 class="modal-title">Agregar Daño</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+                                <form method="post">
+                                    <div class="modal-body">
+                                        <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
+                                        <div class="mb-3">
+                                            <label class="form-label modern-label">Área</label>
+                                            <div class="searchable-dropdown" data-searchable-dropdown>
+                                                <input type="hidden" name="area" value="" required>
+                                                <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione área" value="" autocomplete="off" spellcheck="false">
+                                                <div class="searchable-dropdown-menu">
+                                                    <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
+                                                    <?php foreach ($areasList as $area): ?>
+                                                        <?php $areaLabel = formatDamageOptionLabel($area['CodAreaDano'], $area['NomAreaDano']); ?>
+                                                        <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($area['CodAreaDano']); ?>" data-label="<?php echo htmlspecialchars($areaLabel); ?>"><?php echo htmlspecialchars($areaLabel); ?></button>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                                <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label modern-label">Tipo</label>
+                                            <div class="searchable-dropdown" data-searchable-dropdown>
+                                                <input type="hidden" name="tipo" value="" required>
+                                                <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione tipo" value="" autocomplete="off" spellcheck="false">
+                                                <div class="searchable-dropdown-menu">
+                                                    <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
+                                                    <?php foreach ($tiposList as $tipo): ?>
+                                                        <?php $tipoLabel = formatDamageOptionLabel($tipo['CodTipoDano'], $tipo['NomTipoDano']); ?>
+                                                        <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($tipo['CodTipoDano']); ?>" data-label="<?php echo htmlspecialchars($tipoLabel); ?>"><?php echo htmlspecialchars($tipoLabel); ?></button>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                                <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label modern-label">Severidad</label>
+                                            <div class="searchable-dropdown" data-searchable-dropdown>
+                                                <input type="hidden" name="severidad" value="" required>
+                                                <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione severidad" value="" autocomplete="off" spellcheck="false">
+                                                <div class="searchable-dropdown-menu">
+                                                    <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
+                                                    <?php foreach ($severidadesList as $severidad): ?>
+                                                        <?php $severidadLabel = formatDamageOptionLabel($severidad['CodSeveridadDano'], $severidad['NomSeveridadDano']); ?>
+                                                        <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($severidad['CodSeveridadDano']); ?>" data-label="<?php echo htmlspecialchars($severidadLabel); ?>"><?php echo htmlspecialchars($severidadLabel); ?></button>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                                <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn modern-btn" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" name="guardar_danio" class="btn modern-btn modern-btn-primary">Guardar</button>
+                                    </div>
+                                </form>
                             </div>
-                            <form method="post">
-                                <div class="modal-body">
-                                    <input type="hidden" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
-                                    <div class="mb-3">
-                                        <label class="form-label modern-label">Área</label>
-                                        <div class="searchable-dropdown" data-searchable-dropdown>
-                                            <input type="hidden" name="area" value="" required>
-                                            <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione área" value="" autocomplete="off" spellcheck="false">
-                                            <div class="searchable-dropdown-menu">
-                                                <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
-                                                <?php foreach ($areasList as $area): ?>
-                                                    <?php $areaLabel = formatDamageOptionLabel($area['CodAreaDano'], $area['NomAreaDano']); ?>
-                                                    <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($area['CodAreaDano']); ?>" data-label="<?php echo htmlspecialchars($areaLabel); ?>"><?php echo htmlspecialchars($areaLabel); ?></button>
-                                                <?php endforeach; ?>
-                                            </div>
-                                            <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label modern-label">Tipo</label>
-                                        <div class="searchable-dropdown" data-searchable-dropdown>
-                                            <input type="hidden" name="tipo" value="" required>
-                                            <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione tipo" value="" autocomplete="off" spellcheck="false">
-                                            <div class="searchable-dropdown-menu">
-                                                <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
-                                                <?php foreach ($tiposList as $tipo): ?>
-                                                    <?php $tipoLabel = formatDamageOptionLabel($tipo['CodTipoDano'], $tipo['NomTipoDano']); ?>
-                                                    <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($tipo['CodTipoDano']); ?>" data-label="<?php echo htmlspecialchars($tipoLabel); ?>"><?php echo htmlspecialchars($tipoLabel); ?></button>
-                                                <?php endforeach; ?>
-                                            </div>
-                                            <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label modern-label">Severidad</label>
-                                        <div class="searchable-dropdown" data-searchable-dropdown>
-                                            <input type="hidden" name="severidad" value="" required>
-                                            <input type="text" class="form-control modern-input searchable-dropdown-input" data-searchable-input placeholder="Seleccione severidad" value="" autocomplete="off" spellcheck="false">
-                                            <div class="searchable-dropdown-menu">
-                                                <div class="searchable-dropdown-empty">No se encontraron coincidencias.</div>
-                                                <?php foreach ($severidadesList as $severidad): ?>
-                                                    <?php $severidadLabel = formatDamageOptionLabel($severidad['CodSeveridadDano'], $severidad['NomSeveridadDano']); ?>
-                                                    <button type="button" class="searchable-dropdown-option" data-value="<?php echo intval($severidad['CodSeveridadDano']); ?>" data-label="<?php echo htmlspecialchars($severidadLabel); ?>"><?php echo htmlspecialchars($severidadLabel); ?></button>
-                                                <?php endforeach; ?>
-                                            </div>
-                                            <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn modern-btn" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" name="guardar_danio" class="btn modern-btn modern-btn-primary">Guardar</button>
-                                </div>
-                            </form>
                         </div>
                     </div>
-                </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>

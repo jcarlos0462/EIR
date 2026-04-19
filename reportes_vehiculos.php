@@ -15,7 +15,6 @@ include 'database_connection.php';
 
 require_once 'access_control.php';
 require_module_access($conn, 'reportes');
-require_admin_role($conn);
 
 // Fetch filter lists
 $buques = [];
