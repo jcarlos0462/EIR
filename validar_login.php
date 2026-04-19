@@ -88,6 +88,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt_op->close();
             
             $homePage = get_user_home_page($conn, intval($row['ID']));
+            if ($homePage === 'index.php') {
+                unset($_SESSION['id'], $_SESSION['nombre'], $_SESSION['usuario'], $_SESSION['logueado'], $_SESSION['tipo_operacion'], $_SESSION['puerto']);
+                $_SESSION['error'] = 'Tu usuario no tiene accesos asignados. Contacta al administrador.';
+                header("Location: index.php");
+                exit();
+            }
             header("Location: " . $homePage);
             exit();
         } else {

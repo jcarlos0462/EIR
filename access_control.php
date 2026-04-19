@@ -50,7 +50,7 @@ function user_has_module_access($accessMap, $module) {
 
 function get_home_page_for_access_map($accessMap) {
     if (empty($accessMap)) {
-        return 'Registro_Daños.php';
+        return 'index.php';
     }
 
     // Prioridad de módulos para definir la página inicial cuando hay varios accesos.
@@ -96,7 +96,7 @@ function require_module_access($conn, $module) {
     }
 
     $accessMap = get_user_access_map($conn, $userId);
-    if (!empty($accessMap) && !user_has_module_access($accessMap, $module)) {
+    if (empty($accessMap) || !user_has_module_access($accessMap, $module)) {
         $homePage = get_home_page_for_access_map($accessMap);
         http_response_code(403);
         echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Acceso denegado</title>' .

@@ -15,7 +15,7 @@ require_once 'access_control.php';
 
 $userId = intval($_SESSION['id'] ?? 0);
 $accessMap = ($userId > 0) ? get_user_access_map($conn, $userId) : [];
-$hasAnyAccess = !empty($accessMap);
+
 
 $is_admin = false;
 if ($userId > 0) {
@@ -29,18 +29,15 @@ if ($userId > 0) {
     }
 }
 
-$allowDanos = !$hasAnyAccess || user_has_module_access($accessMap, 'danos');
-$allowVehiculos = !$hasAnyAccess || user_has_module_access($accessMap, 'vehiculos');
-$allowReportes = !$hasAnyAccess || user_has_module_access($accessMap, 'reportes');
-$allowUsuarios = !$hasAnyAccess || user_has_module_access($accessMap, 'usuarios');
-$allowOperadores = true; // Mostrar siempre el enlace a Registro de Operadores
-$allowConfig = !$hasAnyAccess || user_has_module_access($accessMap, 'configuracion');
+
+$allowDanos = user_has_module_access($accessMap, 'danos');
+$allowVehiculos = user_has_module_access($accessMap, 'vehiculos');
+$allowReportes = user_has_module_access($accessMap, 'reportes');
+$allowUsuarios = user_has_module_access($accessMap, 'usuarios');
+$allowOperadores = user_has_module_access($accessMap, 'operadores');
+$allowConfig = user_has_module_access($accessMap, 'configuracion');
 
 if (!$is_admin) {
-    $allowDanos = true;
-    $allowVehiculos = false;
-    $allowReportes = false;
-    $allowUsuarios = false;
     $allowConfig = false;
 }
 ?>
