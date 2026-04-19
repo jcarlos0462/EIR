@@ -503,7 +503,7 @@ if ($has_filter) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Reportes Vehículos - EIR</title>
+    <title>Reporte de daños - EIR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="navbar_styles.css">
@@ -627,7 +627,7 @@ if ($has_filter) {
         <div class="col-md-9 col-lg-10 main-content">
             <div class="card filters-card no-print">
                 <div class="card-body">
-                    <h4>Reportes - Vehículos y Daños</h4>
+                    <h4>Reporte de daños - Vehículos y Daños</h4>
                     <?php
                         // build print URL with current filters
                         $print_params = [];

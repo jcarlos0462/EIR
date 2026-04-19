@@ -50,7 +50,7 @@ if (!$is_admin) {
         <a href="listar_vehiculos.php" class="sidebar-link mb-2 <?php echo active_link('listar_vehiculos.php'); ?>">Vehículos</a>
     <?php endif; ?>
     <?php if ($allowReportes): ?>
-        <a href="reportes_vehiculos.php" class="sidebar-link mb-2 <?php echo active_link('reportes_vehiculos.php'); ?>">Reportes</a>
+        <a href="reportes_vehiculos.php" class="sidebar-link mb-2 <?php echo active_link('reportes_vehiculos.php'); ?>">Reporte de daños</a>
     <?php endif; ?>
     <?php if ($allowOperadores): ?>
         <a href="Registro_Operadores.php" class="sidebar-link mb-2 <?php echo active_link('Registro_Operadores.php'); ?>">Registro de Operadores</a>

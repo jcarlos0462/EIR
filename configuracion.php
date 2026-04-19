@@ -747,7 +747,7 @@ $usuarios_count = $totalUsuarios;
                                         <option value="">Seleccionar módulo...</option>
                                         <option value="vehiculos">Vehículos</option>
                                         <option value="danos">Daños</option>
-                                        <option value="reportes">Reportes</option>
+                                        <option value="reportes">Reporte de daños</option>
                                         <option value="operadores">Registro de Operadores</option>
                                         <option value="configuracion">Configuración</option>
                                     </select>
