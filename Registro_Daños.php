@@ -159,7 +159,9 @@ if ($vin) {
         $puerto_vehiculo = $puerto_db;
         // Buscar daños registrados con descripciones
         $stmt->close();
-        $sql = "SELECT r.ID, r.TipoOperacion AS Origen, r.Puerto AS Puerto, a.CodAreaDano, a.NomAreaDano, t.CodTipoDano, t.NomTipoDano, s.CodSeveridadDano, s.NomSeveridadDano FROM RegistroDanio r
+        $sql = "SELECT r.ID, r.TipoOperacion AS Origen, r.Puerto AS Puerto, a.CodAreaDano, a.NomAreaDano, t.CodTipoDano, t.NomTipoDano, s.CodSeveridadDano, s.NomSeveridadDano,
+            (SELECT rf.FotoRuta FROM RegistroDanioFoto rf WHERE rf.RegistroDanioID = r.ID ORDER BY rf.ID DESC LIMIT 1) AS FotoRuta
+            FROM RegistroDanio r
                 JOIN areadano a ON r.CodAreaDano = a.CodAreaDano
                 JOIN tipodano t ON r.CodTipoDano = t.CodTipoDano
                 JOIN severidaddano s ON r.CodSeveridadDano = s.CodSeveridadDano
@@ -866,6 +868,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                         <th>Área</th>
                                         <th>Tipo</th>
                                         <th>Severidad</th>
+                                        <th>Foto</th>
                                         <?php if ($can_manage_damage_records): ?>
                                             <th class="text-end">Acciones</th>
                                         <?php endif; ?>
@@ -884,6 +887,15 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                             <td><?php echo htmlspecialchars($areaDisplay); ?></td>
                                             <td><?php echo htmlspecialchars($tipoDisplay); ?></td>
                                             <td><?php echo htmlspecialchars($sevDisplay); ?></td>
+                                            <td>
+                                                <?php if (!empty($danio['FotoRuta'])): ?>
+                                                    <button type="button" class="btn btn-sm modern-btn modern-btn-primary btn-view-photo" data-foto="<?php echo htmlspecialchars($danio['FotoRuta'], ENT_QUOTES, 'UTF-8'); ?>" title="Ver foto">
+                                                        <i class="bi bi-image"></i>
+                                                    </button>
+                                                <?php else: ?>
+                                                    <span class="text-muted">Sin foto</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <?php if ($can_manage_damage_records): ?>
                                                 <td class="text-end">
                                                     <button type="button" class="btn btn-sm modern-btn modern-btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditarDanio<?php echo intval($danio['ID']); ?>">
@@ -987,6 +999,19 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     <?php else: ?>
                         <div class="alert alert-info mb-0">No hay daños registrados para este VIN.</div>
                     <?php endif; ?>
+                </div>
+                <div class="modal fade" id="modalVerFotoDanio" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content modern-modal-content">
+                            <div class="modal-header modern-modal-header-primary">
+                                <h5 class="modal-title">Fotografía del daño</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <img id="fotoDanioPreview" src="" alt="Fotografía del daño" class="img-fluid rounded" style="max-height:70vh; object-fit:contain; background:#f8f9fa;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <?php if ($can_create_damage_records): ?>
                     <div class="modal fade" id="modalAgregarDanio" tabindex="-1" aria-hidden="true">
@@ -1437,6 +1462,29 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     if (cameraCaptureBtn) cameraCaptureBtn.disabled = true;
                     if (cameraRetakeBtn) cameraRetakeBtn.disabled = true;
                     if (cameraPreviewBox) cameraPreviewBox.classList.add('d-none');
+                });
+            }
+
+            const viewPhotoModalEl = document.getElementById('modalVerFotoDanio');
+            const fotoDanioPreview = document.getElementById('fotoDanioPreview');
+            const viewPhotoModal = (viewPhotoModalEl && window.bootstrap && window.bootstrap.Modal)
+                ? new window.bootstrap.Modal(viewPhotoModalEl)
+                : null;
+
+            document.querySelectorAll('.btn-view-photo').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (!viewPhotoModal || !fotoDanioPreview) return;
+                    const fotoRuta = btn.getAttribute('data-foto') || '';
+                    fotoDanioPreview.src = fotoRuta;
+                    viewPhotoModal.show();
+                });
+            });
+
+            if (viewPhotoModalEl) {
+                viewPhotoModalEl.addEventListener('hidden.bs.modal', function() {
+                    if (fotoDanioPreview) {
+                        fotoDanioPreview.src = '';
+                    }
                 });
             }
         })();
