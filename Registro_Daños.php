@@ -36,6 +36,72 @@ function formatDamageOptionLabel($code, $name) {
     return trim((string)$code) . ' - ' . trim((string)$name);
 }
 
+function ensure_damage_photo_table($conn) {
+    $conn->query("CREATE TABLE IF NOT EXISTS RegistroDanioFoto (
+        ID INT AUTO_INCREMENT PRIMARY KEY,
+        RegistroDanioID INT NOT NULL,
+        FotoRuta VARCHAR(255) NOT NULL,
+        FechaRegistro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (RegistroDanioID) REFERENCES RegistroDanio(ID) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
+function save_damage_photo($conn, $danioId, $photoData) {
+    $photoData = trim((string)$photoData);
+    if ($photoData === '') {
+        return null;
+    }
+
+    if (!preg_match('/^data:image\/(jpeg|jpg|png|webp);base64,/', $photoData, $matches)) {
+        return 'La fotografia no tiene un formato valido.';
+    }
+
+    $ext = strtolower($matches[1]);
+    if ($ext === 'jpeg') {
+        $ext = 'jpg';
+    }
+
+    $base64 = substr($photoData, strpos($photoData, ',') + 1);
+    $binary = base64_decode($base64, true);
+    if ($binary === false) {
+        return 'No se pudo procesar la fotografia capturada.';
+    }
+
+    $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'danios';
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true)) {
+        return 'No se pudo crear el directorio para guardar la fotografia.';
+    }
+
+    try {
+        $randomToken = bin2hex(random_bytes(4));
+    } catch (Exception $e) {
+        $randomToken = (string)mt_rand(1000, 9999);
+    }
+
+    $fileName = 'danio_' . intval($danioId) . '_' . date('Ymd_His') . '_' . $randomToken . '.' . $ext;
+    $filePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+    if (file_put_contents($filePath, $binary) === false) {
+        return 'No se pudo guardar la fotografia en el servidor.';
+    }
+
+    $relativePath = 'uploads/danios/' . $fileName;
+    ensure_damage_photo_table($conn);
+    $stmt = $conn->prepare("INSERT INTO RegistroDanioFoto (RegistroDanioID, FotoRuta) VALUES (?, ?)");
+    if (!$stmt) {
+        return 'No se pudo asociar la fotografia al registro de dano.';
+    }
+
+    $danioId = intval($danioId);
+    $stmt->bind_param('is', $danioId, $relativePath);
+    if (!$stmt->execute()) {
+        $stmt->close();
+        return 'No se pudo registrar la fotografia del dano.';
+    }
+    $stmt->close();
+
+    return null;
+}
+
 // Cargar IDs sentinel (si existen) para mapearlos a 0 en la vista
 $sentinelAreaId = findRevisadoId($conn, 'areadano', 'CodAreaDano', 'NomAreaDano');
 $sentinelTipoId = findRevisadoId($conn, 'tipodano', 'CodTipoDano', 'NomTipoDano');
@@ -44,6 +110,7 @@ $sentinelSeveridadId = findRevisadoId($conn, 'severidaddano', 'CodSeveridadDano'
 // Inicializar variables
 $vin = $marca = $modelo = $color = '';
 $errores = [];
+$avisos = [];
 $danios = [];
 $show_form = false;
 $usuario_id = $_SESSION['id'] ?? null;
@@ -68,6 +135,11 @@ if (!empty($usuario_id)) {
 }
 $can_create_damage_records = !empty($usuario_id) && can_user_write_module($conn, intval($usuario_id), 'danos');
 $can_manage_damage_records = $is_admin && !$is_read_only;
+
+if (!empty($_SESSION['damage_photo_warning'])) {
+    $avisos[] = $_SESSION['damage_photo_warning'];
+    unset($_SESSION['damage_photo_warning']);
+}
 
 // Buscar VIN (por POST, GET o contexto de acción)
 if (isset($_POST['buscar_vin'])) {
@@ -196,6 +268,7 @@ if (isset($_POST['guardar_danio'])) {
     $area = isset($_POST['area']) ? intval($_POST['area']) : 0;
     $tipo = isset($_POST['tipo']) ? intval($_POST['tipo']) : 0;
     $severidad = isset($_POST['severidad']) ? intval($_POST['severidad']) : 0;
+    $foto_danio_data = $_POST['foto_danio_data'] ?? '';
     if (!$usuario_id || $tipo_operacion === '') {
         $errores[] = 'Debe iniciar sesión y seleccionar el tipo de operación.';
         $show_form = true;
@@ -203,6 +276,11 @@ if (isset($_POST['guardar_danio'])) {
         $stmt = $conn->prepare("INSERT INTO RegistroDanio (VIN, CodAreaDano, CodTipoDano, CodSeveridadDano, UsuarioID, TipoOperacion, Puerto) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param('siiiiss', $vin, $area, $tipo, $severidad, $usuario_id, $tipo_operacion, $puerto_sesion);
         if ($stmt->execute()) {
+            $newDanioId = intval($stmt->insert_id ?: $conn->insert_id);
+            $photoWarning = save_damage_photo($conn, $newDanioId, $foto_danio_data);
+            if ($photoWarning) {
+                $_SESSION['damage_photo_warning'] = $photoWarning;
+            }
             // Redirigir para evitar duplicado al refrescar (PRG) y mantener contexto VIN
             header("Location: Registro_Daños.php?vin=" . urlencode($vin));
             exit();
@@ -624,6 +702,20 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             display: flex;
             align-items: center;
         }
+        .camera-preview {
+            border: 1px solid #d8e1f3;
+            border-radius: 12px;
+            background: #f5f8ff;
+            padding: 0.6rem;
+        }
+        .camera-preview video,
+        .camera-preview img {
+            width: 100%;
+            max-height: 260px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: #0f172a;
+        }
         @media (max-width: 768px) {
             #formBuscar {
                 flex-direction: column !important;
@@ -711,6 +803,9 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             </div>
             <?php if ($errores): ?>
                 <div class="alert alert-danger py-2"><?php echo implode('<br>', $errores); ?></div>
+            <?php endif; ?>
+            <?php if ($avisos): ?>
+                <div class="alert alert-warning py-2"><?php echo implode('<br>', $avisos); ?></div>
             <?php endif; ?>
             <?php if ($marca): ?>
                 <div class="vehiculo-card">
@@ -948,6 +1043,22 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                                                 </div>
                                                 <div class="searchable-dropdown-help">Escribe para filtrar y toca una opción de la misma lista.</div>
                                             </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label modern-label">Fotografía del daño (opcional)</label>
+                                            <div class="d-flex gap-2 flex-wrap mb-2">
+                                                <button type="button" class="btn btn-sm modern-btn modern-btn-primary" id="cameraEnableBtn">Habilitar cámara</button>
+                                                <button type="button" class="btn btn-sm modern-btn modern-btn-success" id="cameraCaptureBtn" disabled>Capturar foto</button>
+                                                <button type="button" class="btn btn-sm modern-btn modern-btn-warning" id="cameraRetakeBtn" disabled>Repetir</button>
+                                            </div>
+                                            <div id="cameraError" class="alert alert-warning py-2 d-none mb-2"></div>
+                                            <div class="camera-preview d-none" id="cameraPreviewBox">
+                                                <video id="cameraVideo" autoplay playsinline muted></video>
+                                                <canvas id="cameraCanvas" class="d-none"></canvas>
+                                                <img id="cameraSnapshot" alt="Foto del daño" class="d-none">
+                                            </div>
+                                            <input type="hidden" name="foto_danio_data" id="fotoDanioData" value="">
+                                            <div class="searchable-dropdown-help">Activa la cámara, captura la evidencia y guarda el daño.</div>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -1205,6 +1316,129 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             });
 
             document.querySelectorAll('[data-searchable-dropdown]').forEach(initSearchableDropdown);
+
+            const addDamageModal = document.getElementById('modalAgregarDanio');
+            const cameraEnableBtn = document.getElementById('cameraEnableBtn');
+            const cameraCaptureBtn = document.getElementById('cameraCaptureBtn');
+            const cameraRetakeBtn = document.getElementById('cameraRetakeBtn');
+            const cameraPreviewBox = document.getElementById('cameraPreviewBox');
+            const cameraVideo = document.getElementById('cameraVideo');
+            const cameraCanvas = document.getElementById('cameraCanvas');
+            const cameraSnapshot = document.getElementById('cameraSnapshot');
+            const cameraError = document.getElementById('cameraError');
+            const fotoDanioData = document.getElementById('fotoDanioData');
+            let cameraStream = null;
+
+            function showCameraError(message) {
+                if (!cameraError) return;
+                if (!message) {
+                    cameraError.textContent = '';
+                    cameraError.classList.add('d-none');
+                    return;
+                }
+                cameraError.textContent = message;
+                cameraError.classList.remove('d-none');
+            }
+
+            function stopCameraStream() {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+                    cameraStream = null;
+                }
+                if (cameraVideo) {
+                    cameraVideo.pause();
+                    cameraVideo.srcObject = null;
+                }
+            }
+
+            async function enableCamera() {
+                if (!cameraVideo || !cameraPreviewBox) return;
+
+                showCameraError('');
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    showCameraError('Tu navegador no soporta acceso a cámara.');
+                    return;
+                }
+
+                stopCameraStream();
+
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { ideal: 'environment' } },
+                        audio: false
+                    });
+                    cameraVideo.srcObject = cameraStream;
+                    cameraPreviewBox.classList.remove('d-none');
+                    cameraVideo.classList.remove('d-none');
+                    if (cameraSnapshot) cameraSnapshot.classList.add('d-none');
+                    if (cameraCaptureBtn) cameraCaptureBtn.disabled = false;
+                    if (cameraRetakeBtn) cameraRetakeBtn.disabled = false;
+                } catch (error) {
+                    showCameraError('No se pudo habilitar la cámara. Verifica permisos del navegador.');
+                }
+            }
+
+            function capturePhoto() {
+                if (!cameraVideo || !cameraCanvas || !cameraSnapshot || !fotoDanioData) return;
+                if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+                    showCameraError('La cámara todavía no está lista para capturar.');
+                    return;
+                }
+
+                showCameraError('');
+                cameraCanvas.width = cameraVideo.videoWidth;
+                cameraCanvas.height = cameraVideo.videoHeight;
+                const ctx = cameraCanvas.getContext('2d');
+                ctx.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+                const dataUrl = cameraCanvas.toDataURL('image/jpeg', 0.88);
+                fotoDanioData.value = dataUrl;
+                cameraSnapshot.src = dataUrl;
+                cameraSnapshot.classList.remove('d-none');
+                cameraVideo.classList.add('d-none');
+                stopCameraStream();
+            }
+
+            function resetCapturedPhoto() {
+                if (fotoDanioData) fotoDanioData.value = '';
+                if (cameraSnapshot) {
+                    cameraSnapshot.src = '';
+                    cameraSnapshot.classList.add('d-none');
+                }
+                if (cameraVideo) {
+                    cameraVideo.classList.remove('d-none');
+                }
+                showCameraError('');
+            }
+
+            if (cameraEnableBtn) {
+                cameraEnableBtn.addEventListener('click', function() {
+                    enableCamera();
+                });
+            }
+
+            if (cameraCaptureBtn) {
+                cameraCaptureBtn.addEventListener('click', function() {
+                    capturePhoto();
+                });
+            }
+
+            if (cameraRetakeBtn) {
+                cameraRetakeBtn.addEventListener('click', function() {
+                    resetCapturedPhoto();
+                    enableCamera();
+                });
+            }
+
+            if (addDamageModal) {
+                addDamageModal.addEventListener('hidden.bs.modal', function() {
+                    stopCameraStream();
+                    resetCapturedPhoto();
+                    if (cameraCaptureBtn) cameraCaptureBtn.disabled = true;
+                    if (cameraRetakeBtn) cameraRetakeBtn.disabled = true;
+                    if (cameraPreviewBox) cameraPreviewBox.classList.add('d-none');
+                });
+            }
         })();
     </script>
 </body>
