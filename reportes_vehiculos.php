@@ -48,8 +48,12 @@ $date_to = isset($_REQUEST['date_to']) ? trim($_REQUEST['date_to']) : '';
 $area = isset($_REQUEST['area']) ? trim($_REQUEST['area']) : '';
 $maniobra = isset($_REQUEST['maniobra']) ? trim($_REQUEST['maniobra']) : '';
 $origen = isset($_REQUEST['origen']) ? trim($_REQUEST['origen']) : '';
-$page = max(1, intval($_GET['page'] ?? 1));
+$page = max(1, intval(isset($_GET['page']) ? $_GET['page'] : 1));
 $rowsPerPage = 50;
+function buildPageUrlVehiculos($targetPage, $params) {
+    $params['page'] = $targetPage;
+    return '?' . http_build_query($params);
+}
 // print mode (open printable view)
 $print_mode = isset($_GET['print']) || isset($_POST['print']);
 
@@ -491,13 +495,16 @@ if ($has_filter) {
         $display_sql = "SELECT rd.FechaRegistro, rd.VIN FROM RegistroDanio rd WHERE 0 LIMIT 0";
         $res = $conn->query($display_sql);
     } else {
-        // count total rows for pagination
-        $count_sql = "SELECT COUNT(*) AS total FROM (" . $sql . ") AS subcount";
+        // count total rows for pagination using the same FROM/WHERE structure but without ORDER BY
+        $count_sql = preg_replace('/\s+ORDER BY\s+[\s\S]*$/i', '', $sql);
+        $count_sql = "SELECT COUNT(*) AS total FROM (" . $count_sql . ") AS subcount";
         $countRes = $conn->query($count_sql);
         if ($countRes) {
             $rowCount = $countRes->fetch_assoc();
             $totalRegistros = intval($rowCount['total'] ?? 0);
             $countRes->free();
+        } else {
+            error_log('Error en query count paginación: ' . $conn->error);
         }
 
         if ($print_mode) {
@@ -782,46 +789,44 @@ if ($has_filter) {
                         </table>
                     </div>
                     <?php if ($has_filter && !$print_mode && $totalPages > 1): ?>
-                        <nav aria-label="Paginación de reportes" class="mt-3">
-                            <ul class="pagination pagination-sm justify-content-center mb-0" style="white-space: nowrap;">
-                                <?php
-                                    $visiblePages = 7;
-                                    $startPage = max(1, $page - intval($visiblePages / 2));
-                                    $endPage = min($totalPages, $startPage + $visiblePages - 1);
-                                    if ($endPage - $startPage + 1 < $visiblePages) {
-                                        $startPage = max(1, $endPage - $visiblePages + 1);
-                                    }
-                                    $queryParams = $_GET;
-                                    function buildPageUrlVehiculos($targetPage, $params) {
-                                        $params['page'] = $targetPage;
-                                        return 'reportes_vehiculos.php?' . http_build_query($params);
-                                    }
-                                ?>
-                                <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                                    <a class="page-link" href="<?php echo $page <= 1 ? '#' : buildPageUrlVehiculos($page - 1, $queryParams); ?>" aria-label="Anterior">Anterior</a>
-                                </li>
-                                <?php if ($startPage > 1): ?>
-                                    <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos(1, $queryParams); ?>">1</a></li>
-                                    <?php if ($startPage > 2): ?>
-                                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                                    <?php endif; ?>
-                                <?php endif; ?>
-                                <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
-                                    <li class="page-item <?php echo $p === $page ? 'active' : ''; ?>">
-                                        <a class="page-link" href="<?php echo buildPageUrlVehiculos($p, $queryParams); ?>"><?php echo $p; ?></a>
+                        <?php
+                            $visiblePages = 7;
+                            $startPage = max(1, $page - intval($visiblePages / 2));
+                            $endPage = min($totalPages, $startPage + $visiblePages - 1);
+                            if ($endPage - $startPage + 1 < $visiblePages) {
+                                $startPage = max(1, $endPage - $visiblePages + 1);
+                            }
+                            $queryParams = $_GET;
+                        ?>
+                        <div class="overflow-auto mt-3">
+                            <nav aria-label="Paginación de reportes">
+                                <ul class="pagination pagination-sm justify-content-center mb-0" style="white-space: nowrap;">
+                                    <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                                        <a class="page-link" href="<?php echo $page <= 1 ? '#' : buildPageUrlVehiculos($page - 1, $queryParams); ?>" aria-label="Anterior">Anterior</a>
                                     </li>
-                                <?php endfor; ?>
-                                <?php if ($endPage < $totalPages): ?>
-                                    <?php if ($endPage < $totalPages - 1): ?>
-                                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                    <?php if ($startPage > 1): ?>
+                                        <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos(1, $queryParams); ?>">1</a></li>
+                                        <?php if ($startPage > 2): ?>
+                                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                        <?php endif; ?>
                                     <?php endif; ?>
-                                    <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos($totalPages, $queryParams); ?>"><?php echo $totalPages; ?></a></li>
-                                <?php endif; ?>
-                                <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
-                                    <a class="page-link" href="<?php echo $page >= $totalPages ? '#' : buildPageUrlVehiculos($page + 1, $queryParams); ?>" aria-label="Siguiente">Siguiente</a>
-                                </li>
-                            </ul>
-                        </nav>
+                                    <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
+                                        <li class="page-item <?php echo $p === $page ? 'active' : ''; ?>">
+                                            <a class="page-link" href="<?php echo buildPageUrlVehiculos($p, $queryParams); ?>"><?php echo $p; ?></a>
+                                        </li>
+                                    <?php endfor; ?>
+                                    <?php if ($endPage < $totalPages): ?>
+                                        <?php if ($endPage < $totalPages - 1): ?>
+                                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                        <?php endif; ?>
+                                        <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos($totalPages, $queryParams); ?>"><?php echo $totalPages; ?></a></li>
+                                    <?php endif; ?>
+                                    <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                                        <a class="page-link" href="<?php echo $page >= $totalPages ? '#' : buildPageUrlVehiculos($page + 1, $queryParams); ?>" aria-label="Siguiente">Siguiente</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
