@@ -119,6 +119,8 @@ $filter_puerto = trim($_GET['filtrar_puerto'] ?? '');
 $filter_fecha_desde = trim($_GET['filtrar_fecha_desde'] ?? '');
 $filter_fecha_hasta = trim($_GET['filtrar_fecha_hasta'] ?? '');
 $report_section = isset($_GET['report_section']) && $_GET['report_section'] === '1';
+$page = max(1, intval($_GET['page'] ?? 1));
+$rowsPerPage = 50;
 
 if ($report_section) {
     $startSection = 'reporte';
@@ -171,13 +173,35 @@ $exportExcel = isset($_GET['export_excel']) && $_GET['export_excel'] === '1';
 
 $registros = [];
 $conteoOperadores = [];
+$totalRegistros = 0;
+$totalPages = 1;
 
 if ($searchExecuted) {
+    $countSql = 'SELECT COUNT(*) AS total FROM operador';
+    if (!empty($where)) {
+        $countSql .= ' WHERE ' . implode(' AND ', $where);
+    }
+
+    if ($countStmt = $conn->prepare($countSql)) {
+        if (!empty($params)) {
+            $countStmt->bind_param($types, ...$params);
+        }
+        $countStmt->execute();
+        $countResult = $countStmt->get_result();
+        $totalRegistros = intval($countResult->fetch_assoc()['total'] ?? 0);
+        $countStmt->close();
+    }
+
     $sql = 'SELECT ID, VIN, Nombre, operacion, puerto, Fecha FROM operador';
     if (!empty($where)) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
     }
-    $sql .= " ORDER BY $sortBy $sortDir LIMIT 500";
+    $sql .= " ORDER BY $sortBy $sortDir";
+    if (!$exportExcel) {
+        $offset = ($page - 1) * $rowsPerPage;
+        $sql .= " LIMIT $rowsPerPage OFFSET $offset";
+        $totalPages = max(1, intval(ceil($totalRegistros / $rowsPerPage)));
+    }
 
     if ($stmt = $conn->prepare($sql)) {
         if (!empty($params)) {
@@ -185,14 +209,14 @@ if ($searchExecuted) {
         }
         $stmt->execute();
 
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $registros[] = $row;
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $registros[] = $row;
+        }
+        $stmt->close();
+    } else {
+        die('Error al cargar registros de operador: ' . $conn->error);
     }
-    $stmt->close();
-} else {
-    die('Error al cargar registros de operador: ' . $conn->error);
-}
 
     $sqlConteo = 'SELECT Nombre, COUNT(*) AS total_movimientos FROM operador';
     if (!empty($where)) {
@@ -440,6 +464,7 @@ if ($exportExcel) {
                             <p class="text-muted">Filtra y ordena los registros existentes.</p>
                             <form method="get" id="formReporte" class="row g-3">
                                 <input type="hidden" name="report_section" value="1">
+                                <input type="hidden" name="page" value="<?php echo intval($page); ?>">
                                 <div class="col-md-6">
                                     <label class="form-label">VIN</label>
                                     <input type="text" class="form-control" name="filtrar_vin" value="<?php echo htmlspecialchars($filter_vin); ?>" placeholder="Filtro por VIN">
@@ -514,6 +539,13 @@ if ($exportExcel) {
                                     </div>
                                 </div>
                             <?php endif; ?>
+                            <?php if ($report_section && !$exportExcel): ?>
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        Mostrando <?php echo $totalRegistros > 0 ? (($page - 1) * $rowsPerPage + 1) : 0; ?> - <?php echo min($totalRegistros, $page * $rowsPerPage); ?> de <?php echo $totalRegistros; ?> registros
+                                    </small>
+                                </div>
+                            <?php endif; ?>
                             <div class="table-responsive">
                                 <table class="table table-striped">
                                     <thead>
@@ -540,6 +572,17 @@ if ($exportExcel) {
                                 </tbody>
                             </table>
                         </div>
+                        <?php if ($report_section && !$exportExcel && $totalPages > 1): ?>
+                            <nav aria-label="Paginación de reportes">
+                                <ul class="pagination justify-content-center mt-3">
+                                    <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                                        <li class="page-item <?php echo $p === $page ? 'active' : ''; ?>">
+                                            <a class="page-link" href="?report_section=1&page=<?php echo $p; ?><?php echo $filter_vin !== '' ? '&filtrar_vin=' . urlencode($filter_vin) : ''; ?><?php echo $filter_nombre !== '' ? '&filtrar_nombre=' . urlencode($filter_nombre) : ''; ?><?php echo $filter_operacion !== '' ? '&filtrar_operacion=' . urlencode($filter_operacion) : ''; ?><?php echo $filter_puerto !== '' ? '&filtrar_puerto=' . urlencode($filter_puerto) : ''; ?><?php echo $filter_fecha_desde !== '' ? '&filtrar_fecha_desde=' . urlencode($filter_fecha_desde) : ''; ?><?php echo $filter_fecha_hasta !== '' ? '&filtrar_fecha_hasta=' . urlencode($filter_fecha_hasta) : ''; ?><?php echo isset($_GET['ordenar']) ? '&ordenar=' . urlencode($_GET['ordenar']) : ''; ?><?php echo isset($_GET['orden_dir']) ? '&orden_dir=' . urlencode($_GET['orden_dir']) : ''; ?>"><?php echo $p; ?></a>
+                                        </li>
+                                    <?php endfor; ?>
+                                </ul>
+                            </nav>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -552,6 +595,7 @@ if ($exportExcel) {
     const reporteSection = document.getElementById('reporteSection');
     const mainMenu = document.getElementById('mainMenu');
     const formOperador = document.getElementById('formOperador');
+    const formReporte = document.getElementById('formReporte');
     const vinInput = document.getElementById('vin');
     const operadorInput = document.getElementById('nombre');
     const isMobileViewport = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
@@ -757,8 +801,18 @@ if ($exportExcel) {
         form.querySelector('select[name="filtrar_puerto"]').value = '';
         form.querySelector('input[name="filtrar_fecha_desde"]').value = '';
         form.querySelector('input[name="filtrar_fecha_hasta"]').value = '';
+        form.querySelector('input[name="page"]').value = '1';
         form.submit();
     });
+
+    if (formReporte) {
+        formReporte.addEventListener('submit', function() {
+            var pageInput = formReporte.querySelector('input[name="page"]');
+            if (pageInput) {
+                pageInput.value = '1';
+            }
+        });
+    }
 
     formOperador.addEventListener('submit', function(event) {
         event.preventDefault();
