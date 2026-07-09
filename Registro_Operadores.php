@@ -252,12 +252,12 @@ if ($exportExcel) {
         fputcsv($output, ['ID', 'VIN', 'Operador', 'Operacion', 'Puerto', 'Fecha']);
         foreach ($registros as $row) {
             fputcsv($output, [
-                $row['ID'] ?? '',
-                $row['VIN'] ?? '',
-                $row['Nombre'] ?? '',
-                $row['operacion'] ?? '',
-                $row['puerto'] ?? '',
-                $row['Fecha'] ?? ''
+                preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', $row['ID'] ?? ''),
+                preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', $row['VIN'] ?? ''),
+                preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', $row['Nombre'] ?? ''),
+                preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', $row['operacion'] ?? ''),
+                preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', $row['puerto'] ?? ''),
+                preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', $row['Fecha'] ?? '')
             ]);
         }
         fclose($output);
@@ -288,6 +288,13 @@ if ($exportExcel) {
         return $col . $rowIndex;
     };
 
+    function sanitizeXmlValue($value) {
+        $value = (string)$value;
+        // Remove invalid XML 1.0 control characters.
+        $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/u', '', $value);
+        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    }
+
     $sheetRowsXml = '';
     $rIndex = 1;
     foreach ($rows as $rowData) {
@@ -295,7 +302,7 @@ if ($exportExcel) {
         $cIndex = 1;
         foreach ($rowData as $cellValue) {
             $ref = $cellRef($cIndex, $rIndex);
-            $escaped = htmlspecialchars($cellValue, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+            $escaped = sanitizeXmlValue($cellValue);
             $sheetRowsXml .= '<c r="' . $ref . '" t="inlineStr"><is><t>' . $escaped . '</t></is></c>';
             $cIndex++;
         }
