@@ -573,14 +573,49 @@ if ($exportExcel) {
                             </table>
                         </div>
                         <?php if ($report_section && !$exportExcel && $totalPages > 1): ?>
+                            <?php
+                                $visiblePages = 7;
+                                $startPage = max(1, $page - intval($visiblePages / 2));
+                                $endPage = min($totalPages, $startPage + $visiblePages - 1);
+                                if ($endPage - $startPage + 1 < $visiblePages) {
+                                    $startPage = max(1, $endPage - $visiblePages + 1);
+                                }
+                                $queryParams = $_GET;
+                                $queryParams['report_section'] = '1';
+                                function buildPageUrl($targetPage, $params) {
+                                    $params['page'] = $targetPage;
+                                    return '?' . http_build_query($params);
+                                }
+                            ?>
                             <div class="overflow-auto mt-3">
                                 <nav aria-label="Paginación de reportes">
                                     <ul class="pagination pagination-sm justify-content-center mb-0" style="white-space: nowrap;">
-                                        <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                                        <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                                            <a class="page-link" href="<?php echo $page <= 1 ? '#' : buildPageUrl($page - 1, $queryParams); ?>" aria-label="Anterior">Anterior</a>
+                                        </li>
+                                        <?php if ($startPage > 1): ?>
+                                            <li class="page-item"><a class="page-link" href="<?php echo buildPageUrl(1, $queryParams); ?>">1</a></li>
+                                            <?php if ($startPage > 2): ?>
+                                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
+                                        <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
                                             <li class="page-item <?php echo $p === $page ? 'active' : ''; ?>">
-                                                <a class="page-link" href="?report_section=1&page=<?php echo $p; ?><?php echo $filter_vin !== '' ? '&filtrar_vin=' . urlencode($filter_vin) : ''; ?><?php echo $filter_nombre !== '' ? '&filtrar_nombre=' . urlencode($filter_nombre) : ''; ?><?php echo $filter_operacion !== '' ? '&filtrar_operacion=' . urlencode($filter_operacion) : ''; ?><?php echo $filter_puerto !== '' ? '&filtrar_puerto=' . urlencode($filter_puerto) : ''; ?><?php echo $filter_fecha_desde !== '' ? '&filtrar_fecha_desde=' . urlencode($filter_fecha_desde) : ''; ?><?php echo $filter_fecha_hasta !== '' ? '&filtrar_fecha_hasta=' . urlencode($filter_fecha_hasta) : ''; ?><?php echo isset($_GET['ordenar']) ? '&ordenar=' . urlencode($_GET['ordenar']) : ''; ?><?php echo isset($_GET['orden_dir']) ? '&orden_dir=' . urlencode($_GET['orden_dir']) : ''; ?>"><?php echo $p; ?></a>
+                                                <a class="page-link" href="<?php echo buildPageUrl($p, $queryParams); ?>"><?php echo $p; ?></a>
                                             </li>
                                         <?php endfor; ?>
+
+                                        <?php if ($endPage < $totalPages): ?>
+                                            <?php if ($endPage < $totalPages - 1): ?>
+                                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                            <?php endif; ?>
+                                            <li class="page-item"><a class="page-link" href="<?php echo buildPageUrl($totalPages, $queryParams); ?>"><?php echo $totalPages; ?></a></li>
+                                        <?php endif; ?>
+
+                                        <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                                            <a class="page-link" href="<?php echo $page >= $totalPages ? '#' : buildPageUrl($page + 1, $queryParams); ?>" aria-label="Siguiente">Siguiente</a>
+                                        </li>
                                     </ul>
                                 </nav>
                             </div>
