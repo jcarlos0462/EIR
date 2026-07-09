@@ -6,7 +6,135 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
 }
 
 // Enable errors for debugging (remove or disable on production)
-// (Removed duplicate simple XLSX generator to avoid parse issues)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// DB connection (same credentials used elsewhere)
+include 'database_connection.php';
+
+require_once 'access_control.php';
+require_module_access($conn, 'reportes');
+
+// Fetch filter lists
+$buques = [];
+$res = $conn->query("SELECT DISTINCT Buque FROM vehiculo WHERE IFNULL(Buque,'')<>'' ORDER BY Buque");
+if ($res) { while ($r = $res->fetch_assoc()) $buques[] = $r['Buque']; }
+
+$areas = [];
+$res = $conn->query("SELECT CodAreaDano, NomAreaDano FROM areadano ORDER BY CodAreaDano");
+if ($res) { while ($r = $res->fetch_assoc()) $areas[] = $r; }
+
+// Origen values from RegistroDanio.Puerto
+$origenes = [];
+// table RegistroDanio does not have column 'Origen' on this schema — use Puerto values instead
+$res = $conn->query("SELECT DISTINCT IFNULL(Puerto,'') AS Origen FROM RegistroDanio WHERE IFNULL(Puerto,'')<>'' ORDER BY Origen");
+if ($res) { while ($r = $res->fetch_assoc()) $origenes[] = $r['Origen']; }
+
+// Check if RegistroDanio has any rows; if empty, we will force queries to return no results
+$rd_count = 0;
+$tmp = $conn->query("SELECT COUNT(*) AS c FROM RegistroDanio");
+if ($tmp) {
+    $rowc = $tmp->fetch_assoc();
+    $rd_count = intval($rowc['c']);
+}
+$registro_danio_empty = ($rd_count === 0);
+
+// read inputs
+$vin = isset($_REQUEST['vin']) ? trim($_REQUEST['vin']) : '';
+$buque = isset($_REQUEST['buque']) ? trim($_REQUEST['buque']) : '';
+$date_from = isset($_REQUEST['date_from']) ? trim($_REQUEST['date_from']) : '';
+$date_to = isset($_REQUEST['date_to']) ? trim($_REQUEST['date_to']) : '';
+$area = isset($_REQUEST['area']) ? trim($_REQUEST['area']) : '';
+$maniobra = isset($_REQUEST['maniobra']) ? trim($_REQUEST['maniobra']) : '';
+$origen = isset($_REQUEST['origen']) ? trim($_REQUEST['origen']) : '';
+// print mode (open printable view)
+$print_mode = isset($_GET['print']) || isset($_POST['print']);
+
+// build WHERE separately for vehicle filters and damage filters so each can work independently
+$where_v = []; // conditions on vehiculo
+$where_rd = []; // conditions on RegistroDanio
+
+if ($vin !== '') $where_v[] = "v.VIN LIKE '%" . $conn->real_escape_string($vin) . "%'";
+if ($buque !== '') $where_v[] = "v.Buque = '" . $conn->real_escape_string($buque) . "'";
+if ($date_from !== '') {
+    $d = $conn->real_escape_string($date_from) . " 00:00:00";
+    $where_rd[] = "rd.FechaRegistro >= '" . $d . "'";
+}
+if ($date_to !== '') {
+    // include entire day for date_to by setting time to 23:59:59
+    $d = $conn->real_escape_string($date_to) . " 23:59:59";
+    $where_rd[] = "rd.FechaRegistro <= '" . $d . "'";
+}
+if ($area !== '') $where_rd[] = "rd.CodAreaDano = '" . $conn->real_escape_string($area) . "'";
+if ($maniobra !== '') $where_rd[] = "rd.TipoOperacion LIKE '%" . $conn->real_escape_string($maniobra) . "%'";
+if ($origen !== '') $where_rd[] = "rd.Puerto = '" . $conn->real_escape_string($origen) . "'";
+
+// Decide which base to use:
+// - If only vehicle filters provided (VIN/Buque) and no damage filters, start from vehiculo LEFT JOIN RegistroDanio
+// - Otherwise, start from RegistroDanio (existing behaviour)
+
+$has_v = count($where_v) > 0;
+$has_rd = count($where_rd) > 0;
+
+if ($has_v && !$has_rd) {
+    $where_sql = 'WHERE ' . implode(' AND ', $where_v);
+    $sql = "SELECT rd.FechaRegistro, v.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
+                rd.CodAreaDano AS CodAreaDano, rd.CodTipoDano AS CodTipoDano, rd.CodSeveridadDano AS CodSeveridadDano, rd.Puerto AS Origen, rd.TipoOperacion
+            FROM vehiculo v
+            LEFT JOIN RegistroDanio rd ON v.VIN = rd.VIN
+            LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
+            LEFT JOIN tipodano t ON rd.CodTipoDano = t.CodTipoDano
+            LEFT JOIN severidaddano s ON rd.CodSeveridadDano = s.CodSeveridadDano
+            " . $where_sql . "
+            ORDER BY rd.FechaRegistro DESC";
+} else {
+    // merge both sets so filters combine when user provides multiple filter types
+    $all_where = array_merge($where_rd, $where_v);
+    $where_sql = '';
+    if (count($all_where) > 0) $where_sql = 'WHERE ' . implode(' AND ', $all_where);
+    $sql = "SELECT rd.FechaRegistro, rd.VIN, v.Marca, v.Modelo, v.Color, v.`Año` AS Ano, v.Puerto, v.Terminal, v.Buque, v.Viaje,
+                rd.CodAreaDano AS CodAreaDano, rd.CodTipoDano AS CodTipoDano, rd.CodSeveridadDano AS CodSeveridadDano, rd.Puerto AS Origen, rd.TipoOperacion
+            FROM RegistroDanio rd
+            LEFT JOIN vehiculo v ON rd.VIN = v.VIN
+            LEFT JOIN areadano a ON rd.CodAreaDano = a.CodAreaDano
+            LEFT JOIN tipodano t ON rd.CodTipoDano = t.CodTipoDano
+            LEFT JOIN severidaddano s ON rd.CodSeveridadDano = s.CodSeveridadDano
+            " . $where_sql . "
+            ORDER BY rd.FechaRegistro DESC";
+}
+
+// Export CSV if requested
+if (isset($_POST['export_csv'])) {
+    $res = $conn->query($sql);
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=report_vehiculos.csv');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra']);
+    if ($res) {
+        while ($r = $res->fetch_assoc()) {
+            fputcsv($out, [
+                $r['FechaRegistro'] ?? '',
+                $r['VIN'] ?? '',
+                $r['Marca'] ?? '',
+                $r['Modelo'] ?? '',
+                $r['Color'] ?? '',
+                $r['Ano'] ?? '',
+                $r['Puerto'] ?? '',
+                $r['Terminal'] ?? '',
+                $r['Buque'] ?? '',
+                $r['Viaje'] ?? '',
+                $r['CodAreaDano'] ?? '',
+                $r['CodTipoDano'] ?? '',
+                $r['CodSeveridadDano'] ?? '',
+                $r['Origen'] ?? '',
+                $r['TipoOperacion'] ?? ''
+            ]);
+        }
+    }
+    fclose($out);
+    exit();
+}
 
 // Export Excel 2003 XML (compatible con Excel sin librerías externas)
 if (isset($_POST['export_xml'])) {
@@ -352,34 +480,18 @@ if (
     $has_filter = true;
 }
 
-$totalRegistros = 0;
-$totalPages = 1;
-
 if ($has_filter) {
+    // run query for display (limit to 200 rows to avoid heavy pages)
     if ($registro_danio_empty) {
         // force empty result set
         $display_sql = "SELECT rd.FechaRegistro, rd.VIN FROM RegistroDanio rd WHERE 0 LIMIT 0";
         $res = $conn->query($display_sql);
     } else {
-        // count total rows for pagination using the same FROM/WHERE structure but without ORDER BY
-        $count_sql = preg_replace('/\s+ORDER BY\s+[\s\S]*$/i', '', $sql);
-        $count_sql = "SELECT COUNT(*) AS total FROM (" . $count_sql . ") AS subcount";
-        $countRes = $conn->query($count_sql);
-        if ($countRes) {
-            $rowCount = $countRes->fetch_assoc();
-            $totalRegistros = intval($rowCount['total'] ?? 0);
-            $countRes->free();
-        } else {
-            error_log('Error en query count paginación: ' . $conn->error);
-        }
-
+        // if printing, return full result; otherwise limit to 200 for display
         if ($print_mode) {
             $display_sql = $sql; // full
-            $totalPages = 1;
         } else {
-            $offset = ($page - 1) * $rowsPerPage;
-            $totalPages = max(1, intval(ceil($totalRegistros / $rowsPerPage)));
-            $display_sql = $sql . " LIMIT $rowsPerPage OFFSET $offset";
+            $display_sql = $sql . " LIMIT 200";
         }
         $res = $conn->query($display_sql);
     }
@@ -530,7 +642,6 @@ if ($has_filter) {
                         $print_url = 'reportes_vehiculos.php' . (count($print_params) ? ('?' . http_build_query($print_params)) : '');
                     ?>
                     <form id="filterForm" method="get" class="row g-2 align-items-end">
-                        <input type="hidden" name="page" value="<?php echo $page; ?>">
                         <div class="col-md-3">
                             <label class="form-label">VIN</label>
                             <input class="form-control" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
@@ -585,10 +696,7 @@ if ($has_filter) {
 
             <div class="card mt-3">
                 <div class="card-body">
-                    <h5>Resultados</h5>
-                    <?php if ($has_filter && !$print_mode): ?>
-                        <div class="mb-2 text-muted">Mostrando <?php echo $totalRegistros > 0 ? (($page - 1) * $rowsPerPage + 1) : 0; ?> - <?php echo min($totalRegistros, $page * $rowsPerPage); ?> de <?php echo $totalRegistros; ?> registros</div>
-                    <?php endif; ?>
+                    <h5>Resultados (muestra hasta 200 filas)</h5>
                     <?php if (!$has_filter): ?>
                         <div class="alert alert-secondary">No se muestran datos. Aplique filtros y presione "Generar reporte".</div>
                     <?php elseif ($registro_danio_empty): ?>
@@ -654,46 +762,6 @@ if ($has_filter) {
                             </tbody>
                         </table>
                     </div>
-                    <?php if ($has_filter && !$print_mode && $totalPages > 1): ?>
-                        <?php
-                            $visiblePages = 7;
-                            $startPage = max(1, $page - intval($visiblePages / 2));
-                            $endPage = min($totalPages, $startPage + $visiblePages - 1);
-                            if ($endPage - $startPage + 1 < $visiblePages) {
-                                $startPage = max(1, $endPage - $visiblePages + 1);
-                            }
-                            $queryParams = $_GET;
-                        ?>
-                        <div class="overflow-auto mt-3">
-                            <nav aria-label="Paginación de reportes">
-                                <ul class="pagination pagination-sm justify-content-center mb-0" style="white-space: nowrap;">
-                                    <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                                        <a class="page-link" href="<?php echo $page <= 1 ? '#' : buildPageUrlVehiculos($page - 1, $queryParams); ?>" aria-label="Anterior">Anterior</a>
-                                    </li>
-                                    <?php if ($startPage > 1): ?>
-                                        <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos(1, $queryParams); ?>">1</a></li>
-                                        <?php if ($startPage > 2): ?>
-                                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
-                                    <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
-                                        <li class="page-item <?php echo $p === $page ? 'active' : ''; ?>">
-                                            <a class="page-link" href="<?php echo buildPageUrlVehiculos($p, $queryParams); ?>"><?php echo $p; ?></a>
-                                        </li>
-                                    <?php endfor; ?>
-                                    <?php if ($endPage < $totalPages): ?>
-                                        <?php if ($endPage < $totalPages - 1): ?>
-                                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                                        <?php endif; ?>
-                                        <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos($totalPages, $queryParams); ?>"><?php echo $totalPages; ?></a></li>
-                                    <?php endif; ?>
-                                    <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
-                                        <a class="page-link" href="<?php echo $page >= $totalPages ? '#' : buildPageUrlVehiculos($page + 1, $queryParams); ?>" aria-label="Siguiente">Siguiente</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -716,16 +784,6 @@ document.addEventListener('DOMContentLoaded', function(){
         btn.addEventListener('click', function(e){
             // small delay to allow any UI changes before printing
             setTimeout(function(){ window.print(); }, 250);
-        });
-    }
-
-    var filterForm = document.getElementById('filterForm');
-    if (filterForm) {
-        filterForm.addEventListener('submit', function(){
-            var pageInput = filterForm.querySelector('input[name="page"]');
-            if (pageInput) {
-                pageInput.value = 1;
-            }
         });
     }
 });
