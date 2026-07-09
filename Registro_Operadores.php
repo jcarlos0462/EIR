@@ -126,7 +126,7 @@ if ($report_section) {
     $startSection = 'reporte';
 }
 
-$searchExecuted = $report_section;
+$searchExecuted = $report_section || $exportExcel;
 
 $where = [];
 $params = [];
@@ -350,6 +350,7 @@ if ($exportExcel) {
 
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment; filename="' . $baseName . '.xlsx"');
+    header('Content-Transfer-Encoding: binary');
     header('Content-Length: ' . filesize($tmpFile));
     readfile($tmpFile);
     @unlink($tmpFile);
