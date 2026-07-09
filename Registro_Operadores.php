@@ -114,6 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
 // Filtros desde GET
 $filter_vin = trim($_GET['filtrar_vin'] ?? '');
 $filter_nombre = trim($_GET['filtrar_nombre'] ?? '');
+$filter_operacion = trim($_GET['filtrar_operacion'] ?? '');
 $filter_puerto = trim($_GET['filtrar_puerto'] ?? '');
 $filter_fecha_desde = trim($_GET['filtrar_fecha_desde'] ?? '');
 $filter_fecha_hasta = trim($_GET['filtrar_fecha_hasta'] ?? '');
@@ -126,6 +127,7 @@ if ($report_section) {
 $searchExecuted = $report_section && (
     $filter_vin !== '' ||
     $filter_nombre !== '' ||
+    $filter_operacion !== '' ||
     $filter_puerto !== '' ||
     $filter_fecha_desde !== '' ||
     $filter_fecha_hasta !== ''
@@ -145,9 +147,14 @@ if ($filter_nombre !== '') {
     $params[] = '%' . $filter_nombre . '%';
     $types .= 's';
 }
+if ($filter_operacion !== '') {
+    $where[] = 'operacion = ?';
+    $params[] = $filter_operacion;
+    $types .= 's';
+}
 if ($filter_puerto !== '') {
-    $where[] = 'puerto LIKE ?';
-    $params[] = '%' . $filter_puerto . '%';
+    $where[] = 'puerto = ?';
+    $params[] = $filter_puerto;
     $types .= 's';
 }
 if ($filter_fecha_desde !== '') {
@@ -449,8 +456,26 @@ if ($exportExcel) {
                                     <input type="text" class="form-control" name="filtrar_nombre" value="<?php echo htmlspecialchars($filter_nombre); ?>" placeholder="Filtro por operador">
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label">Tipo de operación</label>
+                                    <select class="form-select" name="filtrar_operacion">
+                                        <option value="">Todos</option>
+                                        <option value="Descarga Buque" <?php echo $filter_operacion === 'Descarga Buque' ? 'selected' : ''; ?>>Descarga Buque</option>
+                                        <option value="Carga Buque" <?php echo $filter_operacion === 'Carga Buque' ? 'selected' : ''; ?>>Carga Buque</option>
+                                        <option value="Descarga FFCC" <?php echo $filter_operacion === 'Descarga FFCC' ? 'selected' : ''; ?>>Descarga FFCC</option>
+                                        <option value="Carga FFCC" <?php echo $filter_operacion === 'Carga FFCC' ? 'selected' : ''; ?>>Carga FFCC</option>
+                                        <option value="Salida GATE" <?php echo $filter_operacion === 'Salida GATE' ? 'selected' : ''; ?>>Salida GATE</option>
+                                        <option value="Ingreso GATE" <?php echo $filter_operacion === 'Ingreso GATE' ? 'selected' : ''; ?>>Ingreso GATE</option>
+                                        <option value="Almacenaje - Patio" <?php echo $filter_operacion === 'Almacenaje - Patio' ? 'selected' : ''; ?>>Almacenaje - Patio</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label">Puerto</label>
-                                    <input type="text" class="form-control" name="filtrar_puerto" value="<?php echo htmlspecialchars($filter_puerto); ?>" placeholder="Filtro por puerto">
+                                    <select class="form-select" name="filtrar_puerto">
+                                        <option value="">Todos</option>
+                                        <option value="COA" <?php echo $filter_puerto === 'COA' ? 'selected' : ''; ?>>COA</option>
+                                        <option value="SCX" <?php echo $filter_puerto === 'SCX' ? 'selected' : ''; ?>>SCX</option>
+                                        <option value="PA" <?php echo $filter_puerto === 'PA' ? 'selected' : ''; ?>>PA</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Fecha desde</label>
@@ -729,7 +754,8 @@ if ($exportExcel) {
         var form = document.getElementById('formReporte');
         form.querySelector('input[name="filtrar_vin"]').value = '';
         form.querySelector('input[name="filtrar_nombre"]').value = '';
-        form.querySelector('input[name="filtrar_puerto"]').value = '';
+        form.querySelector('select[name="filtrar_operacion"]').value = '';
+        form.querySelector('select[name="filtrar_puerto"]').value = '';
         form.querySelector('input[name="filtrar_fecha_desde"]').value = '';
         form.querySelector('input[name="filtrar_fecha_hasta"]').value = '';
         form.submit();
