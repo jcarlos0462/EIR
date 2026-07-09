@@ -48,6 +48,8 @@ $date_to = isset($_REQUEST['date_to']) ? trim($_REQUEST['date_to']) : '';
 $area = isset($_REQUEST['area']) ? trim($_REQUEST['area']) : '';
 $maniobra = isset($_REQUEST['maniobra']) ? trim($_REQUEST['maniobra']) : '';
 $origen = isset($_REQUEST['origen']) ? trim($_REQUEST['origen']) : '';
+$page = max(1, intval($_GET['page'] ?? 1));
+$rowsPerPage = 50;
 // print mode (open printable view)
 $print_mode = isset($_GET['print']) || isset($_POST['print']);
 
@@ -480,18 +482,31 @@ if (
     $has_filter = true;
 }
 
+$totalRegistros = 0;
+$totalPages = 1;
+
 if ($has_filter) {
-    // run query for display (limit to 200 rows to avoid heavy pages)
     if ($registro_danio_empty) {
         // force empty result set
         $display_sql = "SELECT rd.FechaRegistro, rd.VIN FROM RegistroDanio rd WHERE 0 LIMIT 0";
         $res = $conn->query($display_sql);
     } else {
-        // if printing, return full result; otherwise limit to 200 for display
+        // count total rows for pagination
+        $count_sql = "SELECT COUNT(*) AS total FROM (" . $sql . ") AS subcount";
+        $countRes = $conn->query($count_sql);
+        if ($countRes) {
+            $rowCount = $countRes->fetch_assoc();
+            $totalRegistros = intval($rowCount['total'] ?? 0);
+            $countRes->free();
+        }
+
         if ($print_mode) {
             $display_sql = $sql; // full
+            $totalPages = 1;
         } else {
-            $display_sql = $sql . " LIMIT 200";
+            $offset = ($page - 1) * $rowsPerPage;
+            $totalPages = max(1, intval(ceil($totalRegistros / $rowsPerPage)));
+            $display_sql = $sql . " LIMIT $rowsPerPage OFFSET $offset";
         }
         $res = $conn->query($display_sql);
     }
@@ -642,6 +657,7 @@ if ($has_filter) {
                         $print_url = 'reportes_vehiculos.php' . (count($print_params) ? ('?' . http_build_query($print_params)) : '');
                     ?>
                     <form id="filterForm" method="get" class="row g-2 align-items-end">
+                        <input type="hidden" name="page" value="<?php echo $page; ?>">
                         <div class="col-md-3">
                             <label class="form-label">VIN</label>
                             <input class="form-control" name="vin" value="<?php echo htmlspecialchars($vin); ?>">
@@ -696,7 +712,10 @@ if ($has_filter) {
 
             <div class="card mt-3">
                 <div class="card-body">
-                    <h5>Resultados (muestra hasta 200 filas)</h5>
+                    <h5>Resultados</h5>
+                    <?php if ($has_filter && !$print_mode): ?>
+                        <div class="mb-2 text-muted">Mostrando <?php echo $totalRegistros > 0 ? (($page - 1) * $rowsPerPage + 1) : 0; ?> - <?php echo min($totalRegistros, $page * $rowsPerPage); ?> de <?php echo $totalRegistros; ?> registros</div>
+                    <?php endif; ?>
                     <?php if (!$has_filter): ?>
                         <div class="alert alert-secondary">No se muestran datos. Aplique filtros y presione "Generar reporte".</div>
                     <?php elseif ($registro_danio_empty): ?>
@@ -762,6 +781,47 @@ if ($has_filter) {
                             </tbody>
                         </table>
                     </div>
+                    <?php if ($has_filter && !$print_mode && $totalPages > 1): ?>
+                        <nav aria-label="Paginación de reportes" class="mt-3">
+                            <ul class="pagination pagination-sm justify-content-center mb-0" style="white-space: nowrap;">
+                                <?php
+                                    $visiblePages = 7;
+                                    $startPage = max(1, $page - intval($visiblePages / 2));
+                                    $endPage = min($totalPages, $startPage + $visiblePages - 1);
+                                    if ($endPage - $startPage + 1 < $visiblePages) {
+                                        $startPage = max(1, $endPage - $visiblePages + 1);
+                                    }
+                                    $queryParams = $_GET;
+                                    function buildPageUrlVehiculos($targetPage, $params) {
+                                        $params['page'] = $targetPage;
+                                        return 'reportes_vehiculos.php?' . http_build_query($params);
+                                    }
+                                ?>
+                                <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                                    <a class="page-link" href="<?php echo $page <= 1 ? '#' : buildPageUrlVehiculos($page - 1, $queryParams); ?>" aria-label="Anterior">Anterior</a>
+                                </li>
+                                <?php if ($startPage > 1): ?>
+                                    <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos(1, $queryParams); ?>">1</a></li>
+                                    <?php if ($startPage > 2): ?>
+                                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                                <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
+                                    <li class="page-item <?php echo $p === $page ? 'active' : ''; ?>">
+                                        <a class="page-link" href="<?php echo buildPageUrlVehiculos($p, $queryParams); ?>"><?php echo $p; ?></a>
+                                    </li>
+                                <?php endfor; ?>
+                                <?php if ($endPage < $totalPages): ?>
+                                    <?php if ($endPage < $totalPages - 1): ?>
+                                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                    <?php endif; ?>
+                                    <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos($totalPages, $queryParams); ?>"><?php echo $totalPages; ?></a></li>
+                                <?php endif; ?>
+                                <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                                    <a class="page-link" href="<?php echo $page >= $totalPages ? '#' : buildPageUrlVehiculos($page + 1, $queryParams); ?>" aria-label="Siguiente">Siguiente</a>
+                                </li>
+                            </ul>
+                        </nav>
                     <?php endif; ?>
                 </div>
             </div>
@@ -784,6 +844,16 @@ document.addEventListener('DOMContentLoaded', function(){
         btn.addEventListener('click', function(e){
             // small delay to allow any UI changes before printing
             setTimeout(function(){ window.print(); }, 250);
+        });
+    }
+
+    var filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(){
+            var pageInput = filterForm.querySelector('input[name="page"]');
+            if (pageInput) {
+                pageInput.value = 1;
+            }
         });
     }
 });
