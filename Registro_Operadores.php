@@ -33,6 +33,7 @@ $createSql = "CREATE TABLE IF NOT EXISTS operador (
     ID INT(10) PRIMARY KEY AUTO_INCREMENT,
     VIN VARCHAR(50) NOT NULL,
     Nombre VARCHAR(100) NOT NULL,
+    operacion VARCHAR(100) DEFAULT '',
     Fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     puerto VARCHAR(100) DEFAULT ''
 )";
@@ -55,6 +56,7 @@ function addColumnIfNotExists($conn, $table, $column, $definition) {
 // No forzamos ID si la tabla ya existe, puede causar conflicto con auto_increment si ya hay PK diferente.
 addColumnIfNotExists($conn, 'operador', 'VIN', 'VARCHAR(50) NOT NULL');
 addColumnIfNotExists($conn, 'operador', 'Nombre', 'VARCHAR(100) NOT NULL');
+addColumnIfNotExists($conn, 'operador', 'operacion', "VARCHAR(100) DEFAULT ''");
 addColumnIfNotExists($conn, 'operador', 'Fecha', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
 addColumnIfNotExists($conn, 'operador', 'puerto', "VARCHAR(100) DEFAULT ''");
 
@@ -77,15 +79,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
         $error = 'Debe completar ambos campos: VIN y Operador.';
     } else {
         $fecha = date('Y-m-d H:i:s');
-        // Si hay tipo de operación en sesión, usarlo como "Operador" según requerimiento,
-        // en caso contrario usar el valor enviado por el formulario.
-        $nombre_a_guardar = $tipo_operacion !== '' ? $tipo_operacion : $nombre;
+        $nombre_a_guardar = $nombre;
+        $operacion_a_guardar = $tipo_operacion;
 
-        $stmt = $conn->prepare("INSERT INTO operador (VIN, Nombre, Fecha, puerto) VALUES (?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO operador (VIN, Nombre, operacion, Fecha, puerto) VALUES (?, ?, ?, ?, ?)");
         if (!$stmt) {
             $error = 'Error al preparar consulta: ' . $conn->error;
         } else {
-            $stmt->bind_param('ssss', $vin, $nombre_a_guardar, $fecha, $puerto_sesion);
+            $stmt->bind_param('sssss', $vin, $nombre_a_guardar, $operacion_a_guardar, $fecha, $puerto_sesion);
             if ($stmt->execute()) {
                 $mensaje = 'Registro guardado correctamente.';
                 $vin = '';
@@ -113,6 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
 // Filtros desde GET
 $filter_vin = trim($_GET['filtrar_vin'] ?? '');
 $filter_nombre = trim($_GET['filtrar_nombre'] ?? '');
+$filter_puerto = trim($_GET['filtrar_puerto'] ?? '');
 $filter_fecha_desde = trim($_GET['filtrar_fecha_desde'] ?? '');
 $filter_fecha_hasta = trim($_GET['filtrar_fecha_hasta'] ?? '');
 $report_section = isset($_GET['report_section']) && $_GET['report_section'] === '1';
@@ -124,6 +126,7 @@ if ($report_section) {
 $searchExecuted = $report_section && (
     $filter_vin !== '' ||
     $filter_nombre !== '' ||
+    $filter_puerto !== '' ||
     $filter_fecha_desde !== '' ||
     $filter_fecha_hasta !== ''
 );
@@ -140,6 +143,11 @@ if ($filter_vin !== '') {
 if ($filter_nombre !== '') {
     $where[] = 'Nombre LIKE ?';
     $params[] = '%' . $filter_nombre . '%';
+    $types .= 's';
+}
+if ($filter_puerto !== '') {
+    $where[] = 'puerto LIKE ?';
+    $params[] = '%' . $filter_puerto . '%';
     $types .= 's';
 }
 if ($filter_fecha_desde !== '') {
@@ -217,12 +225,13 @@ if ($exportExcel) {
         header('Content-Disposition: attachment; filename="' . $baseName . '.csv"');
         $output = fopen('php://output', 'w');
         fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, ['ID', 'VIN', 'Operador', 'Puerto', 'Fecha']);
+        fputcsv($output, ['ID', 'VIN', 'Operador', 'Operacion', 'Puerto', 'Fecha']);
         foreach ($registros as $row) {
             fputcsv($output, [
                 $row['ID'] ?? '',
                 $row['VIN'] ?? '',
                 $row['Nombre'] ?? '',
+                $row['operacion'] ?? '',
                 $row['puerto'] ?? '',
                 $row['Fecha'] ?? ''
             ]);
@@ -232,12 +241,13 @@ if ($exportExcel) {
     }
 
     $rows = [];
-    $rows[] = ['ID', 'VIN', 'Operador', 'Puerto', 'Fecha'];
+    $rows[] = ['ID', 'VIN', 'Operador', 'Operacion', 'Puerto', 'Fecha'];
     foreach ($registros as $row) {
         $rows[] = [
             (string)($row['ID'] ?? ''),
             (string)($row['VIN'] ?? ''),
             (string)($row['Nombre'] ?? ''),
+            (string)($row['operacion'] ?? ''),
             (string)($row['puerto'] ?? ''),
             (string)($row['Fecha'] ?? '')
         ];
@@ -439,6 +449,10 @@ if ($exportExcel) {
                                     <input type="text" class="form-control" name="filtrar_nombre" value="<?php echo htmlspecialchars($filter_nombre); ?>" placeholder="Filtro por operador">
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label">Puerto</label>
+                                    <input type="text" class="form-control" name="filtrar_puerto" value="<?php echo htmlspecialchars($filter_puerto); ?>" placeholder="Filtro por puerto">
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label">Fecha desde</label>
                                     <input type="date" class="form-control" name="filtrar_fecha_desde" value="<?php echo htmlspecialchars($filter_fecha_desde); ?>">
                                 </div>
@@ -489,6 +503,7 @@ if ($exportExcel) {
                                             <th>ID</th>
                                             <th>VIN</th>
                                             <th>Operador</th>
+                                            <th>Operacion</th>
                                             <th>Puerto</th>
                                             <th>Fecha</th>
                                         </tr>
@@ -499,6 +514,7 @@ if ($exportExcel) {
                                             <td><?php echo intval($row['ID']); ?></td>
                                             <td><?php echo htmlspecialchars($row['VIN']); ?></td>
                                             <td><?php echo htmlspecialchars($row['Nombre']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['operacion'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($row['puerto'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($row['Fecha']); ?></td>
                                         </tr>
@@ -713,6 +729,7 @@ if ($exportExcel) {
         var form = document.getElementById('formReporte');
         form.querySelector('input[name="filtrar_vin"]').value = '';
         form.querySelector('input[name="filtrar_nombre"]').value = '';
+        form.querySelector('input[name="filtrar_puerto"]').value = '';
         form.querySelector('input[name="filtrar_fecha_desde"]').value = '';
         form.querySelector('input[name="filtrar_fecha_hasta"]').value = '';
         form.submit();
