@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
     header("Location: index.html");
@@ -8,13 +8,13 @@ if (!isset($_SESSION['logueado']) || $_SESSION['logueado'] !== true) {
 // Enable errors for debugging (remove or disable on production)
 // (Removed duplicate simple XLSX generator to avoid parse issues)
 
-// Export Excel 2003 XML (compatible con Excel sin librerías externas)
+// Export Excel 2003 XML (compatible con Excel sin librerÃ­as externas)
 if (isset($_POST['export_xml'])) {
     $resx = $conn->query($sql);
     $rows = [];
     if ($resx) while ($r = $resx->fetch_assoc()) $rows[] = $r;
 
-    $headers_xml = ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
+    $headers_xml = ['FechaRegistro','VIN','Marca','Modelo','Color','AÃ±o','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
 
     // send headers for Excel
     header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
@@ -65,7 +65,7 @@ if (isset($_POST['export_pdf'])) {
     if ($buque !== '') $filters[] = 'Buque: '.htmlspecialchars($buque);
     if ($date_from !== '') $filters[] = 'Desde: '.htmlspecialchars($date_from);
     if ($date_to !== '') $filters[] = 'Hasta: '.htmlspecialchars($date_to);
-    if ($area !== '') $filters[] = 'Área: '.htmlspecialchars($area);
+    if ($area !== '') $filters[] = 'Ãrea: '.htmlspecialchars($area);
     if ($maniobra !== '') $filters[] = 'Maniobra: '.htmlspecialchars($maniobra);
     if ($origen !== '') $filters[] = 'Origen: '.htmlspecialchars($origen);
     $filters_text = $filters ? implode(' / ', $filters) : '(sin filtros)';
@@ -75,11 +75,11 @@ if (isset($_POST['export_pdf'])) {
         '.hdr{margin-bottom:10px} .title{font-size:18px;font-weight:700} .meta{font-size:11px;color:#444;margin-top:4px} ' .
         'table{border-collapse:collapse;width:100%;margin-top:8px} th,td{border:1px solid #ddd;padding:6px 8px;text-align:left} th{background:#f1f5f9;font-weight:700}' .
         '</style></head><body>';
-    $html .= '<div class="hdr"><div class="title">Reporte - Vehículos y Daños</div>';
+    $html .= '<div class="hdr"><div class="title">Reporte - VehÃ­culos y DaÃ±os</div>';
     $html .= '<div class="meta">Generado: '.htmlspecialchars($generated_at).' &nbsp; | &nbsp; Filtros: '.htmlspecialchars($filters_text).'</div></div>';
 
     $html .= '<table><thead><tr>' .
-        '<th>Fecha</th><th>VIN</th><th>Marca</th><th>Modelo</th><th>Color</th><th>Año</th>' .
+        '<th>Fecha</th><th>VIN</th><th>Marca</th><th>Modelo</th><th>Color</th><th>AÃ±o</th>' .
         '<th>Puerto</th><th>Terminal</th><th>Buque</th><th>Viaje</th>' .
         '<th>CodAreaDano</th><th>CodTipoDano</th><th>CodSeveridadDano</th><th>Origen</th><th>Maniobra</th>' .
         '</tr></thead><tbody>';
@@ -108,7 +108,7 @@ if (isset($_POST['export_pdf'])) {
 
     $vendor = __DIR__ . '/vendor/autoload.php';
     if (!file_exists($vendor)) {
-        echo '<div class="alert alert-danger">Dompdf no está instalado en el servidor. Para habilitar PDF server-side ejecuta en el servidor:<br><code>composer require dompdf/dompdf</code></div>';
+        echo '<div class="alert alert-danger">Dompdf no estÃ¡ instalado en el servidor. Para habilitar PDF server-side ejecuta en el servidor:<br><code>composer require dompdf/dompdf</code></div>';
         exit();
     }
     require $vendor;
@@ -133,7 +133,7 @@ if (isset($_POST['export_xlsx'])) {
     // try to load PhpSpreadsheet
     $vendor = __DIR__ . '/vendor/autoload.php';
     if (!file_exists($vendor)) {
-        echo '<div class="alert alert-danger">PhpSpreadsheet no está instalado. Para habilitar exportación .xlsx ejecuta en el servidor:<br><code>composer require phpoffice/phpspreadsheet</code></div>';
+        echo '<div class="alert alert-danger">PhpSpreadsheet no estÃ¡ instalado. Para habilitar exportaciÃ³n .xlsx ejecuta en el servidor:<br><code>composer require phpoffice/phpspreadsheet</code></div>';
         exit();
     }
     require $vendor;
@@ -143,7 +143,7 @@ if (isset($_POST['export_xlsx'])) {
         $sheet = $spreadsheet->getActiveSheet();
 
         // Header row
-        $headers = ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
+        $headers = ['FechaRegistro','VIN','Marca','Modelo','Color','AÃ±o','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
         $col = 1;
         foreach ($headers as $h) {
             $sheet->setCellValueByColumnAndRow($col, 1, $h);
@@ -218,7 +218,7 @@ if (isset($_POST['export_xlsx'])) {
         if ($resx) while ($r = $resx->fetch_assoc()) $rows[] = $r;
     }
 
-    $headers_x = ['FechaRegistro','VIN','Marca','Modelo','Color','Año','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
+    $headers_x = ['FechaRegistro','VIN','Marca','Modelo','Color','AÃ±o','Puerto','Terminal','Buque','Viaje','CodAreaDano','CodTipoDano','CodSeveridadDano','Origen','Maniobra'];
 
     // build sheet rows (array of arrays)
     $sheet_rows = [];
@@ -370,7 +370,7 @@ if ($has_filter) {
             $totalRegistros = intval($rowCount['total'] ?? 0);
             $countRes->free();
         } else {
-            error_log('Error en query count paginación: ' . $conn->error);
+            error_log('Error en query count paginaciÃ³n: ' . $conn->error);
         }
 
         if ($print_mode) {
@@ -391,7 +391,7 @@ if ($has_filter) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Reporte de daños - EIR</title>
+    <title>Reporte de daÃ±os - EIR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="navbar_styles.css">
@@ -461,7 +461,7 @@ if ($has_filter) {
             table.report-table { font-size: 13px; }
             table.report-table th, table.report-table td { padding: 8px 6px; }
 
-            /* Do not hide columns on mobile — allow horizontal scroll instead */
+            /* Do not hide columns on mobile â€” allow horizontal scroll instead */
             table.report-table { min-width: 1100px; }
 
             /* Keep header visible when scrolling (small screens) */
@@ -515,7 +515,7 @@ if ($has_filter) {
         <div class="col-md-9 col-lg-10 main-content">
             <div class="card filters-card no-print">
                 <div class="card-body">
-                    <h4>Reporte de daños - Vehículos y Daños</h4>
+                    <h4>Reporte de daÃ±os - VehÃ­culos y DaÃ±os</h4>
                     <?php
                         // build print URL with current filters
                         $print_params = [];
@@ -557,7 +557,7 @@ if ($has_filter) {
                             <input class="form-control" name="maniobra" value="<?php echo htmlspecialchars($maniobra); ?>">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Área (Maniobra)</label>
+                            <label class="form-label">Ãrea (Maniobra)</label>
                             <select name="area" class="form-select">
                                 <option value="">(todas)</option>
                                 <?php foreach ($areas as $a): ?>
@@ -592,144 +592,9 @@ if ($has_filter) {
                     <?php if (!$has_filter): ?>
                         <div class="alert alert-secondary">No se muestran datos. Aplique filtros y presione "Generar reporte".</div>
                     <?php elseif ($registro_danio_empty): ?>
-                        <div class="alert alert-warning">La tabla <strong>RegistroDanio</strong> no contiene registros. No se mostrarán resultados.</div>
+                        <div class="alert alert-warning">La tabla <strong>RegistroDanio</strong> no contiene registros. No se mostrarÃ¡n resultados.</div>
                     <?php else: ?>
                     <div class="table-responsive">
                         <?php if ($has_filter): ?>
                             <?php $generated_at = date('Y-m-d H:i');
                                 $f = [];
-                                if ($vin!=='') $f[] = 'VIN="'.htmlspecialchars($vin).'"';
-                                if ($buque!=='') $f[] = 'Buque="'.htmlspecialchars($buque).'"';
-                                if ($date_from!=='') $f[] = 'Desde="'.htmlspecialchars($date_from).'"';
-                                if ($date_to!=='') $f[] = 'Hasta="'.htmlspecialchars($date_to).'"';
-                                if ($area!=='') $f[] = 'Area="'.htmlspecialchars($area).'"';
-                                if ($maniobra!=='') $f[] = 'Maniobra="'.htmlspecialchars($maniobra).'"';
-                                if ($origen!=='') $f[] = 'Origen="'.htmlspecialchars($origen).'"';
-                                $filters_text = $f ? implode(' / ', $f) : '(sin filtros)';
-                            ?>
-                            <div class="report-meta">Generado: <?php echo $generated_at; ?> — Filtros: <?php echo $filters_text; ?></div>
-                        <?php endif; ?>
-                        <table class="table table-sm table-striped report-table">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>VIN</th>
-                                    <th>Marca</th>
-                                    <th>Modelo</th>
-                                    <th>Color</th>
-                                    <th>Año</th>
-                                    <th>Puerto</th>
-                                    <th>Terminal</th>
-                                    <th>Buque</th>
-                                    <th>Viaje</th>
-                                    <th>CodAreaDano</th>
-                                    <th>CodTipoDano</th>
-                                    <th>CodSeveridadDano</th>
-                                    <th>Origen</th>
-                                    <th>Maniobra</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-<?php if ($res && $res->num_rows>0): while($row = $res->fetch_assoc()): ?>
-    <tr>
-        <td><?php echo htmlspecialchars($row['FechaRegistro'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['VIN'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Marca'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Modelo'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Color'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Ano'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Puerto'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Terminal'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Buque'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Viaje'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['CodAreaDano'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['CodTipoDano'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['CodSeveridadDano'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['Origen'] ?? ''); ?></td>
-        <td><?php echo htmlspecialchars($row['TipoOperacion'] ?? ''); ?></td>
-    </tr>
-<?php endwhile; else: ?>
-    <tr><td colspan="15" class="text-center">No se encontraron resultados</td></tr>
-<?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <?php if ($has_filter && !$print_mode && $totalPages > 1): ?>
-                        <?php
-                            $visiblePages = 7;
-                            $startPage = max(1, $page - intval($visiblePages / 2));
-                            $endPage = min($totalPages, $startPage + $visiblePages - 1);
-                            if ($endPage - $startPage + 1 < $visiblePages) {
-                                $startPage = max(1, $endPage - $visiblePages + 1);
-                            }
-                            $queryParams = $_GET;
-                        ?>
-                        <div class="overflow-auto mt-3">
-                            <nav aria-label="Paginación de reportes">
-                                <ul class="pagination pagination-sm justify-content-center mb-0" style="white-space: nowrap;">
-                                    <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                                        <a class="page-link" href="<?php echo $page <= 1 ? '#' : buildPageUrlVehiculos($page - 1, $queryParams); ?>" aria-label="Anterior">Anterior</a>
-                                    </li>
-                                    <?php if ($startPage > 1): ?>
-                                        <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos(1, $queryParams); ?>">1</a></li>
-                                        <?php if ($startPage > 2): ?>
-                                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
-                                    <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
-                                        <li class="page-item <?php echo $p === $page ? 'active' : ''; ?>">
-                                            <a class="page-link" href="<?php echo buildPageUrlVehiculos($p, $queryParams); ?>"><?php echo $p; ?></a>
-                                        </li>
-                                    <?php endfor; ?>
-                                    <?php if ($endPage < $totalPages): ?>
-                                        <?php if ($endPage < $totalPages - 1): ?>
-                                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                                        <?php endif; ?>
-                                        <li class="page-item"><a class="page-link" href="<?php echo buildPageUrlVehiculos($totalPages, $queryParams); ?>"><?php echo $totalPages; ?></a></li>
-                                    <?php endif; ?>
-                                    <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
-                                        <a class="page-link" href="<?php echo $page >= $totalPages ? '#' : buildPageUrlVehiculos($page + 1, $queryParams); ?>" aria-label="Siguiente">Siguiente</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    <?php endif; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<?php if ($print_mode): ?>
-<script>
-    // Give the browser more time to layout before opening the print dialog
-    window.onload = function() { setTimeout(function(){ window.print(); }, 800); };
-</script>
-<?php endif; ?>
-<script>
-// Attach print handler to button so it doesn't trigger a page reload/search
-document.addEventListener('DOMContentLoaded', function(){
-    var btn = document.getElementById('btnPrint');
-    if (btn) {
-        btn.addEventListener('click', function(e){
-            // small delay to allow any UI changes before printing
-            setTimeout(function(){ window.print(); }, 250);
-        });
-    }
-
-    var filterForm = document.getElementById('filterForm');
-    if (filterForm) {
-        filterForm.addEventListener('submit', function(){
-            var pageInput = filterForm.querySelector('input[name="page"]');
-            if (pageInput) {
-                pageInput.value = 1;
-            }
-        });
-    }
-});
-</script>
-</body>
-</html>
-<?php $conn->close(); ?>
