@@ -33,7 +33,8 @@ $createSql = "CREATE TABLE IF NOT EXISTS operador (
     ID INT(10) PRIMARY KEY AUTO_INCREMENT,
     VIN VARCHAR(50) NOT NULL,
     Nombre VARCHAR(100) NOT NULL,
-    Fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    Fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    puerto VARCHAR(100) DEFAULT ''
 )";
 if (!$conn->query($createSql)) {
     die('Error creando tabla operador: ' . $conn->error);
@@ -55,6 +56,7 @@ function addColumnIfNotExists($conn, $table, $column, $definition) {
 addColumnIfNotExists($conn, 'operador', 'VIN', 'VARCHAR(50) NOT NULL');
 addColumnIfNotExists($conn, 'operador', 'Nombre', 'VARCHAR(100) NOT NULL');
 addColumnIfNotExists($conn, 'operador', 'Fecha', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
+addColumnIfNotExists($conn, 'operador', 'puerto', "VARCHAR(100) DEFAULT ''");
 
 $mensaje = '';
 $error = '';
@@ -65,6 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
     $startSection = 'registro';
     $vin = trim($_POST['vin'] ?? '');
     $nombre = trim($_POST['nombre'] ?? '');
+    // Tomar valores desde la sesión (mostrados en la navbar)
+    $tipo_operacion = trim($_SESSION['tipo_operacion'] ?? '');
+    $puerto_sesion = trim($_SESSION['puerto'] ?? '');
 
     if (!$can_write_operadores) {
         $error = 'Tu rol es solo lectura. No puedes guardar registros.';
@@ -72,11 +77,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
         $error = 'Debe completar ambos campos: VIN y Operador.';
     } else {
         $fecha = date('Y-m-d H:i:s');
-        $stmt = $conn->prepare("INSERT INTO operador (VIN, Nombre, Fecha) VALUES (?, ?, ?)");
+        // Si hay tipo de operación en sesión, usarlo como "Operador" según requerimiento,
+        // en caso contrario usar el valor enviado por el formulario.
+        $nombre_a_guardar = $tipo_operacion !== '' ? $tipo_operacion : $nombre;
+
+        $stmt = $conn->prepare("INSERT INTO operador (VIN, Nombre, Fecha, puerto) VALUES (?, ?, ?, ?)");
         if (!$stmt) {
             $error = 'Error al preparar consulta: ' . $conn->error;
         } else {
-            $stmt->bind_param('sss', $vin, $nombre, $fecha);
+            $stmt->bind_param('ssss', $vin, $nombre_a_guardar, $fecha, $puerto_sesion);
             if ($stmt->execute()) {
                 $mensaje = 'Registro guardado correctamente.';
                 $vin = '';
@@ -208,12 +217,13 @@ if ($exportExcel) {
         header('Content-Disposition: attachment; filename="' . $baseName . '.csv"');
         $output = fopen('php://output', 'w');
         fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, ['ID', 'VIN', 'Operador', 'Fecha']);
+        fputcsv($output, ['ID', 'VIN', 'Operador', 'Puerto', 'Fecha']);
         foreach ($registros as $row) {
             fputcsv($output, [
                 $row['ID'] ?? '',
                 $row['VIN'] ?? '',
                 $row['Nombre'] ?? '',
+                $row['puerto'] ?? '',
                 $row['Fecha'] ?? ''
             ]);
         }
@@ -222,12 +232,13 @@ if ($exportExcel) {
     }
 
     $rows = [];
-    $rows[] = ['ID', 'VIN', 'Operador', 'Fecha'];
+    $rows[] = ['ID', 'VIN', 'Operador', 'Puerto', 'Fecha'];
     foreach ($registros as $row) {
         $rows[] = [
             (string)($row['ID'] ?? ''),
             (string)($row['VIN'] ?? ''),
             (string)($row['Nombre'] ?? ''),
+            (string)($row['puerto'] ?? ''),
             (string)($row['Fecha'] ?? '')
         ];
     }
@@ -478,6 +489,7 @@ if ($exportExcel) {
                                             <th>ID</th>
                                             <th>VIN</th>
                                             <th>Operador</th>
+                                            <th>Puerto</th>
                                             <th>Fecha</th>
                                         </tr>
                                     </thead>
@@ -487,6 +499,7 @@ if ($exportExcel) {
                                             <td><?php echo intval($row['ID']); ?></td>
                                             <td><?php echo htmlspecialchars($row['VIN']); ?></td>
                                             <td><?php echo htmlspecialchars($row['Nombre']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['puerto'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($row['Fecha']); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
