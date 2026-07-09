@@ -124,14 +124,7 @@ if ($report_section) {
     $startSection = 'reporte';
 }
 
-$searchExecuted = $report_section && (
-    $filter_vin !== '' ||
-    $filter_nombre !== '' ||
-    $filter_operacion !== '' ||
-    $filter_puerto !== '' ||
-    $filter_fecha_desde !== '' ||
-    $filter_fecha_hasta !== ''
-);
+$searchExecuted = $report_section;
 
 $where = [];
 $params = [];
@@ -170,7 +163,7 @@ if ($filter_fecha_hasta !== '') {
 
 $sortBy = $_GET['ordenar'] ?? 'Fecha';
 $sortDir = (isset($_GET['orden_dir']) && strtoupper($_GET['orden_dir']) === 'ASC') ? 'ASC' : 'DESC';
-$allowedSorts = ['ID', 'VIN', 'Nombre', 'Fecha'];
+$allowedSorts = ['ID', 'VIN', 'Nombre', 'operacion', 'puerto', 'Fecha'];
 if (!in_array($sortBy, $allowedSorts)) {
     $sortBy = 'Fecha';
 }
@@ -180,7 +173,7 @@ $registros = [];
 $conteoOperadores = [];
 
 if ($searchExecuted) {
-    $sql = 'SELECT * FROM operador';
+    $sql = 'SELECT ID, VIN, Nombre, operacion, puerto, Fecha FROM operador';
     if (!empty($where)) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
     }
@@ -588,6 +581,12 @@ if ($exportExcel) {
     }
 
     function openReporte() {
+        if (!window.location.search.includes('report_section=1')) {
+            const params = new URLSearchParams(window.location.search);
+            params.set('report_section', '1');
+            window.location.search = params.toString();
+            return;
+        }
         mainMenu.style.display = 'none';
         reporteSection.style.display = 'block';
         registroSection.style.display = 'none';
