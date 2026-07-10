@@ -119,6 +119,7 @@ $filter_puerto = trim($_GET['filtrar_puerto'] ?? '');
 $filter_fecha_desde = trim($_GET['filtrar_fecha_desde'] ?? '');
 $filter_fecha_hasta = trim($_GET['filtrar_fecha_hasta'] ?? '');
 $report_section = isset($_GET['report_section']) && $_GET['report_section'] === '1';
+$exportExcel = isset($_GET['export_excel']) && $_GET['export_excel'] === '1';
 $page = max(1, intval($_GET['page'] ?? 1));
 $rowsPerPage = 50;
 
@@ -169,7 +170,6 @@ $allowedSorts = ['ID', 'VIN', 'Nombre', 'operacion', 'puerto', 'Fecha'];
 if (!in_array($sortBy, $allowedSorts)) {
     $sortBy = 'Fecha';
 }
-$exportExcel = isset($_GET['export_excel']) && $_GET['export_excel'] === '1';
 
 $registros = [];
 $conteoOperadores = [];
