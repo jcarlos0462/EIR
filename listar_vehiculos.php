@@ -157,6 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
             'marca' => null,
             'modelo' => null,
             'color' => null,
+            'año' => null,
             'puerto' => null,
             'puerto final' => null,
             'puerto_final' => null
@@ -213,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
             }
 
             if ($matched === 0) {
-                $layout = ['terminal','buque','viaje','puerto','vin','marca','modelo','color'];
+                $layout = ['terminal','buque','viaje','puerto','vin','marca','modelo','color','año'];
                 foreach ($layout as $i => $key) {
                     if (array_key_exists($key, $expected)) $expected[$key] = $i;
                 }
@@ -224,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
             }
 
             $rowCount = 0; $inserted = 0; $skipped = 0; $errors = []; $duplicates = [];
-            $sql_insert = "INSERT INTO vehiculo (Buque, Viaje, VIN, Marca, Modelo, Color, Puerto, Terminal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql_insert = "INSERT INTO vehiculo (Buque, Viaje, VIN, Marca, Modelo, Color, Año, Puerto, Terminal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt_insert = $conn->prepare($sql_insert);
             if (!$stmt_insert) {
                 $import_summary = ['error' => 'Error preparando la inserción: '.$conn->error];
@@ -249,6 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $marca = $get('marca');
                         $modelo = $get('modelo');
                         $color = $get('color');
+                        $año = $get('año');
                         $puerto = $get(['puerto','puerto final','puerto_final']);
                         if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; continue; }
                         $stmt_check = $conn->prepare("SELECT ID FROM vehiculo WHERE VIN = ? LIMIT 1");
@@ -257,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $resc = $stmt_check->get_result();
                         if ($resc && $resc->num_rows > 0) { $skipped++; $duplicates[] = "Fila {$rowCount}: {$vin}"; $stmt_check->close(); continue; }
                         $stmt_check->close();
-                        $stmt_insert->bind_param('ssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $puerto, $terminal);
+                        $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $año, $puerto, $terminal);
                         if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
                     }
                 } else {
@@ -280,6 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                             $marca = $get('marca');
                             $modelo = $get('modelo');
                             $color = $get('color');
+                            $año = $get('año');
                             $puerto = $get(['puerto','puerto final','puerto_final']);
                             if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; }
                             else {
@@ -290,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                                 if ($resc && $resc->num_rows > 0) { $skipped++; $duplicates[] = "Fila {$rowCount}: {$vin}"; $stmt_check->close(); }
                                 else {
                                     $stmt_check->close();
-                                    $stmt_insert->bind_param('ssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $puerto, $terminal);
+                                    $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $año, $puerto, $terminal);
                                     if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
                                 }
                             }
@@ -315,6 +318,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $marca = $get('marca');
                         $modelo = $get('modelo');
                         $color = $get('color');
+                        $año = $get('año');
                         $puerto = $get(['puerto','puerto final','puerto_final']);
                         if ($vin === '') { $skipped++; $errors[] = "Fila {$rowCount}: VIN vacío"; continue; }
                         $stmt_check = $conn->prepare("SELECT ID FROM vehiculo WHERE VIN = ? LIMIT 1");
@@ -323,7 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_vehiculos'])) 
                         $resc = $stmt_check->get_result();
                         if ($resc && $resc->num_rows > 0) { $skipped++; $duplicates[] = "Fila {$rowCount}: {$vin}"; $stmt_check->close(); continue; }
                         $stmt_check->close();
-                        $stmt_insert->bind_param('ssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $puerto, $terminal);
+                        $stmt_insert->bind_param('sssssssss', $buque, $viaje, $vin, $marca, $modelo, $color, $año, $puerto, $terminal);
                         if ($stmt_insert->execute()) { $inserted++; } else { $errors[] = "Fila {$rowCount}: error insertando VIN {$vin} - " . $stmt_insert->error; }
                     }
                 }
