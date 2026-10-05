@@ -478,9 +478,7 @@ if ($exportExcel) {
                                         <label for="nombre" class="form-label">Operador</label>
                                         <input type="text" id="nombre" name="nombre" class="form-control" value="<?php echo htmlspecialchars($nombre ?? ''); ?>" placeholder="Escanea o ingresa QR de operador" <?php echo $can_write_operadores ? 'required' : 'disabled'; ?> inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
                                     </div>
-                                    <div class="col-12">
-                                        <div class="scan-hint">Escanea VIN y luego operador. En móvil el teclado no debe abrirse automáticamente.</div>
-                                    </div>
+                                
                                 </div>
                                 <div class="mt-3">
                                     <button type="submit" id="btnGuardarRegistro" name="guardar_operador" class="btn btn-primary" disabled>Guardar Registro</button>
