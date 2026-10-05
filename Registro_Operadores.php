@@ -471,7 +471,7 @@ if ($exportExcel) {
                                         <label for="vin" class="form-label">VIN</label>
                                         <div class="input-group">
                                             <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" <?php echo $can_write_operadores ? 'required' : 'disabled'; ?> inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
-                                            <button type="button" id="btnValidarVin" class="btn btn-outline-secondary" <?php echo $can_write_operadores ? '' : 'disabled'; ?>>Validar VIN</button>
+                                            <button type="button" id="btnValidarVin" class="btn btn-primary" <?php echo $can_write_operadores ? '' : 'disabled'; ?>>Validar VIN</button>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -950,7 +950,7 @@ if ($exportExcel) {
     operadorInput.addEventListener('input', updateSaveState);
     btnValidarVin.addEventListener('click', validateVin);
 
-    handleScanOnInput(vinInput, null, validateVin, 17);
+    handleScanOnInput(vinInput, null, null, 17);
     handleScanOnInput(operadorInput, null, submitIfReady, 2);
     updateSaveState();
 
