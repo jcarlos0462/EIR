@@ -469,7 +469,10 @@ if ($exportExcel) {
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label for="vin" class="form-label">VIN</label>
-                                        <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" <?php echo $can_write_operadores ? 'required' : 'disabled'; ?> inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
+                                        <div class="input-group">
+                                            <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" <?php echo $can_write_operadores ? 'required' : 'disabled'; ?> inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
+                                            <button type="button" id="btnValidarVin" class="btn btn-outline-secondary" <?php echo $can_write_operadores ? '' : 'disabled'; ?>>Validar VIN</button>
+                                        </div>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="nombre" class="form-label">Operador</label>
@@ -480,7 +483,7 @@ if ($exportExcel) {
                                     </div>
                                 </div>
                                 <div class="mt-3">
-                                    <button type="submit" name="guardar_operador" class="btn btn-primary" <?php echo $can_write_operadores ? '' : 'disabled'; ?>>Guardar Registro</button>
+                                    <button type="submit" id="btnGuardarRegistro" name="guardar_operador" class="btn btn-primary" disabled>Guardar Registro</button>
                                 </div>
                             </form>
                         </div>
@@ -727,7 +730,7 @@ if ($exportExcel) {
             return;
         }
 
-        if (vinInput.value.trim() === '' || operadorInput.value.trim() === '') {
+        if (!vinValid || vinInput.value.trim() === '' || operadorInput.value.trim() === '') {
             return;
         }
 
@@ -770,6 +773,9 @@ if ($exportExcel) {
                 operadorInput.value = '';
                 vinInput.dataset.lastProcessed = '';
                 operadorInput.dataset.lastProcessed = '';
+                vinValid = false;
+                vinInput.classList.remove('is-valid', 'is-invalid');
+                updateSaveState();
                 openRegistro();
             }
             showFeedback(data.success, data.message);
@@ -787,7 +793,7 @@ if ($exportExcel) {
     }
 
     function submitIfReady() {
-        if (vinInput.value.trim() !== '' && operadorInput.value.trim() !== '') {
+        if (vinValid && vinInput.value.trim() !== '' && operadorInput.value.trim() !== '') {
             submitFormAsync();
         }
     }
@@ -890,9 +896,22 @@ if ($exportExcel) {
     });
 
     let vinValidating = false;
+    let vinValid = false;
+    const btnValidarVin = document.getElementById('btnValidarVin');
+    const btnGuardar = document.getElementById('btnGuardarRegistro');
+    const canWrite = <?php echo $can_write_operadores ? 'true' : 'false'; ?>;
+
+    function updateSaveState() {
+        btnGuardar.disabled = !(canWrite && vinValid && operadorInput.value.trim() !== '');
+    }
+
     async function validateVin() {
         const vin = vinInput.value.trim();
-        if (vin === '' || vinValidating) return;
+        if (vin === '') {
+            alert('Ingresa un VIN para validar.');
+            return;
+        }
+        if (vinValidating) return;
         vinValidating = true;
         try {
             const fd = new FormData();
@@ -900,23 +919,40 @@ if ($exportExcel) {
             fd.append('vin', vin);
             const response = await fetch('Registro_Operadores.php', { method: 'POST', body: fd });
             const data = await response.json();
-            if (data.valid) {
+            if (data.valid && vin === vinInput.value.trim()) {
+                vinValid = true;
+                vinInput.classList.remove('is-invalid');
+                vinInput.classList.add('is-valid');
                 focusField(operadorInput);
-            } else {
+            } else if (!data.valid) {
+                vinValid = false;
+                vinInput.classList.remove('is-valid');
+                vinInput.classList.add('is-invalid');
                 alert('VIN incorrecto: no existe en la base de datos de vehículos.');
                 vinInput.value = '';
                 vinInput.dataset.lastProcessed = '';
                 focusField(vinInput);
             }
         } catch (err) {
+            vinValid = false;
             alert('No se pudo validar el VIN: ' + err.message);
         } finally {
             vinValidating = false;
+            updateSaveState();
         }
     }
 
+    vinInput.addEventListener('input', function() {
+        vinValid = false;
+        vinInput.classList.remove('is-valid', 'is-invalid');
+        updateSaveState();
+    });
+    operadorInput.addEventListener('input', updateSaveState);
+    btnValidarVin.addEventListener('click', validateVin);
+
     handleScanOnInput(vinInput, null, validateVin, 17);
     handleScanOnInput(operadorInput, null, submitIfReady, 2);
+    updateSaveState();
 
     var initialSection = '<?php echo $startSection; ?>';
     if (initialSection === 'registro') {
