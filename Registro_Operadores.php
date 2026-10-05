@@ -64,6 +64,28 @@ $mensaje = '';
 $error = '';
 $startSection = 'menu';
 $ajaxRequest = false;
+
+function vinExisteEnVehiculo($conn, $vin) {
+    $stmt = $conn->prepare("SELECT 1 FROM vehiculo WHERE VIN = ? LIMIT 1");
+    if (!$stmt) {
+        return false;
+    }
+    $stmt->bind_param('s', $vin);
+    $stmt->execute();
+    $stmt->store_result();
+    $existe = $stmt->num_rows > 0;
+    $stmt->close();
+    return $existe;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['validar_vin'])) {
+    $vinCheck = trim($_POST['vin'] ?? '');
+    ob_clean();
+    header('Content-Type: application/json');
+    echo json_encode(['valid' => $vinCheck !== '' && vinExisteEnVehiculo($conn, $vinCheck)]);
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) {
     $ajaxRequest = isset($_POST['ajax']) && $_POST['ajax'] == '1';
     $startSection = 'registro';
@@ -77,6 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_operador'])) 
         $error = 'Tu rol es solo lectura. No puedes guardar registros.';
     } elseif ($vin === '' || $nombre === '') {
         $error = 'Debe completar ambos campos: VIN y Operador.';
+    } elseif (!vinExisteEnVehiculo($conn, $vin)) {
+        $error = 'El VIN no existe en la base de datos de vehículos.';
     } else {
         $fecha = date('Y-m-d H:i:s');
         $nombre_a_guardar = $nombre;
@@ -865,7 +889,33 @@ if ($exportExcel) {
         submitFormAsync();
     });
 
-    handleScanOnInput(vinInput, operadorInput, null, 17);
+    let vinValidating = false;
+    async function validateVin() {
+        const vin = vinInput.value.trim();
+        if (vin === '' || vinValidating) return;
+        vinValidating = true;
+        try {
+            const fd = new FormData();
+            fd.append('validar_vin', '1');
+            fd.append('vin', vin);
+            const response = await fetch('Registro_Operadores.php', { method: 'POST', body: fd });
+            const data = await response.json();
+            if (data.valid) {
+                focusField(operadorInput);
+            } else {
+                alert('VIN incorrecto: no existe en la base de datos de vehículos.');
+                vinInput.value = '';
+                vinInput.dataset.lastProcessed = '';
+                focusField(vinInput);
+            }
+        } catch (err) {
+            alert('No se pudo validar el VIN: ' + err.message);
+        } finally {
+            vinValidating = false;
+        }
+    }
+
+    handleScanOnInput(vinInput, null, validateVin, 17);
     handleScanOnInput(operadorInput, null, submitIfReady, 2);
 
     var initialSection = '<?php echo $startSection; ?>';
