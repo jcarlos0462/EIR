@@ -955,7 +955,7 @@ if ($exportExcel) {
         focusField(vinInput);
     });
 
-    handleScanOnInput(operadorInput, null, submitIfReady, 2);
+    handleScanOnInput(operadorInput, null, null, 2);
     updateSaveState();
 
     var initialSection = '<?php echo $startSection; ?>';
