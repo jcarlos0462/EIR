@@ -471,7 +471,7 @@ if ($exportExcel) {
                                         <label for="vin" class="form-label">VIN</label>
                                         <div class="input-group">
                                             <input type="text" id="vin" name="vin" class="form-control" value="<?php echo htmlspecialchars($vin ?? ''); ?>" placeholder="Escanea o ingresa VIN" <?php echo $can_write_operadores ? 'required' : 'disabled'; ?> inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
-                                            <button type="button" id="btnValidarVin" class="btn btn-primary" <?php echo $can_write_operadores ? '' : 'disabled'; ?>>Validar VIN</button>
+                                            <span id="vinStatus" class="input-group-text bg-white fw-bold d-none" aria-live="polite"></span>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -895,7 +895,7 @@ if ($exportExcel) {
 
     let vinValidating = false;
     let vinValid = false;
-    const btnValidarVin = document.getElementById('btnValidarVin');
+    const vinStatus = document.getElementById('vinStatus');
     const btnGuardar = document.getElementById('btnGuardarRegistro');
     const canWrite = <?php echo $can_write_operadores ? 'true' : 'false'; ?>;
 
@@ -903,12 +903,15 @@ if ($exportExcel) {
         btnGuardar.disabled = !(canWrite && vinValid && operadorInput.value.trim() !== '');
     }
 
+    function showVinStatus(ok) {
+        vinStatus.classList.remove('d-none', 'text-success', 'text-danger');
+        vinStatus.classList.add(ok ? 'text-success' : 'text-danger');
+        vinStatus.textContent = ok ? '\u2714' : '\u2716';
+    }
+
     async function validateVin() {
         const vin = vinInput.value.trim();
-        if (vin === '') {
-            alert('Ingresa un VIN para validar.');
-            return;
-        }
+        if (vin === '') return;
         if (vinValidating) return;
         vinValidating = true;
         try {
@@ -921,18 +924,18 @@ if ($exportExcel) {
                 vinValid = true;
                 vinInput.classList.remove('is-invalid');
                 vinInput.classList.add('is-valid');
+                showVinStatus(true);
                 focusField(operadorInput);
             } else if (!data.valid) {
                 vinValid = false;
                 vinInput.classList.remove('is-valid');
                 vinInput.classList.add('is-invalid');
-                alert('VIN incorrecto: no existe en la base de datos de vehículos.');
-                vinInput.value = '';
-                vinInput.dataset.lastProcessed = '';
-                focusField(vinInput);
+                showVinStatus(false);
+                vinInput.select();
             }
         } catch (err) {
             vinValid = false;
+            showVinStatus(false);
             alert('No se pudo validar el VIN: ' + err.message);
         } finally {
             vinValidating = false;
@@ -943,12 +946,16 @@ if ($exportExcel) {
     vinInput.addEventListener('input', function() {
         vinValid = false;
         vinInput.classList.remove('is-valid', 'is-invalid');
+        vinStatus.classList.add('d-none');
         updateSaveState();
+        if (vinInput.value.trim().length >= 17) validateVin();
     });
+    vinInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); validateVin(); }
+    });
+    vinInput.addEventListener('paste', function() { setTimeout(validateVin, 50); });
     operadorInput.addEventListener('input', updateSaveState);
-    btnValidarVin.addEventListener('click', validateVin);
 
-    handleScanOnInput(vinInput, null, null, 17);
     handleScanOnInput(operadorInput, null, submitIfReady, 2);
     updateSaveState();
 
