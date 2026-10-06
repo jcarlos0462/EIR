@@ -480,6 +480,7 @@ if ($exportExcel) {
                                 
                                 </div>
                                 <div class="mt-3">
+                                    <button type="button" id="btnLimpiarRegistro" class="btn text-white me-2" style="background-color:#fd7e14;border-color:#fd7e14;">Limpiar</button>
                                     <button type="submit" id="btnGuardarRegistro" name="guardar_operador" class="btn btn-primary" disabled>Guardar Registro</button>
                                 </div>
                             </form>
@@ -943,6 +944,16 @@ if ($exportExcel) {
     });
     vinInput.addEventListener('paste', function() { setTimeout(validateVin, 50); });
     operadorInput.addEventListener('input', updateSaveState);
+    document.getElementById('btnLimpiarRegistro').addEventListener('click', function() {
+        vinInput.value = '';
+        operadorInput.value = '';
+        vinInput.dataset.lastProcessed = '';
+        operadorInput.dataset.lastProcessed = '';
+        vinValid = false;
+        vinInput.classList.remove('is-valid', 'is-invalid');
+        updateSaveState();
+        focusField(vinInput);
+    });
 
     handleScanOnInput(operadorInput, null, submitIfReady, 2);
     updateSaveState();
