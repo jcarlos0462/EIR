@@ -14,18 +14,19 @@ if (isset($_GET['buscar_vin']) && $_GET['buscar_vin'] === '1') {
     header('Content-Type: application/json; charset=utf-8');
     $vinPrefix = trim($_GET['vin'] ?? '');
     if ($vinPrefix === '') {
-        echo json_encode(['results' => [], 'hasMore' => false]);
+        echo json_encode(['results' => [], 'hasMore' => false, 'exactMatch' => false]);
         exit();
     }
 
-    $stmt = $conn->prepare("SELECT VIN, Marca, Modelo FROM vehiculo WHERE VIN LIKE CONCAT(?, '%') ORDER BY VIN LIMIT 11");
+    $stmt = $conn->prepare("SELECT VIN, Marca, Modelo, Color, Puerto, (VIN = ?) AS ExactMatch
+        FROM vehiculo WHERE VIN LIKE CONCAT(?, '%') ORDER BY ExactMatch DESC, VIN LIMIT 11");
     if (!$stmt) {
         http_response_code(500);
         echo json_encode(['error' => 'No fue posible buscar VIN.']);
         exit();
     }
 
-    $stmt->bind_param('s', $vinPrefix);
+    $stmt->bind_param('ss', $vinPrefix, $vinPrefix);
     if (!$stmt->execute()) {
         $stmt->close();
         http_response_code(500);
@@ -43,7 +44,8 @@ if (isset($_GET['buscar_vin']) && $_GET['buscar_vin'] === '1') {
     $hasMore = count($matches) > 10;
     echo json_encode([
         'results' => array_slice($matches, 0, 10),
-        'hasMore' => $hasMore
+        'hasMore' => $hasMore,
+        'exactMatch' => !empty($matches) && !empty($matches[0]['ExactMatch'])
     ]);
     exit();
 }
@@ -503,6 +505,10 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             letter-spacing: 2px;
             box-shadow: 0 2px 8px 0 rgba(60,60,120,0.04);
         }
+        #qrInput.form-control.is-valid,
+        #qrInput.form-control.is-invalid {
+            padding-right: calc(1.5em + 0.75rem);
+        }
         .vin-suggestions {
             position: absolute;
             z-index: 1050;
@@ -881,7 +887,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                         <form method="post" id="formBuscar" class="d-flex flex-row gap-3 align-items-end" style="width: 100%;">
                             <div class="flex-grow-1" style="position:relative;">
                                 <label class="modern-label">VIN</label>
-                                <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required placeholder="Escanea o ingresa el VIN" inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false" aria-autocomplete="list" aria-controls="vinSuggestions" aria-expanded="false">
+                                <input type="text" id="qrInput" name="vin" class="form-control modern-input" value="<?php echo htmlspecialchars($vin); ?>" required placeholder="Escanea o ingresa el VIN" inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false" aria-autocomplete="list" aria-controls="vinSuggestions" aria-expanded="false">
                                 <div id="vinSuggestions" class="vin-suggestions" role="listbox" hidden></div>
                                 <div id="scanStatus" style="margin-top:0.4rem; color:#236fa1; font-weight:600; font-size:0.94rem; display:none;">Escaneo detectado: buscando...</div>
                                 
@@ -1235,7 +1241,6 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             const vinHint = document.getElementById('vinHint');
             const MIN_VIN_LENGTH = 17;
             const isMobileViewport = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
-            let submitTimeout = null;
             let suggestionTimeout = null;
             let suggestionRequest = null;
             let lastVinSubmitted = vinInput.value.trim();
@@ -1254,6 +1259,13 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             function clearStatus() {
                 if (scanStatus) {
                     scanStatus.style.display = 'none';
+                }
+            }
+
+            function setVinValidity(isValid) {
+                vinInput.classList.remove('is-valid', 'is-invalid');
+                if (isValid !== null) {
+                    vinInput.classList.add(isValid ? 'is-valid' : 'is-invalid');
                 }
             }
 
@@ -1289,7 +1301,9 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     vinLabel.textContent = vehicle.VIN;
                     option.appendChild(vinLabel);
 
-                    const details = [vehicle.Marca, vehicle.Modelo].filter(Boolean).join(' · ');
+                    const details = [vehicle.Marca, vehicle.Modelo, vehicle.Color, vehicle.Puerto]
+                        .filter(Boolean)
+                        .join(' · ');
                     if (details) {
                         const metadata = document.createElement('span');
                         metadata.className = 'vin-suggestion-meta';
@@ -1339,21 +1353,31 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                     .then(function(data) {
                         if (vinInput.value.trim() !== vinPrefix) return;
                         if (data.error) {
+                            setVinValidity(null);
                             showSuggestionMessage(data.error);
                             return;
                         }
+
+                        const isCompleteVin = vinPrefix.length >= MIN_VIN_LENGTH;
+                        if (isCompleteVin && data.exactMatch) {
+                            setVinValidity(true);
+                            autoSubmit(vinPrefix);
+                            return;
+                        }
+
+                        setVinValidity(isCompleteVin ? data.exactMatch : data.results.length > 0);
                         showVinSuggestions(data.results, data.hasMore);
                     })
                     .catch(function(error) {
                         if (error.name === 'AbortError') return;
                         if (vinInput.value.trim() === vinPrefix) {
+                            setVinValidity(null);
                             showSuggestionMessage('No fue posible realizar la búsqueda de VIN.');
                         }
                     });
             }
 
-            function autoSubmit() {
-                const vinValue = vinInput.value.trim();
+            function autoSubmit(vinValue) {
                 if (!vinValue || vinValue === lastVinSubmitted || vinValue.length < MIN_VIN_LENGTH) return;
 
                 hideVinSuggestions();
@@ -1368,35 +1392,28 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
 
             vinInput.addEventListener('input', function() {
                 const vinValue = vinInput.value.trim();
-                if (submitTimeout) clearTimeout(submitTimeout);
                 if (suggestionTimeout) clearTimeout(suggestionTimeout);
                 hideVinSuggestions();
+                setVinValidity(null);
 
-                if (vinValue.length >= MIN_VIN_LENGTH) {
-                    if (suggestionRequest) suggestionRequest.abort();
-                    submitTimeout = setTimeout(autoSubmit, 80);
-                } else {
+                if (vinValue.length > 0) {
                     clearStatus();
-                    if (vinValue.length > 0) {
-                        suggestionTimeout = setTimeout(function() {
-                            searchVinPrefix(vinValue);
-                        }, 250);
-                    } else if (suggestionRequest) {
-                        suggestionRequest.abort();
-                    }
+                    suggestionTimeout = setTimeout(function() {
+                        searchVinPrefix(vinValue);
+                    }, vinValue.length >= MIN_VIN_LENGTH ? 80 : 250);
+                } else {
+                    if (suggestionRequest) suggestionRequest.abort();
                 }
             });
 
             vinInput.addEventListener('paste', function() {
-                if (submitTimeout) clearTimeout(submitTimeout);
                 if (suggestionTimeout) clearTimeout(suggestionTimeout);
+                setVinValidity(null);
                 const vinValue = vinInput.value.trim();
-                if (vinValue.length >= MIN_VIN_LENGTH) {
-                    submitTimeout = setTimeout(autoSubmit, 80);
-                } else if (vinValue.length > 0) {
+                if (vinValue.length > 0) {
                     suggestionTimeout = setTimeout(function() {
                         searchVinPrefix(vinValue);
-                    }, 250);
+                    }, vinValue.length >= MIN_VIN_LENGTH ? 80 : 250);
                 }
             });
 
@@ -1409,9 +1426,9 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             const finalizarBtn = document.getElementById('finalizarRegistr');
             if (finalizarBtn) {
                 finalizarBtn.addEventListener('click', function() {
-                    if (submitTimeout) clearTimeout(submitTimeout);
                     vinInput.value = '';
                     clearStatus();
+                    setVinValidity(null);
                     lastVinSubmitted = '';
                     // Retornar a pantalla inicial para buscar otro VIN
                     window.location.href = 'Registro_Daños.php';
