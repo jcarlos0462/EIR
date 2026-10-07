@@ -893,7 +893,6 @@ if ($exportExcel) {
         submitFormAsync();
     });
 
-    let vinValidating = false;
     let vinValid = false;
     const btnGuardar = document.getElementById('btnGuardarRegistro');
     const canWrite = <?php echo $can_write_operadores ? 'true' : 'false'; ?>;
@@ -905,15 +904,14 @@ if ($exportExcel) {
     async function validateVin() {
         const vin = vinInput.value.trim();
         if (vin === '') return;
-        if (vinValidating) return;
-        vinValidating = true;
         try {
             const fd = new FormData();
             fd.append('validar_vin', '1');
             fd.append('vin', vin);
             const response = await fetch('Registro_Operadores.php', { method: 'POST', body: fd });
             const data = await response.json();
-            if (data.valid && vin === vinInput.value.trim()) {
+            if (vin !== vinInput.value.trim()) return;
+            if (data.valid) {
                 vinValid = true;
                 vinInput.classList.remove('is-invalid');
                 vinInput.classList.add('is-valid');
@@ -925,10 +923,11 @@ if ($exportExcel) {
                 vinInput.select();
             }
         } catch (err) {
-            vinValid = false;
-            alert('No se pudo validar el VIN: ' + err.message);
+            if (vin === vinInput.value.trim()) {
+                vinValid = false;
+                alert('No se pudo validar el VIN: ' + err.message);
+            }
         } finally {
-            vinValidating = false;
             updateSaveState();
         }
     }
@@ -937,7 +936,7 @@ if ($exportExcel) {
         vinValid = false;
         vinInput.classList.remove('is-valid', 'is-invalid');
         updateSaveState();
-        if (vinInput.value.trim().length >= 17) validateVin();
+        if (vinInput.value.trim() !== '') validateVin();
     });
     vinInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') { e.preventDefault(); validateVin(); }
@@ -969,4 +968,3 @@ if ($exportExcel) {
 </script>
 </body>
 </html>
-
