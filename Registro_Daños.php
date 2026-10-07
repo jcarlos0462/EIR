@@ -9,6 +9,45 @@ $debug = true; // poner a false en producción
 include 'database_connection.php';
 require_once 'access_control.php';
 require_module_access($conn, 'danos');
+
+if (isset($_GET['buscar_vin']) && $_GET['buscar_vin'] === '1') {
+    header('Content-Type: application/json; charset=utf-8');
+    $vinPrefix = trim($_GET['vin'] ?? '');
+    if ($vinPrefix === '') {
+        echo json_encode(['results' => [], 'hasMore' => false]);
+        exit();
+    }
+
+    $stmt = $conn->prepare("SELECT VIN, Marca, Modelo FROM vehiculo WHERE VIN LIKE CONCAT(?, '%') ORDER BY VIN LIMIT 11");
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['error' => 'No fue posible buscar VIN.']);
+        exit();
+    }
+
+    $stmt->bind_param('s', $vinPrefix);
+    if (!$stmt->execute()) {
+        $stmt->close();
+        http_response_code(500);
+        echo json_encode(['error' => 'No fue posible buscar VIN.']);
+        exit();
+    }
+
+    $result = $stmt->get_result();
+    $matches = [];
+    while ($row = $result->fetch_assoc()) {
+        $matches[] = $row;
+    }
+    $stmt->close();
+
+    $hasMore = count($matches) > 10;
+    echo json_encode([
+        'results' => array_slice($matches, 0, 10),
+        'hasMore' => $hasMore
+    ]);
+    exit();
+}
+
 // Helper: buscar ID existente de 'Revisado' en una tabla de referencia
 function findRevisadoId($conn, $table, $codeCol, $nameCol) {
     $name = 'Revisado';
@@ -464,6 +503,42 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             letter-spacing: 2px;
             box-shadow: 0 2px 8px 0 rgba(60,60,120,0.04);
         }
+        .vin-suggestions {
+            position: absolute;
+            z-index: 1050;
+            top: 100%;
+            right: 0;
+            left: 0;
+            max-height: 280px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #d8deeb;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 6px 16px rgba(30, 45, 80, 0.16);
+        }
+        .vin-suggestion {
+            display: block;
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border: 0;
+            border-bottom: 1px solid #edf0f6;
+            background: #fff;
+            color: #222;
+            text-align: left;
+        }
+        .vin-suggestion:hover, .vin-suggestion:focus {
+            background: #f0f4ff;
+            outline: none;
+        }
+        .vin-suggestion-meta, .vin-suggestion-message {
+            display: block;
+            color: #5b6b8a;
+            font-size: 0.88rem;
+            letter-spacing: normal;
+        }
+        .vin-suggestion-message {
+            padding: 0.75rem 0.85rem;
+        }
         .vin-hint {
             margin-top: 0.45rem;
             color: #5b6b8a;
@@ -804,9 +879,10 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 <div class="col-12 d-flex justify-content-center">
                     <div class="modern-card">
                         <form method="post" id="formBuscar" class="d-flex flex-row gap-3 align-items-end" style="width: 100%;">
-                            <div class="flex-grow-1">
+                            <div class="flex-grow-1" style="position:relative;">
                                 <label class="modern-label">VIN</label>
-                                <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required placeholder="Escanea o ingresa el VIN" inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false">
+                                <input type="text" id="qrInput" name="vin" class="modern-input" value="<?php echo htmlspecialchars($vin); ?>" required placeholder="Escanea o ingresa el VIN" inputmode="none" autocomplete="off" autocapitalize="off" spellcheck="false" aria-autocomplete="list" aria-controls="vinSuggestions" aria-expanded="false">
+                                <div id="vinSuggestions" class="vin-suggestions" role="listbox" hidden></div>
                                 <div id="scanStatus" style="margin-top:0.4rem; color:#236fa1; font-weight:600; font-size:0.94rem; display:none;">Escaneo detectado: buscando...</div>
                                 
                             </div>
@@ -1155,10 +1231,13 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             const vinInput = document.getElementById('qrInput');
             const formBuscar = document.getElementById('formBuscar');
             const scanStatus = document.getElementById('scanStatus');
+            const vinSuggestions = document.getElementById('vinSuggestions');
             const vinHint = document.getElementById('vinHint');
             const MIN_VIN_LENGTH = 17;
             const isMobileViewport = window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches;
             let submitTimeout = null;
+            let suggestionTimeout = null;
+            let suggestionRequest = null;
             let lastVinSubmitted = vinInput.value.trim();
 
             function focusVinInput() {
@@ -1178,10 +1257,106 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                 }
             }
 
+            function hideVinSuggestions() {
+                vinSuggestions.replaceChildren();
+                vinSuggestions.hidden = true;
+                vinInput.setAttribute('aria-expanded', 'false');
+            }
+
+            function showSuggestionMessage(message) {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'vin-suggestion-message';
+                messageElement.textContent = message;
+                vinSuggestions.replaceChildren(messageElement);
+                vinSuggestions.hidden = false;
+                vinInput.setAttribute('aria-expanded', 'true');
+            }
+
+            function showVinSuggestions(results, hasMore) {
+                vinSuggestions.replaceChildren();
+                if (results.length === 0) {
+                    showSuggestionMessage('No se encontraron VIN que coincidan.');
+                    return;
+                }
+
+                results.forEach(function(vehicle) {
+                    const option = document.createElement('button');
+                    option.type = 'button';
+                    option.className = 'vin-suggestion';
+                    option.setAttribute('role', 'option');
+
+                    const vinLabel = document.createElement('strong');
+                    vinLabel.textContent = vehicle.VIN;
+                    option.appendChild(vinLabel);
+
+                    const details = [vehicle.Marca, vehicle.Modelo].filter(Boolean).join(' · ');
+                    if (details) {
+                        const metadata = document.createElement('span');
+                        metadata.className = 'vin-suggestion-meta';
+                        metadata.textContent = details;
+                        option.appendChild(metadata);
+                    }
+
+                    option.addEventListener('click', function() {
+                        vinInput.value = vehicle.VIN;
+                        hideVinSuggestions();
+                        if (scanStatus) {
+                            scanStatus.textContent = 'VIN seleccionado: buscando...';
+                            scanStatus.style.display = 'block';
+                        }
+                        lastVinSubmitted = '';
+                        formBuscar.submit();
+                    });
+                    vinSuggestions.appendChild(option);
+                });
+
+                if (hasMore) {
+                    const moreMessage = document.createElement('div');
+                    moreMessage.className = 'vin-suggestion-message';
+                    moreMessage.textContent = 'Hay más resultados; escribe más caracteres para afinar la búsqueda.';
+                    vinSuggestions.appendChild(moreMessage);
+                }
+
+                vinSuggestions.hidden = false;
+                vinInput.setAttribute('aria-expanded', 'true');
+            }
+
+            function searchVinPrefix(vinPrefix) {
+                if (suggestionRequest) {
+                    suggestionRequest.abort();
+                }
+                suggestionRequest = new AbortController();
+
+                fetch('Registro_Daños.php?buscar_vin=1&vin=' + encodeURIComponent(vinPrefix), {
+                    signal: suggestionRequest.signal
+                })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('La búsqueda de VIN respondió con un error.');
+                        }
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (vinInput.value.trim() !== vinPrefix) return;
+                        if (data.error) {
+                            showSuggestionMessage(data.error);
+                            return;
+                        }
+                        showVinSuggestions(data.results, data.hasMore);
+                    })
+                    .catch(function(error) {
+                        if (error.name === 'AbortError') return;
+                        if (vinInput.value.trim() === vinPrefix) {
+                            showSuggestionMessage('No fue posible realizar la búsqueda de VIN.');
+                        }
+                    });
+            }
+
             function autoSubmit() {
                 const vinValue = vinInput.value.trim();
                 if (!vinValue || vinValue === lastVinSubmitted || vinValue.length < MIN_VIN_LENGTH) return;
 
+                hideVinSuggestions();
                 if (scanStatus) {
                     scanStatus.textContent = 'Escaneo detectado: buscando...';
                     scanStatus.style.display = 'block';
@@ -1194,17 +1369,35 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             vinInput.addEventListener('input', function() {
                 const vinValue = vinInput.value.trim();
                 if (submitTimeout) clearTimeout(submitTimeout);
+                if (suggestionTimeout) clearTimeout(suggestionTimeout);
+                hideVinSuggestions();
 
                 if (vinValue.length >= MIN_VIN_LENGTH) {
+                    if (suggestionRequest) suggestionRequest.abort();
                     submitTimeout = setTimeout(autoSubmit, 80);
                 } else {
                     clearStatus();
+                    if (vinValue.length > 0) {
+                        suggestionTimeout = setTimeout(function() {
+                            searchVinPrefix(vinValue);
+                        }, 250);
+                    } else if (suggestionRequest) {
+                        suggestionRequest.abort();
+                    }
                 }
             });
 
             vinInput.addEventListener('paste', function() {
                 if (submitTimeout) clearTimeout(submitTimeout);
-                submitTimeout = setTimeout(autoSubmit, 80);
+                if (suggestionTimeout) clearTimeout(suggestionTimeout);
+                const vinValue = vinInput.value.trim();
+                if (vinValue.length >= MIN_VIN_LENGTH) {
+                    submitTimeout = setTimeout(autoSubmit, 80);
+                } else if (vinValue.length > 0) {
+                    suggestionTimeout = setTimeout(function() {
+                        searchVinPrefix(vinValue);
+                    }, 250);
+                }
             });
 
             vinInput.addEventListener('touchstart', function() {
@@ -1226,7 +1419,10 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             }
 
             vinInput.addEventListener('focus', clearStatus);
-            vinInput.addEventListener('blur', clearStatus);
+            vinInput.addEventListener('blur', function() {
+                clearStatus();
+                setTimeout(hideVinSuggestions, 150);
+            });
 
             if (isMobileViewport && vinHint) {
                 vinHint.textContent = 'Escanea el VIN. Si tu navegador abre teclado, vuelve a tocar fuera del campo y escanea.';
