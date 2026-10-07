@@ -1358,14 +1358,13 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
                             return;
                         }
 
-                        const isCompleteVin = vinPrefix.length >= MIN_VIN_LENGTH;
-                        if (isCompleteVin && data.exactMatch) {
+                        if (data.exactMatch) {
                             setVinValidity(true);
                             autoSubmit(vinPrefix);
                             return;
                         }
 
-                        setVinValidity(isCompleteVin ? data.exactMatch : data.results.length > 0);
+                        setVinValidity(false);
                         showVinSuggestions(data.results, data.hasMore);
                     })
                     .catch(function(error) {
@@ -1378,7 +1377,7 @@ $severidadesList = $severidadesRes ? $severidadesRes->fetch_all(MYSQLI_ASSOC) : 
             }
 
             function autoSubmit(vinValue) {
-                if (!vinValue || vinValue === lastVinSubmitted || vinValue.length < MIN_VIN_LENGTH) return;
+                if (!vinValue || vinValue === lastVinSubmitted) return;
 
                 hideVinSuggestions();
                 if (scanStatus) {
